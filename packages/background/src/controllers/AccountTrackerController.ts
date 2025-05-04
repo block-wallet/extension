@@ -216,6 +216,32 @@ export interface UpdateAccountsOptions {
 export class AccountTrackerController extends BaseController<AccountTrackerState> {
     private readonly _mutex: Mutex;
     private readonly _balanceFetchIntervalController: ActionIntervalController;
+
+    /**
+     * Normalizes an address to lowercase for use as a storage key
+     */
+    private _getStorageKey(address: string): string {
+        return address.toLowerCase();
+    }
+
+    /**
+     * Gets an account by address, normalizing the input address first
+     */
+    private _getAccountByAddress(address: string, includeHidden = false): AccountInfo | undefined {
+        const storageKey = this._getStorageKey(address);
+        const { accounts, hiddenAccounts } = this.store.getState();
+
+        if (accounts[storageKey]) {
+            return accounts[storageKey];
+        }
+
+        if (includeHidden && hiddenAccounts[storageKey]) {
+            return hiddenAccounts[storageKey];
+        }
+
+        return undefined;
+    }
+
     constructor(
         private readonly _keyringController: KeyringControllerDerivated,
         private readonly _networkController: NetworkController,
@@ -489,8 +515,15 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         }
 
         const { accounts, hiddenAccounts } = this.store.getState();
-        const account =
-            accounts[accountAddress] || hiddenAccounts[accountAddress];
+        // Normalize the account address to match storage format
+        const accountKey = this._getStorageKey(accountAddress);
+        const account = accounts[accountKey] || hiddenAccounts[accountKey];
+
+        if (!account) {
+            log.warn(`Account not found for address: ${accountAddress}`);
+            return;
+        }
+
         const chainTokenAllowances: AccountAllowance['tokens'] =
             this._getAccountChainAllowances(account, chainId).tokens;
         const { spenderAddress, tokenAddress } = params;
@@ -508,7 +541,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 transactionMeta.status === TransactionStatus.SUBMITTED
                     ? TokenAllowanceStatus.AWAITING_TRANSACTION_RESULT
                     : TokenAllowanceStatus.UPDATED;
-            this._updateAccountAllowancesState(accountAddress, {
+            this._updateAccountAllowancesState(accountKey, {
                 ...account.allowances,
                 [chainId]: { tokens: chainTokenAllowances },
             });
@@ -528,7 +561,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             };
             this._handleNewTokenAllowanceSpendersEvents(
                 chainId,
-                accountAddress,
+                accountKey,
                 event
             );
         }
@@ -936,8 +969,15 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         const release = await this._mutex.acquire();
         const [chainId, accountAddress, newAllowances] = args;
         const { accounts, hiddenAccounts } = this.store.getState();
-        const account =
-            accounts[accountAddress] || hiddenAccounts[accountAddress];
+        // Normalize the account address to match storage format
+        const accountKey = this._getStorageKey(accountAddress);
+        const account = accounts[accountKey] || hiddenAccounts[accountKey];
+
+        if (!account) {
+            log.warn(`Account not found for address: ${accountAddress}`);
+            release();
+            return;
+        }
 
         try {
             const newAccountAllowances =
@@ -949,7 +989,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
 
             if (newAccountAllowances) {
                 this._updateAccountAllowancesState(
-                    accountAddress,
+                    accountKey,
                     newAccountAllowances
                 );
             }
@@ -965,22 +1005,26 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         const { accounts, hiddenAccounts } = this.store.getState();
         const cleanedAllowances =
             this._cleanupAllowancesBeforeStore(newAllowances);
-        if (accountAddress in accounts) {
+
+        // Ensure we're using a normalized key for consistency
+        const accountKey = this._getStorageKey(accountAddress);
+
+        if (accountKey in accounts) {
             this.store.updateState({
                 accounts: {
                     ...this.store.getState().accounts,
-                    [accountAddress]: {
-                        ...this.store.getState().accounts[accountAddress],
+                    [accountKey]: {
+                        ...this.store.getState().accounts[accountKey],
                         allowances: cleanedAllowances,
                     },
                 },
             });
-        } else if (accountAddress in hiddenAccounts) {
+        } else if (accountKey in hiddenAccounts) {
             this.store.updateState({
                 hiddenAccounts: {
                     ...this.store.getState().hiddenAccounts,
-                    [accountAddress]: {
-                        ...this.store.getState().hiddenAccounts[accountAddress],
+                    [accountKey]: {
+                        ...this.store.getState().hiddenAccounts[accountKey],
                         allowances: cleanedAllowances,
                     },
                 },
@@ -1075,14 +1119,14 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
      * @param name new name
      */
     public addPrimaryAccount(address: string): void {
-        // Checksum address
-        address = toChecksumAddress(address);
+        // Checksum address for display purposes
+        const checksummedAddress = toChecksumAddress(address);
 
-        // Also store the lowercase version for object key consistency
-        const addressLowerCase = address.toLowerCase();
+        // Use lowercase version for storage key consistency
+        const accountKey = this._getStorageKey(checksummedAddress);
 
         const primaryAccountInfo: AccountInfo = {
-            address,
+            address: checksummedAddress,
             name: 'Account 1',
             accountType: AccountType.HD_ACCOUNT,
             index: 0, // first account
@@ -1092,14 +1136,14 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         };
 
         this.store.updateState({
-            accounts: { [addressLowerCase]: primaryAccountInfo },
+            accounts: { [accountKey]: primaryAccountInfo },
         });
 
         // Emit account update
-        this.emit(AccountTrackerEvents.ACCOUNT_ADDED, address);
+        this.emit(AccountTrackerEvents.ACCOUNT_ADDED, checksummedAddress);
 
         this.updateAccounts({
-            addresses: [address],
+            addresses: [checksummedAddress],
             assetAddresses: [NATIVE_TOKEN_ADDRESS],
         });
     }
@@ -1116,8 +1160,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         // Get new created account with checksum format (for display purposes)
         const newAccount = toChecksumAddress(account);
 
-        // Also store the lowercase version for object key consistency
-        const newAccountLowerCase = newAccount.toLowerCase();
+        // Use lowercase version for storage key consistency
+        const accountKey = this._getStorageKey(newAccount);
 
         // Get current accounts
         const trackedAccounts = this.store.getState().accounts;
@@ -1135,7 +1179,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             status: AccountStatus.ACTIVE,
             allowances: {},
         };
-        trackedAccounts[newAccountLowerCase] = accountInfo;
+        trackedAccounts[accountKey] = accountInfo;
 
         // Update state
         this.store.updateState({
@@ -1206,11 +1250,11 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             // Checksum received account address
             const newAccount = toChecksumAddress(address);
 
-            // Store lowercase version for object key consistency
-            const newAccountLowerCase = newAccount.toLowerCase();
+            // Use lowercase version for storage key consistency
+            const accountKey = this._getStorageKey(newAccount);
 
             // Skip already imported accounts
-            if (newAccountLowerCase in trackedAccounts) {
+            if (accountKey in trackedAccounts) {
                 continue;
             }
 
@@ -1233,7 +1277,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             updatedAccounts.push(accountInfo);
 
             // Set account in trackedAccount object
-            trackedAccounts[newAccountLowerCase] = accountInfo;
+            trackedAccounts[accountKey] = accountInfo;
         }
 
         // Update state
@@ -1275,8 +1319,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             await this._keyringController.importAccount(privateKey)
         );
 
-        // Store lowercase version for object key consistency
-        const newAccountLowerCase = newAccount.toLowerCase();
+        // Use lowercase version for storage key consistency
+        const accountKey = this._getStorageKey(newAccount);
 
         // Get current tracked accounts
         const trackedAccounts = this.store.getState().accounts;
@@ -1294,7 +1338,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             status: AccountStatus.ACTIVE,
             allowances: {},
         };
-        trackedAccounts[newAccountLowerCase] = accountInfo;
+        trackedAccounts[accountKey] = accountInfo;
 
         // Update state
         this.store.updateState({
@@ -1320,18 +1364,21 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
     public async removeAccount(address: string): Promise<boolean> {
         const { accounts } = this.store.getState();
 
-        if (!accounts[address]) {
+        // Normalize the account address to match storage format
+        const accountKey = this._getStorageKey(address);
+
+        if (!accounts[accountKey]) {
             throw new Error('Account not found');
         }
 
-        if (accounts[address].accountType === AccountType.HD_ACCOUNT) {
+        if (accounts[accountKey].accountType === AccountType.HD_ACCOUNT) {
             throw new Error('Cannot internal HD accounts');
         }
 
         // if account is currently selected, change accounts
         if (address === this._preferencesController.getSelectedAddress()) {
             const accountsCopy = { ...accounts };
-            delete accountsCopy[address];
+            delete accountsCopy[accountKey];
 
             this._preferencesController.setSelectedAddress(
                 accountsCopy[Object.keys(accountsCopy)[0]].address
@@ -1339,7 +1386,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         }
 
         // Remove from account tracker
-        delete accounts[address];
+        delete accounts[accountKey];
 
         // Update state
         this.store.updateState({ accounts });
@@ -1358,11 +1405,14 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
     public async hideAccount(address: string): Promise<boolean> {
         const { accounts } = this.store.getState();
 
-        if (!accounts[address]) {
+        // Normalize the account address to match storage format
+        const accountKey = this._getStorageKey(address);
+
+        if (!accounts[accountKey]) {
             throw new Error('Account not found');
         }
 
-        if (accounts[address].accountType !== AccountType.HD_ACCOUNT) {
+        if (accounts[accountKey].accountType !== AccountType.HD_ACCOUNT) {
             throw new Error('Can only hide internal accounts');
         }
 
@@ -1375,7 +1425,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         // if account is currently selected, change accounts
         if (address === this._preferencesController.getSelectedAddress()) {
             const accountsCopy = { ...accounts };
-            delete accountsCopy[address];
+            delete accountsCopy[accountKey];
 
             this._preferencesController.setSelectedAddress(
                 accountsCopy[Object.keys(accountsCopy)[0]].address
@@ -1383,10 +1433,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         }
 
         // Add to hidden accounts
-        this.addHiddenAccount(accounts[address]);
+        this.addHiddenAccount(accounts[accountKey]);
 
         // Remove from account tracker
-        delete accounts[address];
+        delete accounts[accountKey];
 
         // Update state
         this.store.updateState({ accounts });
@@ -1405,18 +1455,21 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
     public async unhideAccount(address: string): Promise<boolean> {
         const { accounts, hiddenAccounts } = this.store.getState();
 
-        if (!hiddenAccounts[address]) {
+        // Normalize the account address to match storage format
+        const accountKey = this._getStorageKey(address);
+
+        if (!hiddenAccounts[accountKey]) {
             throw new Error('Account not found');
         }
 
         // Add account to accounts
-        accounts[address] = {
-            ...hiddenAccounts[address],
+        accounts[accountKey] = {
+            ...hiddenAccounts[accountKey],
             status: AccountStatus.ACTIVE,
         };
 
         // Remove from hidden accounts
-        delete hiddenAccounts[address];
+        delete hiddenAccounts[accountKey];
 
         // Update state
         this.store.updateState({ accounts, hiddenAccounts });
@@ -1433,10 +1486,14 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
      */
     public addHiddenAccount(account: AccountInfo): void {
         const { hiddenAccounts } = this.store.getState();
+
+        // Normalize the account address to match storage format
+        const accountKey = this._getStorageKey(account.address);
+
         this.store.updateState({
             hiddenAccounts: {
                 ...(hiddenAccounts || {}),
-                [account.address]: {
+                [accountKey]: {
                     ...account,
                     status: AccountStatus.HIDDEN,
                 },
@@ -1453,11 +1510,14 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
     public renameAccount(address: string, name: string): void {
         const { accounts } = this.store.getState();
 
-        if (!accounts[address]) {
+        // Normalize the account address to match storage format
+        const accountKey = this._getStorageKey(address);
+
+        if (!accounts[accountKey]) {
             throw new Error('Account not found');
         }
 
-        accounts[address] = { ...accounts[address], name: name };
+        accounts[accountKey] = { ...accounts[accountKey], name: name };
 
         // save accounts state
         this.store.updateState({ accounts });
@@ -1472,7 +1532,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
     public getAccountName(address: string): string | undefined {
         const { accounts } = this.store.getState();
 
-        const accountName = accounts[checksummedAddress(address)]?.name;
+        // Normalize the account address for lookup
+        const accountKey = this._getStorageKey(address);
+
+        const accountName = accounts[accountKey]?.name;
 
         return accountName;
     }
@@ -1700,23 +1763,26 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         console.log(`[AccTrk] _updateAccountBalanceState for ${accountAddress} on chain ${chainId}`);
         const stateAccounts = this.store.getState().accounts;
 
+        // Normalize the account address to match storage format
+        const accountKey = this._getStorageKey(accountAddress);
+
         const finalNativeTokenBalance = assetAddressToGetBalance.includes(
             NATIVE_TOKEN_ADDRESS
         )
             ? account.balances[chainId].nativeTokenBalance
-            : accountAddress in stateAccounts &&
-                chainId in stateAccounts[accountAddress].balances
-                ? stateAccounts[accountAddress].balances[chainId].nativeTokenBalance
+            : accountKey in stateAccounts &&
+                chainId in stateAccounts[accountKey].balances
+                ? stateAccounts[accountKey].balances[chainId].nativeTokenBalance
                 : Zero;
 
         let finalTokens: AccountBalanceTokens = {};
         if (
-            accountAddress in stateAccounts &&
-            chainId in stateAccounts[accountAddress].balances &&
-            stateAccounts[accountAddress].balances[chainId].tokens
+            accountKey in stateAccounts &&
+            chainId in stateAccounts[accountKey].balances &&
+            stateAccounts[accountKey].balances[chainId].tokens
         ) {
             finalTokens = {
-                ...stateAccounts[accountAddress].balances[chainId].tokens,
+                ...stateAccounts[accountKey].balances[chainId].tokens,
             };
         }
         if (chainId in account.balances && account.balances[chainId].tokens) {
@@ -1735,10 +1801,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         const newState = {
             accounts: {
                 ...this.store.getState().accounts,
-                [accountAddress]: {
-                    ...this.store.getState().accounts[accountAddress],
+                [accountKey]: {
+                    ...this.store.getState().accounts[accountKey],
                     balances: {
-                        ...this.store.getState().accounts[accountAddress]
+                        ...this.store.getState().accounts[accountKey]
                             .balances,
                         [chainId]: {
                             nativeTokenBalance: finalNativeTokenBalance,
@@ -1748,7 +1814,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 },
             },
         };
-        console.log(`[AccTrk] Updating state for ${accountAddress}. New balances[${chainId}]:`, newState.accounts[accountAddress].balances[chainId]);
+        console.log(`[AccTrk] Updating state for ${accountAddress}. New balances[${chainId}]:`, newState.accounts[accountKey].balances[chainId]);
         this.store.updateState(newState);
 
         console.log(`[AccTrk] Emitting BALANCE_UPDATED for ${accountAddress}, chain ${chainId}`);
@@ -1933,13 +1999,16 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         accountAddress: string = this._preferencesController.getSelectedAddress(),
         chainId: number = this._networkController.network.chainId
     ): AccountBalanceTokens {
-        if (accountAddress in this.store.getState().accounts) {
+        // Normalize the account address to match storage format
+        const accountKey = this._getStorageKey(accountAddress);
+
+        if (accountKey in this.store.getState().accounts) {
             if (
-                this.store.getState().accounts[accountAddress].balances &&
+                this.store.getState().accounts[accountKey].balances &&
                 chainId in
-                this.store.getState().accounts[accountAddress].balances
+                this.store.getState().accounts[accountKey].balances
             ) {
-                return this.store.getState().accounts[accountAddress].balances[
+                return this.store.getState().accounts[accountKey].balances[
                     chainId
                 ].tokens;
             }
@@ -1957,13 +2026,16 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         accountAddress: string = this._preferencesController.getSelectedAddress(),
         chainId: number = this._networkController.network.chainId
     ): BigNumber {
-        if (accountAddress in this.store.getState().accounts) {
+        // Normalize the account address to match storage format
+        const accountKey = this._getStorageKey(accountAddress);
+
+        if (accountKey in this.store.getState().accounts) {
             if (
-                this.store.getState().accounts[accountAddress].balances &&
+                this.store.getState().accounts[accountKey].balances &&
                 chainId in
-                this.store.getState().accounts[accountAddress].balances
+                this.store.getState().accounts[accountKey].balances
             ) {
-                return this.store.getState().accounts[accountAddress].balances[
+                return this.store.getState().accounts[accountKey].balances[
                     chainId
                 ].nativeTokenBalance;
             }
@@ -2605,20 +2677,24 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         console.log(`[AccTrk] _onTransactionConfirmed called for Tx ID: ${transactionMeta.id}`);
         const { accounts, hiddenAccounts } = this.store.getState();
         const txChainId = transactionMeta.chainId;
-        const txFrom = transactionMeta.transactionParams.from?.toLowerCase();
-        const txTo = transactionMeta.transactionParams.to?.toLowerCase();
+        const txFrom = transactionMeta.transactionParams.from;
+        const txTo = transactionMeta.transactionParams.to;
 
         if (!txFrom || !txChainId) {
             log.warn("Confirmed transaction missing sender or chainId", transactionMeta);
             return;
         }
 
+        // Normalize addresses for lookup
+        const txFromKey = this._getStorageKey(txFrom);
+        const txToKey = txTo ? this._getStorageKey(txTo) : null;
+
         // Determine which tracked account(s) are involved
         const involvedAddresses: string[] = [];
-        if (txFrom && (accounts[txFrom] || hiddenAccounts[txFrom])) {
+        if (txFromKey && (accounts[txFromKey] || hiddenAccounts[txFromKey])) {
             involvedAddresses.push(txFrom);
         }
-        if (txTo && txTo !== txFrom && (accounts[txTo] || hiddenAccounts[txTo])) {
+        if (txToKey && txTo && txToKey !== txFromKey && (accounts[txToKey] || hiddenAccounts[txToKey])) {
             involvedAddresses.push(txTo);
         }
 

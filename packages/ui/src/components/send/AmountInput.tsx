@@ -10,6 +10,22 @@ import { Classes } from "../../styles"
 import ErrorMessage from "../error/ErrorMessage"
 import { getValueByKey } from "../../util/objectUtils"
 import { ResponseGetState } from "@block-wallet/background/utils/types/communication"
+import { toChecksumAddress } from "ethereumjs-util"
+
+// Helper function to normalize addresses for comparison
+const normalizeAddress = (address: string): string => {
+    return address.toLowerCase();
+}
+
+// Helper function to ensure address is checksummed
+const ensureChecksumAddress = (address: string): string => {
+    try {
+        return toChecksumAddress(address);
+    } catch (e) {
+        console.error("Failed to checksum address:", e);
+        return address; // Return original if checksum fails
+    }
+}
 
 // Improved debounce hook that returns both the debounced value and a setter
 const useDebouncedValue = <T,>(initialValue: T, delay: number = 300): [T, (value: T) => void, boolean] => {
@@ -83,6 +99,9 @@ export const AmountInput: React.FC<AmountInputProps> = ({
 
     // Create a single decimals constant for consistent use
     const decimals = selectedToken?.token.decimals ?? DEFAULT_DECIMALS;
+
+    // Ensure token symbol is consistent
+    const tokenAddress = selectedToken?.token.address ? normalizeAddress(selectedToken.token.address) : '';
     const symbol = selectedToken?.token.symbol.toUpperCase() ?? blankState.networkNativeCurrency.symbol;
 
     const calcNativeCurrency = useCallback((amountStr: string) => {

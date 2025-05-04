@@ -37,6 +37,11 @@ type RecentAddressInfo = {
     name: string;
 }
 
+// Helper function to normalize addresses for consistent comparison
+const normalizeAddress = (address: string): string => {
+    return address.toLowerCase();
+}
+
 // Schema
 const schema = yup.object().shape({
     address: yup
@@ -110,17 +115,18 @@ const SendPage = () => {
 
     // Handlers
     const onSubmit = handleSubmit(async (data: AddressFormData) => {
+        const checksummedAddress = toChecksumAddress(data.address);
         if (addContact) {
             await addressBookSet(
-                data.address,
-                `Account ${formatHashLastChars(data.address)}`,
+                checksummedAddress,
+                `Account ${formatHashLastChars(checksummedAddress)}`,
                 ""
             )
         }
         history.push({
             pathname: "/send/confirm",
             state: {
-                address: toChecksumAddress(data.address),
+                address: checksummedAddress,
                 asset: preSelectedAsset,
                 name: selectedAccount?.name,
                 fromAssetPage: fromAssetPage,
@@ -146,10 +152,11 @@ const SendPage = () => {
             setWarning("")
 
             if (validAddress) {
-                const normalizedAddress = toChecksumAddress(searchString)
+                const checksummedAddress = toChecksumAddress(searchString)
+                const normalizedAddress = normalizeAddress(checksummedAddress)
 
                 const isCurrentAccount =
-                    normalizedAddress === currentAccount.address
+                    normalizedAddress === normalizeAddress(currentAccount.address)
 
                 if (isCurrentAccount) {
                     setWarning(
@@ -158,11 +165,11 @@ const SendPage = () => {
                 }
 
                 const isInAddressBook = (addressBookAccounts || []).some(
-                    ({ address }) => address === normalizedAddress
+                    ({ address }) => normalizeAddress(address) === normalizedAddress
                 )
 
                 const isInMyAccounts = (myAccounts || []).some(
-                    ({ address }) => address === normalizedAddress
+                    ({ address }) => normalizeAddress(address) === normalizedAddress
                 )
 
                 setCanAddContact(
@@ -176,11 +183,14 @@ const SendPage = () => {
 
     const onAccountSelect = useCallback((account: AccountInfo | AccountResult | RecentAddressInfo) => {
         if (account && account.address) {
-            setSelectedAccount({ address: account.address, name: account.name });
-            setValue("address", account.address, {
+            // Always use checksummed address for display and storage
+            const checksummedAddress = toChecksumAddress(account.address);
+
+            setSelectedAccount({ address: checksummedAddress, name: account.name });
+            setValue("address", checksummedAddress, {
                 shouldValidate: true,
             })
-            setSearchString(account.address)
+            setSearchString(checksummedAddress)
             setIsAddress(true)
             setShowRecents(false)
         }

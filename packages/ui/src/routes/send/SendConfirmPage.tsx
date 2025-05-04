@@ -21,6 +21,7 @@ import { InferType } from "yup"
 import { BigNumber } from "@ethersproject/bignumber"
 import { formatUnits } from "@ethersproject/units"
 import { DEFAULT_DECIMALS } from "../../util/constants"
+import { toChecksumAddress } from "ethereumjs-util"
 
 // Hooks
 import { useBlankState } from "../../context/background/backgroundHooks"
@@ -57,6 +58,21 @@ import { GasSettings } from "../../components/send/GasSettings"
 import { useSendTransaction } from "../../context/hooks/useSendTransaction"
 import { useNetworkCongestion, CongestionLevel } from "../../context/hooks/useNetworkCongestion"
 import { AiFillInfoCircle } from "react-icons/ai"
+
+// Helper function to normalize addresses for comparison
+const normalizeAddress = (address: string): string => {
+    return address.toLowerCase();
+}
+
+// Helper function to ensure address is checksummed
+const ensureChecksumAddress = (address: string): string => {
+    try {
+        return toChecksumAddress(address);
+    } catch (e) {
+        console.error("Failed to checksum address:", e);
+        return address; // Return original if checksum fails
+    }
+}
 
 // Debounce utility
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -266,7 +282,7 @@ const SendConfirmPage = () => {
     const history: any = useOnMountHistory()
     const balance = useSelectedAccountBalance()
     const { address, accountType } = useSelectedAccount()
-    const receivingAddress = history.location.state.address
+    const receivingAddress = ensureChecksumAddress(history.location.state.address)
     const accountNameByAddress = useAccountNameByAddress(receivingAddress)
     const selectedAccountName =
         history.location.state.name ?? accountNameByAddress
@@ -528,8 +544,7 @@ const SendConfirmPage = () => {
         const checkIfSendingToTokenAddress = async () => {
             if (
                 selectedToken &&
-                receivingAddress.toLowerCase() ===
-                selectedToken.token.address.toLowerCase()
+                normalizeAddress(receivingAddress) === normalizeAddress(selectedToken.token.address)
             ) {
                 setShowSendingToTokenAddressWarning(true)
             }
@@ -639,7 +654,7 @@ const SendConfirmPage = () => {
             />
             <div className="w-full h-full flex flex-col overflow-y-auto pb-4">
                 <AddressDisplay
-                    receivingAddress={history.location.state.address}
+                    receivingAddress={receivingAddress}
                     selectedAccountName={selectedAccountName}
                 />
                 <div className="flex flex-col px-4 sm:px-6 flex-grow">

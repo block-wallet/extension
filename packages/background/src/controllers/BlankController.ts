@@ -2290,6 +2290,8 @@ export default class BlankController extends EventEmitter {
         value,
         feeData,
         advancedData,
+        note,
+        labels,
     }: RequestSendEther): Promise<string> {
         // Add unapproved trasaction
         const {
@@ -2308,6 +2310,20 @@ export default class BlankController extends EventEmitter {
 
         // As we don't care about the result here, ignore errors in transaction result
         result.catch(() => { });
+
+        // Add note and labels if provided
+        if (note || (labels && labels.length > 0)) {
+            const transaction = this.transactionController.getTransaction(id);
+            if (transaction) {
+                if (note) {
+                    transaction.note = note;
+                }
+                if (labels && labels.length > 0) {
+                    transaction.labels = labels;
+                }
+                this.transactionController.updateTransaction(transaction);
+            }
+        }
 
         // Approve it
         try {
@@ -3191,6 +3207,8 @@ export default class BlankController extends EventEmitter {
         value,
         feeData,
         advancedData,
+        note,
+        labels,
     }: RequestSendToken): Promise<string> {
         /**
          * Old Method
@@ -3199,13 +3217,49 @@ export default class BlankController extends EventEmitter {
 
         const transferTransaction = this.getTransferTransaction();
 
-        return transferTransaction.do(
-            tokenAddress,
-            to,
-            value,
-            feeData,
-            advancedData
-        );
+        // Get transaction ID first by adding a handler before executing the transaction
+        let transactionId: string | null = null;
+        const originalUpdateTransaction = this.transactionController.updateTransaction.bind(this.transactionController);
+
+        // Temporarily override updateTransaction to capture the ID
+        this.transactionController.updateTransaction = (meta: TransactionMeta) => {
+            if (!transactionId && meta.id) {
+                transactionId = meta.id;
+            }
+
+            // Add note and labels if this is the first time we're seeing this transaction
+            if (transactionId === meta.id && (note || (labels && labels.length > 0))) {
+                if (note) {
+                    meta.note = note;
+                }
+                if (labels && labels.length > 0) {
+                    meta.labels = labels;
+                }
+            }
+
+            // Call the original method
+            return originalUpdateTransaction(meta);
+        };
+
+        try {
+            // Execute the token transfer
+            const result = await transferTransaction.do(
+                tokenAddress,
+                to,
+                value,
+                feeData,
+                advancedData
+            );
+
+            // Restore original method
+            this.transactionController.updateTransaction = originalUpdateTransaction;
+
+            return result;
+        } catch (error) {
+            // Restore original method in case of error
+            this.transactionController.updateTransaction = originalUpdateTransaction;
+            throw error;
+        }
     }
 
     /**
@@ -3471,7 +3525,7 @@ export default class BlankController extends EventEmitter {
 
     /**
      * Restores a hardware wallet state after service worker restart
-     * 
+     *
      * @param params Object containing device and state information
      * @returns True if restoration was successful, or object indicating user gesture is needed
      */

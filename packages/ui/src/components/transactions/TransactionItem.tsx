@@ -116,9 +116,8 @@ const getPendingTransactionMessage = (
     })()
 
     if (metaType === MetaType.CANCEL || metaType === MetaType.SPEED_UP)
-        return `${
-            metaType === MetaType.CANCEL ? "Cancelation" : "Speeding up"
-        } of ${message[0].toLowerCase()}${message.substring(1)}`
+        return `${metaType === MetaType.CANCEL ? "Cancelation" : "Speeding up"
+            } of ${message[0].toLowerCase()}${message.substring(1)}`
 
     return message
 }
@@ -205,27 +204,27 @@ const TransactionIcon: React.FC<{
     transaction: { transactionCategory: category, transactionStatus },
     transactionIcon,
 }) => (
-    <div className="align-start">
-        {transactionStatus !== TransactionStatus.SUBMITTED ? (
-            transactionIcon ? (
-                <TokenLogo
-                    name={""}
-                    logo={transactionIcon}
-                    filled={true}
-                    logoSize="big"
-                />
-            ) : category ? (
+        <div className="align-start">
+            {transactionStatus !== TransactionStatus.SUBMITTED ? (
+                transactionIcon ? (
+                    <TokenLogo
+                        name={""}
+                        logo={transactionIcon}
+                        filled={true}
+                        logoSize="big"
+                    />
+                ) : category ? (
+                    <div className={Classes.roundedIcon}>
+                        {transactionIcons[category]}
+                    </div>
+                ) : null
+            ) : (
                 <div className={Classes.roundedIcon}>
-                    {transactionIcons[category]}
+                    <PendingSpinner />
                 </div>
-            ) : null
-        ) : (
-            <div className={Classes.roundedIcon}>
-                <PendingSpinner />
-            </div>
-        )}
-    </div>
-)
+            )}
+        </div>
+    )
 
 const getTransactionTime = (
     status: TransactionStatus,
@@ -352,11 +351,11 @@ const getTransactionLabel = (
 
         return isPending
             ? getPendingTransactionMessage(
-                  transactionCategory,
-                  metaType,
-                  networkNativeCurrency.symbol,
-                  advancedData
-              ) || txMessage
+                transactionCategory,
+                metaType,
+                networkNativeCurrency.symbol,
+                advancedData
+            ) || txMessage
             : txMessage
     }
 
@@ -534,8 +533,37 @@ const TransactionItem: React.FC<{
         status === TransactionStatus.SUBMITTED &&
         metaType === MetaType.REGULAR &&
         transactionCategory !==
-            TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER &&
+        TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER &&
         !isBlankWithdraw
+
+    const timeDisplay = (
+        <div
+            className={classnames(
+                "flex flex-col items-end justify-center z-0 mt-3"
+            )}
+        >
+            {getTransactionTimeOrStatus(
+                status,
+                metaType,
+                confirmationTime,
+                submittedTime,
+                time,
+                isQueued || false,
+                forceDrop || false,
+                bridgeParams
+            )}
+
+            {/* Show first label if available */}
+            {transaction.labels && transaction.labels.length > 0 && (
+                <div className="mt-1">
+                    <span className="text-[10px] text-white bg-primary-blue-default px-2 py-0.5 rounded-full">
+                        {transaction.labels[0]}
+                        {transaction.labels.length > 1 && "..."}
+                    </span>
+                </div>
+            )}
+        </div>
+    )
 
     return (
         <>
@@ -544,8 +572,8 @@ const TransactionItem: React.FC<{
                     "flex flex-col px-6 py-4 transition duration-300 hover:bg-primary-grey-default",
                     "hover:bg-opacity-50 active:bg-primary-grey-hover active:bg-opacity-50 -ml-1 cursor-pointer",
                     txHash &&
-                        transaction.transactionParams.from &&
-                        "cursor-default"
+                    transaction.transactionParams.from &&
+                    "cursor-default"
                 )}
                 style={{
                     width: "calc(88% + 3rem)",
@@ -623,16 +651,7 @@ const TransactionItem: React.FC<{
                                     </div>
                                 )}
                         </div>
-                        {getTransactionTimeOrStatus(
-                            status,
-                            metaType,
-                            confirmationTime,
-                            submittedTime,
-                            time,
-                            isQueued || false,
-                            forceDrop || false,
-                            bridgeParams
-                        )}
+                        {timeDisplay}
 
                         {canSpeedUpOrCancel && (
                             <div className="mt-2">
@@ -758,9 +777,9 @@ const TransactionItem: React.FC<{
                     )}
                 </div>
                 {status === TransactionStatus.CONFIRMED &&
-                transactionCategory === TransactionCategories.BRIDGE &&
-                bridgeParams &&
-                BRIDGE_PENDING_STATUS.includes(bridgeParams!.status! || "") ? (
+                    transactionCategory === TransactionCategories.BRIDGE &&
+                    bridgeParams &&
+                    BRIDGE_PENDING_STATUS.includes(bridgeParams!.status! || "") ? (
                     <div className="ml-11 mt-2">
                         <i className="text-primary-grey-dark">
                             <>

@@ -903,6 +903,8 @@ export interface RequestSendEther {
     value: BigNumber;
     feeData: TransactionFeeData;
     advancedData: TransactionAdvancedData;
+    note?: string;
+    labels?: string[];
 }
 
 export interface RequestWalletCreate {
@@ -991,6 +993,8 @@ export interface RequestSendToken {
     value: BigNumber;
     feeData: TransactionFeeData;
     advancedData: TransactionAdvancedData;
+    note?: string;
+    labels?: string[];
 }
 
 export interface RequestAddAsNewSendTransaction {

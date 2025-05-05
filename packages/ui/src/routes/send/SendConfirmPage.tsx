@@ -58,6 +58,7 @@ import { GasSettings } from "../../components/send/GasSettings"
 import { useSendTransaction } from "../../context/hooks/useSendTransaction"
 import { useNetworkCongestion, CongestionLevel } from "../../context/hooks/useNetworkCongestion"
 import { AiFillInfoCircle } from "react-icons/ai"
+import { MdOutlineLabel, MdNoteAdd } from "react-icons/md"
 
 // Helper function to normalize addresses for comparison
 const normalizeAddress = (address: string): string => {
@@ -211,6 +212,8 @@ interface SendConfirmPersistedState {
     submitted: boolean
     asset: TokenWithBalance | null
     txId: string
+    note: string
+    labels: string[]
 }
 
 const INITIAL_VALUE_PERSISTED_DATA = {
@@ -218,6 +221,8 @@ const INITIAL_VALUE_PERSISTED_DATA = {
     amount: "",
     submitted: false,
     txId: "",
+    note: "",
+    labels: [],
 }
 
 // Helper to get message and style based on congestion level
@@ -280,6 +285,18 @@ const useDebouncedWatch = (
 
     return debouncedValue;
 };
+
+// Predefined transaction label options
+const PREDEFINED_LABELS = [
+    "Payment",
+    "Subscription",
+    "Investment",
+    "Shopping",
+    "Donation",
+    "Salary",
+    "Business",
+    "Personal"
+]
 
 // Page
 const SendConfirmPage = () => {
@@ -475,6 +492,42 @@ const SendConfirmPage = () => {
         clearSubmissionError();
         submitTransaction();
     });
+
+    // Transaction note state management
+    const [note, setNote] = useState(persistedData.note || "");
+    const [labels, setLabels] = useState<string[]>(persistedData.labels || []);
+    const [showLabelInput, setShowLabelInput] = useState(false);
+    const [customLabel, setCustomLabel] = useState("");
+
+    // Handle note changes
+    const handleNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const value = e.target.value;
+        if (value.length <= 200) {
+            setNote(value);
+            setPersistedData((prev) => ({ ...prev, note: value }));
+        }
+    };
+
+    // Handle label selection
+    const toggleLabel = (label: string) => {
+        const updatedLabels = labels.includes(label)
+            ? labels.filter(l => l !== label)
+            : [...labels, label];
+
+        setLabels(updatedLabels);
+        setPersistedData((prev) => ({ ...prev, labels: updatedLabels }));
+    };
+
+    // Add custom label
+    const addCustomLabel = () => {
+        if (customLabel.trim() && !labels.includes(customLabel.trim()) && labels.length < 5) {
+            const updatedLabels = [...labels, customLabel.trim()];
+            setLabels(updatedLabels);
+            setPersistedData((prev) => ({ ...prev, labels: updatedLabels }));
+            setCustomLabel("");
+            setShowLabelInput(false);
+        }
+    };
 
     const setMaxTransactionAmount = useCallback((_usingMax: boolean = usingMax) => {
         setUsingMax(_usingMax)
@@ -752,6 +805,76 @@ const SendConfirmPage = () => {
                     <div className={`${effectiveError ? "pl-1 my-1 h-5" : "h-5"}`}>
                         <ErrorMessage>{effectiveError}</ErrorMessage>
                     </div>
+                </div>
+            </div>
+
+            {/* Transaction Notes & Labels */}
+            <div className="mt-6 px-6">
+                <div className="mb-4">
+                    <label className="flex flex-row items-center text-sm font-semibold text-primary-grey-dark mb-2">
+                        <MdNoteAdd className="mr-1" size={16} />
+                        Transaction Note
+                    </label>
+                    <div className="relative">
+                        <textarea
+                            className="w-full p-2 text-sm border border-primary-grey-hover rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue-default"
+                            placeholder="Add a personal note about this transaction (only visible to you)"
+                            rows={2}
+                            value={note}
+                            onChange={handleNoteChange}
+                        ></textarea>
+                        <div className="absolute bottom-2 right-2 text-xs text-primary-grey-dark">
+                            {note.length}/200
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mb-6">
+                    <label className="flex flex-row items-center text-sm font-semibold text-primary-grey-dark mb-2">
+                        <MdOutlineLabel className="mr-1" size={16} />
+                        Labels {labels.length > 0 && `(${labels.length}/5)`}
+                    </label>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                        {PREDEFINED_LABELS.map(label => (
+                            <button
+                                key={label}
+                                onClick={() => toggleLabel(label)}
+                                className={`px-3 py-1 text-xs rounded-full ${labels.includes(label)
+                                    ? "bg-primary-blue-default text-white"
+                                    : "bg-primary-grey-default text-gray-700 hover:bg-primary-grey-hover"
+                                    }`}
+                            >
+                                {label}
+                            </button>
+                        ))}
+                    </div>
+
+                    {showLabelInput ? (
+                        <div className="flex mt-2">
+                            <input
+                                type="text"
+                                className="flex-1 p-2 text-sm border border-primary-grey-hover rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary-blue-default"
+                                placeholder="Custom label"
+                                value={customLabel}
+                                onChange={(e) => setCustomLabel(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && addCustomLabel()}
+                                maxLength={20}
+                            />
+                            <button
+                                className="px-3 bg-primary-blue-default text-white rounded-r-md hover:bg-blue-600"
+                                onClick={addCustomLabel}
+                            >
+                                Add
+                            </button>
+                        </div>
+                    ) : labels.length < 5 ? (
+                        <button
+                            className="text-xs text-primary-blue-default hover:underline"
+                            onClick={() => setShowLabelInput(true)}
+                        >
+                            + Add custom label
+                        </button>
+                    ) : null}
                 </div>
             </div>
         </PopupLayout>

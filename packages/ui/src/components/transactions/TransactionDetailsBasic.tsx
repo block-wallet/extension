@@ -495,6 +495,42 @@ export const TransactionDetailsBasic: FunctionComponent<
                     </div>
                 </div>
             )}
+
+            {/* Transaction Notes & Labels */}
+            {(transaction.note || (transaction.labels && transaction.labels.length > 0)) && (
+                <div className="flex flex-col mt-4">
+                    <div className="w-full border-t my-2"></div>
+
+                    {transaction.note && (
+                        <div className="flex flex-col mb-3">
+                            <span className="text-sm font-semibold text-primary-grey-dark mb-1">
+                                Note
+                            </span>
+                            <div className="bg-primary-grey-default p-2 rounded-md text-sm break-words">
+                                {transaction.note}
+                            </div>
+                        </div>
+                    )}
+
+                    {transaction.labels && transaction.labels.length > 0 && (
+                        <div className="flex flex-col">
+                            <span className="text-sm font-semibold text-primary-grey-dark mb-1">
+                                Labels
+                            </span>
+                            <div className="flex flex-wrap gap-2">
+                                {transaction.labels.map((label, index) => (
+                                    <div
+                                        key={index}
+                                        className="bg-primary-blue-default text-white px-3 py-1 text-xs rounded-full"
+                                    >
+                                        {label}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     )
 }

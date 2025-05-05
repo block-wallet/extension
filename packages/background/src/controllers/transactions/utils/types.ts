@@ -77,6 +77,16 @@ export interface TransactionMeta {
         withdrawFee?: BigNumber;
     };
 
+    /**
+     * User-supplied note for the transaction
+     */
+    note?: string;
+
+    /**
+     * Array of user-applied labels for the transaction
+     */
+    labels?: string[];
+
     confirmationTime?: number;
     chainId?: number;
     transactionParams: TransactionParams;

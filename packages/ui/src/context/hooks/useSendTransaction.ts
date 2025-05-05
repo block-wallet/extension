@@ -25,12 +25,16 @@ interface SendConfirmPersistedState {
     submitted: boolean
     asset: TokenWithBalance | null
     txId: string
+    note: string
+    labels: string[]
 }
 const INITIAL_VALUE_PERSISTED_DATA = {
     asset: null,
     amount: "",
     submitted: false,
     txId: "",
+    note: "",
+    labels: [],
 }
 
 interface UseSendTransactionProps {
@@ -240,7 +244,9 @@ export const useSendTransaction = ({
                     receivingAddress,
                     selectedGas,
                     value,
-                    transactionAdvancedData
+                    transactionAdvancedData,
+                    persistedData.note,
+                    persistedData.labels
                 );
             } else {
                 sendPromise = sendToken(
@@ -248,7 +254,9 @@ export const useSendTransaction = ({
                     receivingAddress,
                     selectedGas,
                     value,
-                    transactionAdvancedData
+                    transactionAdvancedData,
+                    persistedData.note,
+                    persistedData.labels
                 );
             }
 
@@ -296,4 +304,4 @@ export const useSendTransaction = ({
         dialogState,
         showContractAddressWarning,
     };
-}; 
+};

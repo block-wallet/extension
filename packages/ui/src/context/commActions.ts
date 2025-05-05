@@ -454,18 +454,25 @@ export const resolveUDName = async (name: string): Promise<string | null> => {
  * @param to recipient
  * @param feeData gas fee data
  * @param value amount
+ * @param advancedData transaction advanced data
+ * @param note optional transaction note
+ * @param labels optional transaction labels
  */
 export const sendEther = async (
     to: string,
     feeData: TransactionFeeData,
     value: BigNumber,
-    advancedData: TransactionAdvancedData
+    advancedData: TransactionAdvancedData,
+    note?: string,
+    labels?: string[]
 ): Promise<string> => {
     return sendMessage(Messages.TRANSACTION.SEND_ETHER, {
         to,
         feeData,
         value,
         advancedData,
+        note,
+        labels,
     })
 }
 
@@ -686,13 +693,18 @@ export const deleteCustomToken = async (address: string): Promise<void> => {
  * @param to recipient
  * @param feeData gas fee data
  * @param value amount
+ * @param advancedData transaction advanced data
+ * @param note optional transaction note
+ * @param labels optional transaction labels
  */
 export const sendToken = async (
     tokenAddress: string,
     to: string,
     feeData: TransactionFeeData,
     value: BigNumber,
-    advancedData: TransactionAdvancedData
+    advancedData: TransactionAdvancedData,
+    note?: string,
+    labels?: string[]
 ): Promise<string> => {
     return sendMessage(Messages.TOKEN.SEND_TOKEN, {
         tokenAddress,
@@ -700,6 +712,8 @@ export const sendToken = async (
         value,
         feeData,
         advancedData,
+        note,
+        labels,
     })
 }
 
@@ -1808,10 +1822,10 @@ export const setHideSmallBalances = async (enabled: boolean): Promise<void> => {
 /**
  * Gets hardware wallet accounts with fallback to different HD paths if the default doesn't return accounts
  * This is especially useful for Ledger devices where users may be using different HD paths
- * 
+ *
  * @param device Device type
  * @param page Page index
- * @param pageSize Number of accounts per page  
+ * @param pageSize Number of accounts per page
  * @returns Promise resolving to an array of device accounts
  */
 export const getHardwareWalletAccountsWithFallback = async (

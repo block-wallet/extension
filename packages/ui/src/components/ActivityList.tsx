@@ -1,6 +1,6 @@
 import { useState } from "react"
 import TransactionsList from "./transactions/TransactionsList"
-import { FiFilter, FiSearch } from "react-icons/fi"
+import { FiFilter, FiSearch, FiChevronDown, FiChevronUp } from "react-icons/fi"
 import { MdOutlineLabel } from "react-icons/md"
 
 // Context
@@ -57,14 +57,29 @@ const ActivityList = () => {
         >
             <div className="px-6 pb-2">
                 <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-medium">Activity</h3>
                     <button
-                        className="flex items-center text-xs text-primary-blue-default"
+                        className="flex items-center text-xs text-primary-blue-default px-2 py-1 rounded-md border border-primary-grey-hover hover:bg-primary-grey-default"
                         onClick={() => setShowFilters(!showFilters)}
                     >
                         <FiFilter size={14} className="mr-1" />
-                        {showFilters ? "Hide filters" : "Show filters"}
+                        {showFilters ? "Hide filters" : "Filters"}
+                        {showFilters ?
+                            <FiChevronUp size={14} className="ml-1" /> :
+                            <FiChevronDown size={14} className="ml-1" />
+                        }
                     </button>
+
+                    {(filterText || selectedLabel) && (
+                        <div className="flex items-center">
+                            <span className="text-xs text-primary-grey-dark mr-1">Filters active</span>
+                            <button
+                                className="text-xs text-primary-blue-default hover:underline"
+                                onClick={clearFilters}
+                            >
+                                Clear
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {showFilters && (
@@ -93,23 +108,16 @@ const ActivityList = () => {
                                             ? "bg-primary-blue-default text-white"
                                             : "bg-primary-grey-default text-gray-700 hover:bg-primary-grey-hover"
                                             }`}
-                                        onClick={() => selectedLabel === label
-                                            ? setSelectedLabel(null)
-                                            : setSelectedLabel(label)
-                                        }
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            selectedLabel === label
+                                                ? setSelectedLabel(null)
+                                                : setSelectedLabel(label);
+                                        }}
                                     >
                                         {label}
                                     </button>
                                 ))}
-
-                                {(filterText || selectedLabel) && (
-                                    <button
-                                        className="text-xs text-primary-blue-default hover:underline ml-auto"
-                                        onClick={clearFilters}
-                                    >
-                                        Clear filters
-                                    </button>
-                                )}
                             </div>
                         )}
                     </div>

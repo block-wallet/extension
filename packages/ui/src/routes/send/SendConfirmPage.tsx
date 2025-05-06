@@ -59,6 +59,7 @@ import { useSendTransaction } from "../../context/hooks/useSendTransaction"
 import { useNetworkCongestion, CongestionLevel } from "../../context/hooks/useNetworkCongestion"
 import { AiFillInfoCircle } from "react-icons/ai"
 import { MdOutlineLabel, MdNoteAdd } from "react-icons/md"
+import { FiChevronDown } from "react-icons/fi"
 
 // Helper function to normalize addresses for comparison
 const normalizeAddress = (address: string): string => {
@@ -498,6 +499,8 @@ const SendConfirmPage = () => {
     const [labels, setLabels] = useState<string[]>(persistedData.labels || []);
     const [showLabelInput, setShowLabelInput] = useState(false);
     const [customLabel, setCustomLabel] = useState("");
+    const [noteExpanded, setNoteExpanded] = useState(false);
+    const [labelsExpanded, setLabelsExpanded] = useState(false);
 
     // Handle note changes
     const handleNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -641,6 +644,21 @@ const SendConfirmPage = () => {
             if (timer) clearTimeout(timer);
         };
     }, [selectedGas]); // React to gas changes only, not usingMax which would cause double executions
+
+    // Initialize collapsible sections
+    useEffect(() => {
+        // Hide note and label sections by default
+        const noteSection = document.getElementById('note-section');
+        const labelSection = document.getElementById('label-section');
+
+        if (noteSection) {
+            noteSection.style.display = 'none';
+        }
+
+        if (labelSection) {
+            labelSection.style.display = 'none';
+        }
+    }, []);
 
     const congestionLevel = useNetworkCongestion();
     const congestionInfo = getCongestionInfo(congestionLevel);
@@ -809,12 +827,54 @@ const SendConfirmPage = () => {
             </div>
 
             {/* Transaction Notes & Labels */}
-            <div className="mt-6 px-6">
-                <div className="mb-4">
-                    <label className="flex flex-row items-center text-sm font-semibold text-primary-grey-dark mb-2">
+            <div className="mt-3 px-6 border-t pt-3">
+                <div
+                    className="flex items-center justify-between cursor-pointer mb-2"
+                    onClick={() => {
+                        const noteSection = document.getElementById('note-section');
+                        if (noteSection) {
+                            const newExpandedState = noteSection.style.display === 'none';
+                            noteSection.style.display = newExpandedState ? 'block' : 'none';
+                            setNoteExpanded(newExpandedState);
+                        }
+                    }}
+                >
+                    <div className="flex items-center">
                         <MdNoteAdd className="mr-1" size={16} />
-                        Transaction Note
-                    </label>
+                        <label className="text-sm font-semibold text-primary-grey-dark">
+                            Transaction Note
+                        </label>
+                    </div>
+                    <FiChevronDown
+                        className={`text-primary-grey-dark transform transition-transform ${noteExpanded ? 'rotate-180' : ''}`}
+                        size={18}
+                    />
+                </div>
+
+                <div
+                    className="flex items-center justify-between cursor-pointer mb-2"
+                    onClick={() => {
+                        const labelSection = document.getElementById('label-section');
+                        if (labelSection) {
+                            const newExpandedState = labelSection.style.display === 'none';
+                            labelSection.style.display = newExpandedState ? 'block' : 'none';
+                            setLabelsExpanded(newExpandedState);
+                        }
+                    }}
+                >
+                    <div className="flex items-center">
+                        <MdOutlineLabel className="mr-1" size={16} />
+                        <label className="text-sm font-semibold text-primary-grey-dark">
+                            Labels {labels.length > 0 && `(${labels.length}/5)`}
+                        </label>
+                    </div>
+                    <FiChevronDown
+                        className={`text-primary-grey-dark transform transition-transform ${labelsExpanded ? 'rotate-180' : ''}`}
+                        size={18}
+                    />
+                </div>
+
+                <div id="note-section" className="mb-4">
                     <div className="relative">
                         <textarea
                             className="w-full p-2 text-sm border border-primary-grey-hover rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue-default"
@@ -829,11 +889,7 @@ const SendConfirmPage = () => {
                     </div>
                 </div>
 
-                <div className="mb-6">
-                    <label className="flex flex-row items-center text-sm font-semibold text-primary-grey-dark mb-2">
-                        <MdOutlineLabel className="mr-1" size={16} />
-                        Labels {labels.length > 0 && `(${labels.length}/5)`}
-                    </label>
+                <div id="label-section" className="mb-6">
                     <div className="flex flex-wrap gap-2 mb-2">
                         {PREDEFINED_LABELS.map(label => (
                             <button
@@ -870,7 +926,10 @@ const SendConfirmPage = () => {
                     ) : labels.length < 5 ? (
                         <button
                             className="text-xs text-primary-blue-default hover:underline"
-                            onClick={() => setShowLabelInput(true)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowLabelInput(true);
+                            }}
                         >
                             + Add custom label
                         </button>

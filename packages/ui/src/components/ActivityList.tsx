@@ -55,20 +55,8 @@ const ActivityList = () => {
             className="flex flex-col flex-1 w-full space-y-0 h-full max-h-[470px] min-h-[266px]"
             data-testid="activity-list"
         >
-            <div className="px-6 pb-2">
-                <div className="flex items-center justify-between mb-2">
-                    <button
-                        className="flex items-center text-xs text-primary-blue-default px-2 py-1 rounded-md border border-primary-grey-hover hover:bg-primary-grey-default"
-                        onClick={() => setShowFilters(!showFilters)}
-                    >
-                        <FiFilter size={14} className="mr-1" />
-                        {showFilters ? "Hide filters" : "Filters"}
-                        {showFilters ?
-                            <FiChevronUp size={14} className="ml-1" /> :
-                            <FiChevronDown size={14} className="ml-1" />
-                        }
-                    </button>
-
+            <div className="px-6 pb-2 pt-3">
+                <div className="flex items-center justify-end mb-2 space-x-2">
                     {(filterText || selectedLabel) && (
                         <div className="flex items-center">
                             <span className="text-xs text-primary-grey-dark mr-1">Filters active</span>
@@ -80,6 +68,17 @@ const ActivityList = () => {
                             </button>
                         </div>
                     )}
+                    <button
+                        className="flex items-center text-xs text-primary-blue-default px-2 py-1 rounded-md border border-primary-grey-hover hover:bg-primary-grey-default"
+                        onClick={() => setShowFilters(!showFilters)}
+                    >
+                        <FiFilter size={14} className="mr-1" />
+                        {showFilters ? "Hide filters" : "Filters"}
+                        {showFilters ?
+                            <FiChevronUp size={14} className="ml-1" /> :
+                            <FiChevronDown size={14} className="ml-1" />
+                        }
+                    </button>
                 </div>
 
                 {showFilters && (

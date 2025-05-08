@@ -52,11 +52,10 @@ interface UseSendTransactionProps {
 }
 
 interface UseSendTransactionResult {
-    submitTransaction: () => Promise<void>;
-    isSubmitting: boolean; // Combines hardware checks and sending state
+    submitTransaction: (note?: string, labels?: string[]) => Promise<void>;
+    isSubmitting: boolean;
     submissionError: string | null;
     clearSubmissionError: () => void;
-    // Expose dialog state/dispatch if needed, or handle dialog within the hook
     dialogState: ReturnType<typeof useTransactionWaitingDialog>;
     showContractAddressWarning: boolean;
 }
@@ -167,7 +166,7 @@ export const useSendTransaction = ({
         clearLocationRecovery();
     }
 
-    const submitTransaction = useCallback(async () => {
+    const submitTransaction = useCallback(async (note?: string, labels?: string[]) => {
         clearSubmissionError();
         if (!selectedToken) {
             setSubmissionError("Select a token first.");
@@ -186,7 +185,7 @@ export const useSendTransaction = ({
         const value = usingMax
             ? getMaxTransactionAmount()
             : parseUnits(
-                formData.amount.toString(), // Use formData passed in props
+                formData.amount.toString(),
                 selectedToken.token.decimals || DEFAULT_DECIMALS
             );
 
@@ -245,8 +244,8 @@ export const useSendTransaction = ({
                     selectedGas,
                     value,
                     transactionAdvancedData,
-                    persistedData.note,
-                    persistedData.labels
+                    note,
+                    labels
                 );
             } else {
                 sendPromise = sendToken(
@@ -255,12 +254,12 @@ export const useSendTransaction = ({
                     selectedGas,
                     value,
                     transactionAdvancedData,
-                    persistedData.note,
-                    persistedData.labels
+                    note,
+                    labels
                 );
             }
 
-            setPersistedData((prev) => ({ ...prev, submitted: true }));
+            setPersistedData((prev) => ({ ...prev, submitted: true, txId: "", note: note || "", labels: labels || [] }));
 
             await sendPromise;
 

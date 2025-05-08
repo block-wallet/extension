@@ -15,13 +15,15 @@ import { TransactionMeta } from "@block-wallet/background/controllers/transactio
 import TransactionsLoadingSkeleton from "../skeleton/TransactionsLoadingSkeleton"
 
 //Default tx height
-const DEFAULT_TX_HEIGHT_IN_PX = 76
+const DEFAULT_TX_HEIGHT_IN_PX = 84
 
 //Tx with captions (Sped up/Bridge information)
-const TX_HEIHG_WITH_CAPTION = 95
+const TX_HEIHG_WITH_CAPTION = 103
 
 //Speed-up/Cancel buttons
-const TX_HEIGHT_WITH_BUTTONS = 110
+const TX_HEIGHT_WITH_BUTTONS = 118
+
+const LABEL_EXTRA_HEIGHT = 22;
 
 const pendingSpeedingCancellingMetaTypes = [
     MetaType.REGULAR_SPEEDING_UP,
@@ -31,21 +33,29 @@ const pendingSpeedingCancellingMetaTypes = [
 const confirmedSpedCancelMetaTypes = [MetaType.SPEED_UP, MetaType.CANCEL]
 
 const getItemHeightInPx = (tx: TransactionMeta) => {
+    let height = DEFAULT_TX_HEIGHT_IN_PX;
+
     if (tx.id) {
         if (
             tx.status === TransactionStatus.SUBMITTED &&
             !pendingSpeedingCancellingMetaTypes.includes(tx.metaType)
         ) {
-            return TX_HEIGHT_WITH_BUTTONS
+            height = TX_HEIGHT_WITH_BUTTONS;
         } else if (tx.transactionCategory === TransactionCategories.BRIDGE) {
-            return BRIDGE_PENDING_STATUS.includes(tx.bridgeParams!.status!)
+            height = BRIDGE_PENDING_STATUS.includes(tx.bridgeParams!.status!)
                 ? TX_HEIHG_WITH_CAPTION
-                : DEFAULT_TX_HEIGHT_IN_PX
+                : DEFAULT_TX_HEIGHT_IN_PX;
         } else if (confirmedSpedCancelMetaTypes.includes(tx.metaType)) {
-            return TX_HEIHG_WITH_CAPTION
+            height = TX_HEIHG_WITH_CAPTION;
         }
     }
-    return DEFAULT_TX_HEIGHT_IN_PX
+
+    // Add extra height if labels are present
+    if (tx.labels && tx.labels.length > 0) {
+        height += LABEL_EXTRA_HEIGHT;
+    }
+
+    return height;
 }
 
 interface watchDetailsType {
@@ -70,10 +80,10 @@ const TransactionsList: React.FC<{
     const OperationDetails = watchDetails
         ? watchDetails.transaction.transactionCategory
             ? [
-                  TransactionCategories.BRIDGE,
-                  TransactionCategories.INCOMING_BRIDGE_REFUND,
-                  TransactionCategories.INCOMING_BRIDGE,
-              ].includes(watchDetails.transaction.transactionCategory)
+                TransactionCategories.BRIDGE,
+                TransactionCategories.INCOMING_BRIDGE_REFUND,
+                TransactionCategories.INCOMING_BRIDGE,
+            ].includes(watchDetails.transaction.transactionCategory)
                 ? BridgeDetails
                 : TransactionDetails
             : undefined
@@ -150,3 +160,4 @@ const TransactionsList: React.FC<{
 }
 
 export default TransactionsList
+

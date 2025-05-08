@@ -488,12 +488,6 @@ const SendConfirmPage = () => {
     const isLoading = isSubmitting
     const effectiveError = submissionError || error
 
-    const handleFormSubmit = handleSubmit(() => {
-        setError("");
-        clearSubmissionError();
-        submitTransaction();
-    });
-
     // Transaction note state management
     const [note, setNote] = useState(persistedData.note || "");
     const [labels, setLabels] = useState<string[]>(persistedData.labels || []);
@@ -501,6 +495,12 @@ const SendConfirmPage = () => {
     const [customLabel, setCustomLabel] = useState("");
     const [noteExpanded, setNoteExpanded] = useState(false);
     const [labelsExpanded, setLabelsExpanded] = useState(false);
+
+    const handleFormSubmit = handleSubmit(() => {
+        setError("");
+        clearSubmissionError();
+        submitTransaction(note, labels);
+    });
 
     // Handle note changes
     const handleNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {

@@ -5,6 +5,7 @@ import { RiCopperCoinFill } from "react-icons/ri"
 import { AiFillInfoCircle } from "react-icons/ai"
 import { GiSuspensionBridge } from "react-icons/gi"
 import { ImSpinner } from "react-icons/im"
+import { MdOutlineLabel } from "react-icons/md"
 import { BigNumber } from "@ethersproject/bignumber"
 import classNames from "classnames"
 import { Classes, classnames } from "../../styles"
@@ -439,13 +440,12 @@ const TransactionItem: React.FC<{
         bridgeParams,
         transactionCategory,
         advancedData,
+        labels,
     } = transaction
 
     const bridgeTransactionsData = useGetBridgeTransactionsData(transaction)
-
     const history: any = useOnMountHistory()
     const formatter = useCurrencyFromatter()
-
     const { nativeCurrency: networkNativeCurrency, defaultNetworkLogo } =
         useSelectedNetwork()
 
@@ -468,7 +468,6 @@ const TransactionItem: React.FC<{
         : undefined
 
     if (isAllowanceApproval) {
-        //Change transaction logo to the approval Token Logo if it's an approval transaction
         if (approvalToken) {
             if (approvalToken.logo) {
                 transfer.logo = approvalToken.logo
@@ -476,13 +475,12 @@ const TransactionItem: React.FC<{
                 transfer.logo = unknownTokenIcon
             }
         }
-        // TODO: Test and Remove if not required
         if (!transfer.amount) {
             transfer.amount = BigNumber.from("0")
         }
     }
 
-    const label = getTransactionLabel(
+    const itemLabel = getTransactionLabel(
         status,
         metaType,
         index,
@@ -501,7 +499,6 @@ const TransactionItem: React.FC<{
             case TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER:
             case TransactionCategories.INCOMING_BRIDGE_REFUND:
                 return "+"
-
             default:
                 return BigNumber.from(transfer.amount).eq(0) ? "" : "-"
         }
@@ -510,13 +507,32 @@ const TransactionItem: React.FC<{
     const txValue = transfer.amount
         ? formatTransactionValue(transfer as TransferType, true, 5)[0]
         : ""
-
     const valueLabel = `${txValueSign}${txValue}`
 
     const { formattedLabel, typeCss, amountCss } = getTransactionItemStyles(
-        label,
+        itemLabel,
         valueLabel
     )
+
+    const amountColor = (() => {
+        switch (transactionCategory) {
+            case TransactionCategories.INCOMING:
+            case TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER:
+            case TransactionCategories.BLANK_WITHDRAWAL:
+            case TransactionCategories.INCOMING_BRIDGE:
+            case TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER:
+            case TransactionCategories.INCOMING_BRIDGE_REFUND:
+                return "text-green-500";
+            case TransactionCategories.SENT_ETHER:
+            case TransactionCategories.TOKEN_METHOD_TRANSFER:
+            case TransactionCategories.BLANK_DEPOSIT:
+            case TransactionCategories.EXCHANGE:
+            case TransactionCategories.BRIDGE:
+                return "text-red-500";
+            default:
+                return "text-primary-black-default";
+        }
+    })();
 
     const tokenSymbol = transfer.currency
         ? transfer.currency.toUpperCase()
@@ -536,40 +552,56 @@ const TransactionItem: React.FC<{
         TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER &&
         !isBlankWithdraw
 
-    const timeDisplay = (
-        <div
-            className={classnames(
-                "flex flex-col items-end justify-center z-0 mt-3"
-            )}
-        >
-            {getTransactionTimeOrStatus(
-                status,
-                metaType,
-                confirmationTime,
-                submittedTime,
-                time,
-                isQueued || false,
-                forceDrop || false,
-                bridgeParams
-            )}
-
-            {/* Show first label if available */}
-            {transaction.labels && transaction.labels.length > 0 && (
-                <div className="mt-1">
-                    <span className="text-[10px] text-white bg-primary-blue-default px-2 py-0.5 rounded-full">
-                        {transaction.labels[0]}
-                        {transaction.labels.length > 1 && "..."}
-                    </span>
+    const timeAndLabelDisplay = (
+        <div className="flex flex-col items-end justify-center z-0 mt-1">
+            <div>
+                {getTransactionTimeOrStatus(
+                    status,
+                    metaType,
+                    confirmationTime,
+                    submittedTime,
+                    time,
+                    isQueued || false,
+                    forceDrop || false,
+                    bridgeParams
+                )}
+            </div>
+            {labels && labels.length > 0 && (
+                <div className="mt-1 mb-1 flex flex-wrap items-center justify-end gap-1 max-w-[150px]">
+                    {labels.length <= 2 ? (
+                        labels.slice(0, 2).map((label, idx) => (
+                            <span
+                                key={idx}
+                                title={label}
+                                className="text-[10px] text-white bg-primary-blue-default px-2 py-0.5 rounded-full truncate"
+                            >
+                                {label}
+                            </span>
+                        ))
+                    ) : (
+                        <div className="group relative flex items-center">
+                            <div className="relative">
+                                <MdOutlineLabel size={16} className="text-primary-blue-default cursor-pointer" />
+                                <span
+                                    className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-semibold w-3.5 h-3.5 rounded-full flex items-center justify-center p-0.5"
+                                    style={{ lineHeight: '1' }}
+                                >
+                                    {labels.length}
+                                </span>
+                            </div>
+                            <Tooltip content={labels.join(", ")} />
+                        </div>
+                    )}
                 </div>
             )}
         </div>
-    )
+    );
 
     return (
         <>
             <div
                 className={classNames(
-                    "flex flex-col px-6 py-4 transition duration-300 hover:bg-primary-grey-default",
+                    "flex flex-col px-6 py-5 transition duration-300 hover:bg-primary-grey-default",
                     "hover:bg-opacity-50 active:bg-primary-grey-hover active:bg-opacity-50 -ml-1 cursor-pointer",
                     txHash &&
                     transaction.transactionParams.from &&
@@ -596,8 +628,8 @@ const TransactionItem: React.FC<{
                         transactionIcon={transfer.logo}
                     />
                     <div
-                        className="flex flex-col ml-2"
-                        style={{ width: "calc(100% - 16px)" }}
+                        className="flex flex-col ml-2 flex-grow"
+                        style={{ width: "calc(100% - 16px - 80px)" }}
                     >
                         <div
                             className="flex flex-row w-full items-center space-x-1"
@@ -605,7 +637,7 @@ const TransactionItem: React.FC<{
                         >
                             <span
                                 className="text-sm font-semibold truncate"
-                                title={label}
+                                title={itemLabel}
                             >
                                 {formattedLabel}
                             </span>
@@ -651,7 +683,8 @@ const TransactionItem: React.FC<{
                                     </div>
                                 )}
                         </div>
-                        {timeDisplay}
+
+                        {timeAndLabelDisplay}
 
                         {canSpeedUpOrCancel && (
                             <div className="mt-2">
@@ -695,13 +728,12 @@ const TransactionItem: React.FC<{
                         )}
                     </div>
 
-                    {/* Allowance */}
                     {isAllowanceApproval &&
                         approvalToken &&
                         transaction.approveAllowanceParams?.allowanceValue && (
                             <div
                                 className={classNames(
-                                    "flex flex-col items-end self-start"
+                                    "flex flex-col items-end self-start ml-2"
                                 )}
                                 style={amountCss}
                             >
@@ -745,10 +777,9 @@ const TransactionItem: React.FC<{
                             </div>
                         )}
 
-                    {/* Amount */}
                     {!isAllowanceApproval && transfer.amount && (
                         <div
-                            className={classNames("flex flex-col items-end")}
+                            className={classNames("flex flex-col items-end ml-2")}
                             style={amountCss}
                         >
                             <div
@@ -759,7 +790,8 @@ const TransactionItem: React.FC<{
                             >
                                 <span
                                     className={classNames(
-                                        "text-sm font-semibold text-right truncate max-w-[130px]"
+                                        "text-sm font-semibold text-right truncate max-w-[130px]",
+                                        amountColor
                                     )}
                                 >
                                     {`${valueLabel} ${transfer.currency.toUpperCase()}`}

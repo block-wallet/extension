@@ -11,7 +11,7 @@ export function patchLedgerBridgeKeyring() {
         /**
          * Force adds an account to the keyring state without requiring Ledger device interaction
          * This is useful for adding accounts in a service worker context where DOM access is not available
-         * 
+         *
          * @param address The Ethereum address to add
          * @returns The added address (checksummed)
          */
@@ -45,7 +45,20 @@ export function patchLedgerBridgeKeyring() {
     }
 }
 
+// Do NOT automatically apply the patch - export it to be called only when needed
+// patchLedgerBridgeKeyring();
+
+let patched = false;
+
 /**
- * Apply the patches when this module is imported
+ * Apply the patch only if it hasn't been applied yet
+ * Returns true if patch was applied, false if already patched
  */
-patchLedgerBridgeKeyring(); 
+export function ensureLedgerKeyringPatched(): boolean {
+    if (!patched) {
+        patchLedgerBridgeKeyring();
+        patched = true;
+        return true;
+    }
+    return false;
+}

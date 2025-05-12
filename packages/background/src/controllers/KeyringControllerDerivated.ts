@@ -39,8 +39,8 @@ import { isManifestV3, forceNavigateTab } from '../utils/manifest';
 // Add static import for ledgerBridge
 import { ledgerBridge } from '../utils/ledgerBridge';
 // Import LedgerKeyringPatch to add forceAddAccount method
-import '../utils/LedgerKeyringPatch';
-// Add import at the top with other imports 
+import { ensureLedgerKeyringPatched } from '../utils/LedgerKeyringPatch';
+// Add import at the top with other imports
 import {
     ledgerConnectionManager,
     LedgerConnectionState,
@@ -88,7 +88,7 @@ interface QRSignatureRequest {
  * Checks if the current environment has DOM access
  * This is needed to work around the fact that LedgerBridgeKeyring tries to create DOM elements
  * which fails in MV3 service workers
- * 
+ *
  * @returns {boolean} True if the environment has a document with createElement
  */
 const hasDOMAccess = (): boolean => {
@@ -146,6 +146,8 @@ export default class KeyringControllerDerivated extends KeyringController {
     private restoreCompleted = false;
     // Add HD path cache to improve performance
     private _hdPathCache: Map<Devices, string> = new Map();
+    // Track whether hardware wallet components are initialized
+    private _ledgerComponentsInitialized = false;
 
     // Store active operation timeouts for cleanup
     private _activeTimeouts: Set<NodeJS.Timeout> = new Set();
@@ -186,6 +188,27 @@ export default class KeyringControllerDerivated extends KeyringController {
     }
 
     /**
+     * Ensures that Ledger components are initialized
+     * This method is called before any Ledger-specific operations
+     */
+    private ensureLedgerComponentsInitialized(): void {
+        if (!this._ledgerComponentsInitialized) {
+            // Patch LedgerBridgeKeyring with forceAddAccount method
+            ensureLedgerKeyringPatched();
+            this._ledgerComponentsInitialized = true;
+        }
+    }
+
+    /**
+     * Get an instance of the LedgerConnectionManager
+     * This ensures lazy loading of the manager only when needed
+     */
+    private getLedgerConnectionManager() {
+        this.ensureLedgerComponentsInitialized();
+        return ledgerConnectionManager.getInstance();
+    }
+
+    /**
      * Cleanup resources when the controller is no longer needed
      * Should be called when the controller is being removed or on extension shutdown
      */
@@ -199,14 +222,10 @@ export default class KeyringControllerDerivated extends KeyringController {
         // Clear the HD path cache
         this._hdPathCache.clear();
 
-        // Clear the last update timestamp cache
-        KeyringControllerDerivated.lastUpdateTime = {};
-
-        // Clean up hardware wallet handlers
-        HardwareWalletHandlerFactory.cleanup();
-
-        // Clean up Ledger connection manager
-        ledgerConnectionManager.cleanup();
+        // Clean up Ledger connection manager if initialized
+        if (this._ledgerComponentsInitialized) {
+            this.getLedgerConnectionManager().cleanup();
+        }
 
         // Clear any in-memory session storage items if possible
         if (chrome.storage?.session) {
@@ -214,11 +233,14 @@ export default class KeyringControllerDerivated extends KeyringController {
                 chrome.storage.session.remove([
                     'ledger_connection_status',
                     'ledger_eth_app_status',
-                    'ledger_hd_path',
-                    'trezor_connection_status'
-                ]).catch(e => log.debug('Error cleaning up session storage:', e));
+                    'ledger_needs_user_interaction',
+                    'trezor_needs_user_interaction',
+                    'keystone_needs_user_interaction'
+                ]).catch(() => {
+                    // Ignore errors during cleanup
+                });
             } catch (e) {
-                log.debug('Error during session storage cleanup:', e);
+                // Ignore storage errors during cleanup
             }
         }
 
@@ -747,7 +769,7 @@ export default class KeyringControllerDerivated extends KeyringController {
     /**
      * Signs an Ethereum transaction
      * This is an alias for signTransaction for backwards compatibility
-     * 
+     *
      * @param transactionId The transaction ID
      * @param transaction The transaction to sign
      * @param from The address to sign from
@@ -764,7 +786,7 @@ export default class KeyringControllerDerivated extends KeyringController {
 
     /**
      * Gets the device associated with a specific account
-     * 
+     *
      * @param address The account address to check
      * @returns The device type or null if not a hardware wallet
      */
@@ -824,7 +846,7 @@ export default class KeyringControllerDerivated extends KeyringController {
 
     /**
      * Restores hardware wallet state from storage
-     * 
+     *
      * @param params The parameters containing device and state
      * @returns Promise resolving to the restoration result or an object with needsUserGesture property
      */
@@ -844,7 +866,7 @@ export default class KeyringControllerDerivated extends KeyringController {
 
     /**
      * Checks if an account is linked to a hardware device
-     * 
+     *
      * @param address The account address to check
      * @returns True if the account is linked to a hardware device
      */
@@ -856,7 +878,7 @@ export default class KeyringControllerDerivated extends KeyringController {
     /**
      * Removes a hardware keyring for a specific device
      * Uses the hardware wallet handler for cleanup
-     * 
+     *
      * @param device The hardware wallet device type
      * @returns Promise resolving when the keyring is removed
      */
@@ -885,7 +907,7 @@ export default class KeyringControllerDerivated extends KeyringController {
     /**
      * Cancels a QR hardware sign request
      * Stub implementation for interface compatibility
-     * 
+     *
      * @param requestId Optional - The ID of the request to cancel
      */
     public cancelQRHardwareSignRequest(requestId?: string): void {
@@ -896,7 +918,7 @@ export default class KeyringControllerDerivated extends KeyringController {
     /**
      * Tries to restore a hardware wallet from storage
      * Supports both direct Devices parameter and object parameter with device and state
-     * 
+     *
      * @param paramsOrDevice The device or parameters containing device and state
      * @returns Promise resolving to the restoration result or an object with needsUserGesture property
      */
@@ -1046,7 +1068,7 @@ export default class KeyringControllerDerivated extends KeyringController {
     /**
      * Efficiently performs multiple storage operations in a batch for better performance
      * Handles errors gracefully for each operation
-     * 
+     *
      * @param operations Array of storage operations to perform
      * @param storageType The type of storage to use ('local', 'session', or 'both')
      * @returns Promise that resolves when all operations complete (successfully or not)

@@ -1354,36 +1354,82 @@ export const getValidCurrencies = async (): Promise<Currency[]> => {
 }
 
 /**
- * Opens the extension tab (TODO: test window) to connect a hardware wallet
- *
+ * It opens the view to connect a hardware wallet.
+ * Also sets a flag in session storage to indicate we're entering hardware wallet mode
  */
 export const openHardwareConnect = async (): Promise<void> => {
-    return sendMessage(Messages.APP.OPEN_HW_CONNECT)
-}
+    try {
+        // Set a flag in session storage to indicate we're in hardware wallet mode
+        if (chrome.storage?.session) {
+            await chrome.storage.session.set({
+                'current_wallet_operation': 'hardware_wallet'
+            });
+        }
+    } catch (e) {
+        console.error('Failed to set hardware wallet mode flag:', e);
+    }
+
+    return sendMessage(Messages.APP.OPEN_HW_CONNECT);
+};
+
 /**
- * Opens the extension tab (TODO: test window) to remove a hardware wallet
- *
+ * It opens the view to remove a hardware wallet.
+ * Also sets a flag in session storage to indicate we're entering hardware wallet mode
  */
 export const openHardwareRemove = async (): Promise<void> => {
-    return sendMessage(Messages.APP.OPEN_HW_REMOVE)
-}
+    try {
+        // Set a flag in session storage to indicate we're in hardware wallet mode
+        if (chrome.storage?.session) {
+            await chrome.storage.session.set({
+                'current_wallet_operation': 'hardware_wallet'
+            });
+        }
+    } catch (e) {
+        console.error('Failed to set hardware wallet mode flag:', e);
+    }
+
+    return sendMessage(Messages.APP.OPEN_HW_REMOVE);
+};
 
 /**
- * Opens the extension tab (TODO: test window) to connect a hardware wallet
- *
+ * It opens the view to reconnect a hardware wallet.
+ * Also sets a flag in session storage to indicate we're entering hardware wallet mode
  */
 export const openHardwareReconnect = async (address: string): Promise<void> => {
-    return sendMessage(Messages.APP.OPEN_HW_RECONNECT, { address })
-}
+    try {
+        // Set a flag in session storage to indicate we're in hardware wallet mode
+        if (chrome.storage?.session) {
+            await chrome.storage.session.set({
+                'current_wallet_operation': 'hardware_wallet'
+            });
+        }
+    } catch (e) {
+        console.error('Failed to set hardware wallet mode flag:', e);
+    }
+
+    return sendMessage(Messages.APP.OPEN_HW_RECONNECT, { address });
+};
 
 /**
- * It connects a hardware wallet to the extension
+ * Connect to a hardware wallet device
+ * Sets a flag indicating we're in hardware wallet mode
  */
 export const connectHardwareWallet = async (
     device: Devices
 ): Promise<boolean | { needsUserGesture: boolean; deviceName: string }> => {
+    try {
+        // Set a flag in session storage to indicate we're in hardware wallet mode
+        if (chrome.storage?.session) {
+            await chrome.storage.session.set({
+                'current_wallet_operation': 'hardware_wallet'
+            });
+        }
+    } catch (e) {
+        console.error('Failed to set hardware wallet mode flag:', e);
+    }
+
     return sendMessage(Messages.WALLET.HARDWARE_CONNECT, { device });
-}
+};
 
 /**
  * It completes the hardware wallet connection process after user interaction

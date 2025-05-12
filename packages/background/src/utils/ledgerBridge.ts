@@ -17,10 +17,37 @@ export class LedgerBridge {
     private connectionTimeout: NodeJS.Timeout | null = null;
     private lastEthAppCheck = 0;
     private ethAppOpenStatus = false;
+    private initialized = false;
+    private static instance: LedgerBridge | null = null;
 
-    constructor() {
-        log.debug('Initialized LedgerBridge for WebHID communication');
-        console.log('[LEDGER] LedgerBridge initialized for WebHID communication');
+    /**
+     * Private constructor to enforce singleton pattern
+     */
+    private constructor() {
+        // No initialization, will be done lazily
+    }
+
+    /**
+     * Get the singleton instance of LedgerBridge
+     * Ensures lazy initialization
+     */
+    public static getInstance(): LedgerBridge {
+        if (!LedgerBridge.instance) {
+            LedgerBridge.instance = new LedgerBridge();
+        }
+        return LedgerBridge.instance;
+    }
+
+    /**
+     * Initializes the bridge if not already initialized
+     * Called internally before any operation that requires the bridge
+     */
+    private ensureInitialized(): void {
+        if (!this.initialized) {
+            log.debug('Initializing LedgerBridge for WebHID communication (lazy)');
+            console.log('[LEDGER] LedgerBridge initialized for WebHID communication (lazy)');
+            this.initialized = true;
+        }
     }
 
     /**
@@ -29,6 +56,8 @@ export class LedgerBridge {
      * @throws Error if offscreen API is not available or document creation fails
      */
     async ensureOffscreenDocument(): Promise<boolean> {
+        this.ensureInitialized();
+
         // Check if we already have an offscreen document
         if (this.offscreenCreated) return true;
 
@@ -95,6 +124,7 @@ export class LedgerBridge {
      * @returns Promise resolving to true if the Ethereum app is open
      */
     async verifyEthereumAppOpen(bypassCache = false): Promise<boolean> {
+        this.ensureInitialized();
         try {
             const now = Date.now();
             if (!bypassCache && now - this.lastEthAppCheck < 5000 && this.ethAppOpenStatus) {
@@ -250,6 +280,7 @@ export class LedgerBridge {
      * @returns Promise resolving to the connection result
      */
     async connectUsingWebHID(): Promise<ConnectionResult> {
+        this.ensureInitialized();
         try {
             // Ensure offscreen document is available (throws if not possible)
             await this.ensureOffscreenDocument();
@@ -431,6 +462,7 @@ export class LedgerBridge {
      * @returns Promise resolving to true if a Ledger device is connected via WebHID
      */
     async checkWebHIDStatus(): Promise<boolean> {
+        this.ensureInitialized();
         try {
             await this.ensureOffscreenDocument();
 
@@ -478,6 +510,7 @@ export class LedgerBridge {
      * @returns Promise resolving to true if connection is active
      */
     async checkConnectionStatus(): Promise<boolean> {
+        this.ensureInitialized();
         console.log('[LEDGER] Checking WebHID connection status');
 
         try {
@@ -518,6 +551,7 @@ export class LedgerBridge {
      * Closes the offscreen document if it exists
      */
     async closeOffscreenDocument(): Promise<void> {
+        this.ensureInitialized();
         if (this.offscreenCreated && chrome.offscreen) {
             try {
                 await chrome.offscreen.closeDocument();
@@ -535,10 +569,11 @@ export class LedgerBridge {
      * Proxy method to get a page of accounts from Ledger device via the offscreen document
      * @param pageIndex The index of the page to get
      * @param pageSize The number of accounts to get per page
-     * @param hdPath The HD path to use (optional) 
+     * @param hdPath The HD path to use (optional)
      * @returns Promise resolving to the page of accounts
      */
     async getAccounts(pageIndex: number, pageSize: number, hdPath?: string): Promise<Array<{ address: string, index: number, balance?: string, name?: string }>> {
+        this.ensureInitialized();
         try {
             await this.ensureOffscreenDocument();
 
@@ -625,6 +660,7 @@ export class LedgerBridge {
      * This force-closes and reopens the device connection to recover from errors
      */
     private async sendDeviceReconnectionRequest(): Promise<void> {
+        this.ensureInitialized();
         try {
             log.debug('Sending device reconnection request to offscreen document');
             console.log('[LEDGER] Sending device reconnection request to offscreen document');
@@ -683,10 +719,11 @@ export class LedgerBridge {
      * Proxy method to get a page of accounts from Ledger device via the offscreen document
      * This is an alternative interface to getAccounts that matches the KeyringController interface
      * @param pageIndex The index of the page to get
-     * @param hdPath The HD path to use (optional) 
+     * @param hdPath The HD path to use (optional)
      * @returns Promise resolving to the page of accounts
      */
     async getPage(pageIndex: number, hdPath?: string): Promise<string[]> {
+        this.ensureInitialized();
         try {
             log.debug(`Proxying getPage to offscreen document (page ${pageIndex})`);
             console.log(`[LEDGER] Proxying getPage to offscreen document (page ${pageIndex})`);
@@ -741,6 +778,7 @@ export class LedgerBridge {
      * @returns Promise resolving to array of Ethereum addresses
      */
     async getMultipleAccounts(accountIndexes: number[], hdPath?: string): Promise<string[]> {
+        this.ensureInitialized();
         try {
             log.debug(`Getting multiple Ledger accounts for indexes: ${accountIndexes.join(', ')}`);
             console.log(`[LEDGER] Getting multiple Ledger accounts for indexes: ${accountIndexes.join(', ')}`);
@@ -801,6 +839,7 @@ export class LedgerBridge {
      * @returns Promise resolving to the operation result
      */
     async proxyLedgerOperation(operation: string, params: any): Promise<any> {
+        this.ensureInitialized();
         try {
             log.debug(`Proxying ${operation} to offscreen document`);
             console.log(`[LEDGER] Proxying ${operation} to offscreen document`);
@@ -846,5 +885,5 @@ export class LedgerBridge {
     }
 }
 
-// Export a singleton instance
-export const ledgerBridge = new LedgerBridge(); 
+// Export a lazy-loaded singleton instance that will only be initialized when used
+export const ledgerBridge = LedgerBridge.getInstance();

@@ -5,12 +5,29 @@ import { ledgerConnectionManager, LedgerConnectionState } from '../LedgerConnect
 import log from 'loglevel';
 import { forceNavigateTab } from '../manifest';
 import { KeyringTypes } from '../../controllers/KeyringControllerDerivated';
+import { ensureLedgerKeyringPatched } from '../LedgerKeyringPatch';
 
 /**
  * LedgerHardwareWalletHandler
  * Handles Ledger hardware wallet operations using ledgerConnectionManager
  */
 export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
+    /**
+     * Ensure Ledger components are properly initialized
+     */
+    private ensureLedgerInitialized(): void {
+        // Make sure LedgerKeyringPatch is applied
+        ensureLedgerKeyringPatched();
+    }
+
+    /**
+     * Gets the ledgerConnectionManager instance, ensuring it's initialized
+     */
+    private getConnectionManager() {
+        this.ensureLedgerInitialized();
+        return ledgerConnectionManager.getInstance();
+    }
+
     /**
      * Creates a new LedgerHardwareWalletHandler
      * @param keyringController Reference to the keyring controller
@@ -19,8 +36,8 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
         super(Devices.LEDGER, keyringController);
         log.debug('Initialized LedgerHardwareWalletHandler');
 
-        // Add a listener to the connection manager to stay in sync
-        this.connectionCleanup = ledgerConnectionManager.addListener((state, info) => {
+        // Initialize the connection manager lazily and add a listener to stay in sync
+        this.connectionCleanup = this.getConnectionManager().addListener((state, info) => {
             // Log state changes
             console.log(`[LEDGER] Connection state changed: ${state}, appOpen: ${info.appOpen}`);
 
@@ -117,7 +134,7 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
     /**
      * Connects to a Ledger hardware wallet
      * Uses ledgerConnectionManager to handle connection state
-     * 
+     *
      * @returns Promise resolving to connection result
      */
     public async connect(): Promise<
@@ -134,7 +151,7 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
             console.log("[LEDGER] Using connection manager for Ledger connection");
 
             // Use the connection manager to connect to the device
-            const result = await ledgerConnectionManager.connect();
+            const result = await this.getConnectionManager().connect();
             console.log("[LEDGER] Connection result:", result);
 
             // Store the result in session storage for UI access
@@ -170,12 +187,12 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
 
                 // Connected but need to explicitly check app status
                 console.log("[LEDGER] Connected, checking if Ethereum app is open...");
-                const appOpen = await ledgerConnectionManager.verifyEthereumAppOpen(true);
+                const appOpen = await this.getConnectionManager().verifyEthereumAppOpen(true);
 
                 if (appOpen) {
                     console.log("[LEDGER] Ethereum app is now open");
 
-                    // Try to navigate to accounts page automatically 
+                    // Try to navigate to accounts page automatically
                     try {
                         await this.navigateToAccountsPage();
                     } catch (e) {
@@ -199,6 +216,27 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
                     needsEthereumApp: true,
                     message: "Please open the Ethereum app on your Ledger device"
                 };
+            }
+
+            // Handle possible connection failures
+            if (result.error) {
+                log.warn(`Ledger connection error: ${result.error.message}`);
+                console.log(`[LEDGER] Connection error: ${result.error.message}`);
+
+                // Specific error handling
+                if (result.error.type === 'PERMISSION_DENIED') {
+                    return {
+                        needsUserGesture: true,
+                        deviceName: this.device,
+                        message: "Permission denied for WebHID. Please retry with a user gesture."
+                    };
+                } else if (result.error.type === 'NO_DEVICE_FOUND') {
+                    return {
+                        needsUserGesture: true,
+                        deviceName: this.device,
+                        message: "No Ledger device found. Please ensure your device is connected and unlocked."
+                    };
+                }
             }
 
             // Connection failed or needs user gesture
@@ -261,7 +299,7 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
     /**
      * Completes the hardware wallet connection process
      * For Ledger, this verifies the connection and creates a keyring
-     * 
+     *
      * @returns Promise resolving to true if the connection was successful
      */
     public async completeConnection(): Promise<boolean> {
@@ -270,7 +308,7 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
             console.log(`[LEDGER] Completing hardware connection...`);
 
             // Verify the connection state using the manager
-            const { state, info } = ledgerConnectionManager.getState();
+            const { state, info } = this.getConnectionManager().getState();
 
             // Get current info about the connection
             log.debug(`Current Ledger connection state: ${state}`);
@@ -284,7 +322,7 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
                 log.debug("Ledger not connected, attempting connection...");
                 console.log("[LEDGER] Not connected, attempting connection...");
 
-                const result = await ledgerConnectionManager.connect();
+                const result = await this.getConnectionManager().connect();
                 console.log("[LEDGER] Connection result:", result);
 
                 if (!result.success) {
@@ -296,7 +334,7 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
 
             // Verify Ethereum app is open with forced refresh
             console.log("[LEDGER] Verifying Ethereum app is open...");
-            const appOpen = await ledgerConnectionManager.verifyEthereumAppOpen(true);
+            const appOpen = await this.getConnectionManager().verifyEthereumAppOpen(true);
             console.log(`[LEDGER] Ethereum app open status: ${appOpen}`);
 
             // Create keyring if in UI context
@@ -305,7 +343,7 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
                 console.log("[LEDGER] Creating keyring in UI context");
 
                 // Get HD path from connection manager
-                const hdPath = await ledgerConnectionManager.getHDPath();
+                const hdPath = await this.getConnectionManager().getHDPath();
                 console.log(`[LEDGER] Using HD path: ${hdPath}`);
 
                 // Create a new keyring instance
@@ -354,7 +392,7 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
     /**
      * Sets the HD path for the Ledger device
      * Uses ledgerConnectionManager to manage path state
-     * 
+     *
      * @param hdPath The HD path to set
      */
     public async setHDPath(hdPath: string): Promise<void> {
@@ -370,7 +408,7 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
 
         try {
             // Let the connection manager handle the complex path setting and persistence
-            await ledgerConnectionManager.setHDPath(hdPath);
+            await this.getConnectionManager().setHDPath(hdPath);
 
             log.debug(`Successfully set HD path ${hdPath} for Ledger using connection manager`);
         } catch (error) {
@@ -382,7 +420,7 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
     /**
      * Gets the current HD path for the Ledger device
      * Uses ledgerConnectionManager for cached state
-     * 
+     *
      * @returns The current HD path for the device
      */
     public async getHDPath(): Promise<string> {
@@ -390,7 +428,7 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
             log.debug(`Getting HD path for ${this.device}`);
 
             // Try to get from connection manager first
-            const hdPath = await ledgerConnectionManager.getHDPath();
+            const hdPath = await this.getConnectionManager().getHDPath();
 
             // If found, update our cache and return
             if (hdPath) {
@@ -431,7 +469,7 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
     /**
      * Imports accounts from the Ledger device
      * Handles both UI and service worker contexts
-     * 
+     *
      * @param accountIndexes Array of account indexes to import
      * @returns Promise resolving to array of imported account addresses
      */
@@ -652,22 +690,30 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
     }
 
     /**
-     * Cleans up resources when handler is no longer needed
+     * Cleans up resources when the handler is being removed
      */
     public async cleanup(): Promise<void> {
         try {
-            log.debug(`Cleaning up ${this.device} hardware wallet handler`);
-
-            // Clean up connection listener if one exists
+            // Remove connection listener if registered
             if (this.connectionCleanup) {
                 this.connectionCleanup();
                 this.connectionCleanup = null;
             }
 
-            // Additional cleanup code...
+            // Clean up the ledgerConnectionManager but only if we've initialized it
+            try {
+                // Only attempt to access the ledger connection manager if we've initialized it
+                this.getConnectionManager().cleanup();
+            } catch (error) {
+                // Ignore errors - the manager might not be initialized
+            }
+
+            // Call parent cleanup
             await super.cleanup();
+
+            log.debug('LedgerHardwareWalletHandler cleaned up');
         } catch (error) {
-            log.error(`Error during ${this.device} hardware wallet handler cleanup:`, error);
+            log.error('Error cleaning up LedgerHardwareWalletHandler:', error);
         }
     }
 
@@ -676,7 +722,7 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
      * @returns The current connection state
      */
     public async getState(): Promise<{ connected: boolean; appOpen: boolean; state: string }> {
-        const { state, info } = ledgerConnectionManager.getState();
+        const { state, info } = this.getConnectionManager().getState();
 
         console.log(`[LEDGER] Getting connection state: ${state}, appOpen: ${info.appOpen}`);
 
@@ -704,4 +750,4 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
             state: state
         };
     }
-} 
+}

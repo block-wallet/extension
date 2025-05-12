@@ -750,7 +750,7 @@ export class LedgerConnectionManager {
     /**
      * Initiates a connection to a Ledger device
      * Only one connection attempt can be in progress at a time
-     * 
+     *
      * @returns Promise resolving to connection result
      */
     public async connect(): Promise<ConnectionResult> {
@@ -1192,5 +1192,15 @@ export class LedgerConnectionManager {
     }
 }
 
-// Export a singleton instance for global use
-export const ledgerConnectionManager = new LedgerConnectionManager(); 
+// Export a lazy-loaded singleton instance for global use
+let instance: LedgerConnectionManager | null = null;
+
+export const ledgerConnectionManager = {
+    getInstance(): LedgerConnectionManager {
+        if (!instance) {
+            instance = new LedgerConnectionManager();
+            console.log('LedgerConnectionManager initialized');
+        }
+        return instance;
+    }
+}

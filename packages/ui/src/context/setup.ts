@@ -16,20 +16,47 @@ export let session: { origin: string; data: SiteMetadata } | null = null
 export let isAutomaticClose: boolean = false
 
 const portConnection = () => {
-    port.onMessage.removeListener(messageListener)
-    port.onDisconnect.removeListener(disconectListener)
-    port.disconnect()
-    initPort()
-    port.onMessage.addListener(messageListener)
-    port.onDisconnect.addListener(disconectListener)
+    try {
+        // Only try to remove listeners and disconnect if the port is defined
+        if (port) {
+            try {
+                port.onMessage.removeListener(messageListener)
+                port.onDisconnect.removeListener(disconectListener)
+                port.disconnect()
+            } catch (e) {
+                log.warn("Error while disconnecting port", e)
+            }
+        }
+
+        // Create a new port connection
+        initPort()
+
+        // Set up listeners on the new port
+        port.onMessage.addListener(messageListener)
+        port.onDisconnect.addListener(disconectListener)
+
+        log.debug("Port reconnected successfully")
+    } catch (err) {
+        log.error("Failed to reconnect port", err)
+
+        // If reconnection fails, try again after a short delay
+        setTimeout(() => {
+            log.debug("Attempting port reconnection after failure")
+            isPortConnected = false
+            initialize()
+        }, 500)
+    }
 }
 
 const disconectListener = () => {
+    isPortConnected = false
     const error = chrome.runtime.lastError
     if (error) {
-        log.error("Port disconnected", error.message)
+        log.error("Port disconnected with error:", error.message)
+        console.error("Port disconnection error:", error.message)
     } else {
-        log.debug("Port disconnected")
+        log.debug("Port disconnected normally")
+        console.log("Port disconnected normally")
     }
 }
 
@@ -43,6 +70,7 @@ const messageListener = (data: TransportResponseMessage<MessageTypes>) => {
             window.close()
         } else {
             log.error("Unknown response", data)
+            console.error("Unknown response from background:", data)
         }
         return
     }
@@ -64,8 +92,11 @@ const messageListener = (data: TransportResponseMessage<MessageTypes>) => {
             err.message
                 .toLowerCase()
                 .includes("attempting to use a disconnected port object")
-        )
+        ) {
+            log.warn("Detected disconnected port error, attempting reconnection")
+            console.warn("Detected disconnected port error, attempting reconnection")
             portConnection()
+        }
         // Reject promise
         else handler.reject(err)
     } else {
@@ -77,19 +108,25 @@ const messageListener = (data: TransportResponseMessage<MessageTypes>) => {
  * Connect ports
  */
 const initPort = () => {
-    // Open port
-    port = chrome.runtime.connect({ name: Origin.EXTENSION })
+    try {
+        // Open port
+        port = chrome.runtime.connect({ name: Origin.EXTENSION })
 
-    // Override postMessage function
-    // port.postMessage = postMessageWithRetry(port.postMessage)
+        // Check for error
+        port.onDisconnect.addListener(disconectListener)
 
-    // Check for error
-    port.onDisconnect.addListener(disconectListener)
+        // Add port message listener
+        port.onMessage.addListener(messageListener)
 
-    // Add port message listener
-    port.onMessage.addListener(messageListener)
+        isPortConnected = true
+        log.debug("Port initialized successfully")
+    } catch (err) {
+        log.error("Failed to initialize port", err)
+        isPortConnected = false
 
-    isPortConnected = true
+        // Retry connection after a delay
+        setTimeout(initialize, 500)
+    }
 }
 
 /**

@@ -213,6 +213,7 @@ export const Messages = {
     BACKGROUND,
     DAPP,
     EXCHANGE,
+    BRIDGE,
     EXTERNAL,
     NETWORK,
     PASSWORD,
@@ -226,7 +227,6 @@ export const Messages = {
     ADDRESS_BOOK,
     BROWSER,
     FILTERS,
-    BRIDGE,
 }
 
 export enum TransactionStatus {

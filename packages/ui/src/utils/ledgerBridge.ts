@@ -51,9 +51,33 @@ class LedgerBridgeUI implements LedgerBridge {
         VERIFY_APP: "ledger_verify_ethereum_app"
     };
 
-    constructor() {
-        log.debug('Initialized UI-side LedgerBridge for communication with background');
-        console.log('[LEDGER] UI-side LedgerBridge initialized');
+    private static instance: LedgerBridgeUI | null = null;
+    private initialized = false;
+
+    private constructor() {
+        // Private constructor to enforce singleton
+    }
+
+    /**
+     * Get the singleton instance of LedgerBridgeUI
+     * This implements lazy initialization to avoid loading at startup
+     */
+    public static getInstance(): LedgerBridgeUI {
+        if (!LedgerBridgeUI.instance) {
+            LedgerBridgeUI.instance = new LedgerBridgeUI();
+        }
+        return LedgerBridgeUI.instance;
+    }
+
+    /**
+     * Initialize the bridge if it hasn't been initialized yet
+     */
+    private ensureInitialized(): void {
+        if (!this.initialized) {
+            log.debug('Initializing UI-side LedgerBridge for communication with background');
+            console.log('[LEDGER] UI-side LedgerBridge initialized');
+            this.initialized = true;
+        }
     }
 
     /**
@@ -61,6 +85,7 @@ class LedgerBridgeUI implements LedgerBridge {
      * @returns Promise resolving to a boolean indicating if connected
      */
     public async checkWebHIDStatus(): Promise<boolean> {
+        this.ensureInitialized();
         try {
             return sendMessage(this.MESSAGE_TYPES.CHECK_STATUS);
         } catch (error) {
@@ -74,6 +99,7 @@ class LedgerBridgeUI implements LedgerBridge {
      * @returns Promise resolving to true if connected
      */
     public async connectUsingWebHID(): Promise<boolean> {
+        this.ensureInitialized();
         try {
             return sendMessage(this.MESSAGE_TYPES.CONNECT);
         } catch (error) {
@@ -89,6 +115,7 @@ class LedgerBridgeUI implements LedgerBridge {
      * @returns Promise resolving to an array of addresses
      */
     public async getAccounts(pageIndex: number = 0, pageSize: number = 5): Promise<string[]> {
+        this.ensureInitialized();
         try {
             return sendMessage(this.MESSAGE_TYPES.GET_ACCOUNTS, { pageIndex, pageSize });
         } catch (error) {
@@ -103,6 +130,7 @@ class LedgerBridgeUI implements LedgerBridge {
      * @returns Promise resolving to an array of addresses
      */
     public async getMultipleAccounts(indexes: number[]): Promise<string[]> {
+        this.ensureInitialized();
         try {
             return sendMessage(this.MESSAGE_TYPES.GET_MULTIPLE_ACCOUNTS, { indexes });
         } catch (error) {
@@ -116,6 +144,7 @@ class LedgerBridgeUI implements LedgerBridge {
      * @returns Promise resolving to an object with appOpen boolean
      */
     public async verifyEthereumAppOpen(): Promise<{ appOpen: boolean }> {
+        this.ensureInitialized();
         try {
             return sendMessage(this.MESSAGE_TYPES.VERIFY_APP);
         } catch (error) {
@@ -125,4 +154,5 @@ class LedgerBridgeUI implements LedgerBridge {
     }
 }
 
-export const ledgerBridge = new LedgerBridgeUI(); 
+// Export a lazy-loaded singleton that will only be initialized when first used
+export const ledgerBridge = LedgerBridgeUI.getInstance();

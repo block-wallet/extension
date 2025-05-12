@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { yupResolver } from "@hookform/resolvers/yup"
 import { useForm } from "react-hook-form"
 import WaitingDialog, {
@@ -20,6 +20,7 @@ import Select from "../../components/input/Select"
 import AntiPhishing from "../../components/phishing/AntiPhishing"
 import PopupFooter from "../../components/popup/PopupFooter"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
+import Alert from "../../components/ui/Alert"
 
 const importAccountSchema = yup.object({
     privateKey: yup
@@ -43,6 +44,8 @@ const ImportAccountPage = () => {
     const state = useBlankState()!
     const { suggestedAccountName, checkAccountNameAvailablility } =
         useNewAccountHelper()
+    const [discoveryError, setDiscoveryError] = useState<string>("")
+    const [retryAttempts, setRetryAttempts] = useState<number>(0)
 
     const {
         register,
@@ -85,6 +88,9 @@ const ImportAccountPage = () => {
                 return
             }
 
+            // Reset any previous discovery errors
+            setDiscoveryError("")
+
             //run always receives a promise
             await run(
                 new Promise(async (resolve, reject) => {
@@ -95,8 +101,15 @@ const ImportAccountPage = () => {
                         )
                         await selectAccount(newAccount.address)
                         resolve(true)
-                    } catch (e) {
-                        reject(e)
+                    } catch (e: any) {
+                        // Check if this is a port disconnection error
+                        if (e.message && e.message.toLowerCase().includes("attempting to use a disconnected port object")) {
+                            // Set a more user-friendly error message
+                            setDiscoveryError("Communication with the extension was interrupted. Please try again.")
+                            reject(e)
+                        } else {
+                            reject(e)
+                        }
                     }
                 })
             )
@@ -154,6 +167,18 @@ const ImportAccountPage = () => {
         }
     }, [isLoading, isSuccess, isError, dispatch])
 
+    // Function to retry the import when there's a port connection error
+    const handleRetry = () => {
+        setRetryAttempts(prev => prev + 1)
+        setDiscoveryError("")
+        // Wait for 500ms to ensure connection is reestablished
+        setTimeout(() => {
+            // Get current form values and resubmit manually
+            const currentValues = watch();
+            onSubmit(currentValues as any);
+        }, 500)
+    }
+
     return (
         <PopupLayout header={<PopupHeader title="Import External Account" />}>
             <WaitingDialog
@@ -181,6 +206,23 @@ const ImportAccountPage = () => {
                 timeout={1100}
             />
             <div className="flex flex-col flex-1 w-full">
+                {discoveryError && (
+                    <div className="px-6 pt-6">
+                        <Alert type="error" className="mb-4">
+                            <div className="flex flex-col">
+                                <span><strong>Discovery Error:</strong> {discoveryError}</span>
+                                {retryAttempts < 3 && (
+                                    <button
+                                        onClick={handleRetry}
+                                        className="text-red-700 underline font-medium mt-2 self-end"
+                                    >
+                                        Retry
+                                    </button>
+                                )}
+                            </div>
+                        </Alert>
+                    </div>
+                )}
                 <form
                     className="flex flex-col justify-between flex-1 h-full"
                     onSubmit={onSubmit}
@@ -237,6 +279,7 @@ const ImportAccountPage = () => {
                             type="submit"
                             isLoading={isLoading}
                             label="Import"
+                            disabled={retryAttempts >= 3 && !!discoveryError}
                         ></ButtonWithLoading>
                     </PopupFooter>
                 </form>

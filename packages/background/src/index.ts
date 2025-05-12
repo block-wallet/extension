@@ -154,16 +154,28 @@ const initBlockWallet = async () => {
         devTools,
     });
 
-    // After initializing blankController, restore hardware wallet connections if needed
+    // After initializing blankController, check if we're in hardware wallet mode
+    // and only restore hardware wallet connections if needed
     if (isManifestV3()) {
-        // Run immediately and don't wait for promises to complete
-        // This ensures restoration happens as early as possible
-        log.info('Starting hardware wallet state restoration...');
-        setTimeout(() => {
-            restoreHardwareWalletConnections(blankController).catch(error => {
-                log.error('Failed to restore hardware wallet connections:', error);
-            });
-        }, 0);
+        // Check for hardware wallet mode
+        if (chrome.storage?.session) {
+            try {
+                const sessionData = await chrome.storage.session.get(['current_wallet_operation']);
+                if (sessionData.current_wallet_operation === 'hardware_wallet') {
+                    // Only run hardware wallet restoration in hardware wallet mode
+                    log.info('In hardware wallet mode - starting state restoration...');
+                    setTimeout(() => {
+                        restoreHardwareWalletConnections(blankController).catch(error => {
+                            log.error('Failed to restore hardware wallet connections:', error);
+                        });
+                    }, 0);
+                } else {
+                    log.debug('Not in hardware wallet mode - skipping hardware wallet initialization');
+                }
+            } catch (error) {
+                log.error('Error checking for hardware wallet mode:', error);
+            }
+        }
     }
 
     // Clear badge on init
@@ -415,6 +427,29 @@ if (isManifestV3()) {
  * 3. Mark states that require user interaction for the UI to handle
  */
 async function restoreHardwareWalletConnections(blankController: BlankController): Promise<void> {
+    // Check if we're currently in a hardware wallet flow before proceeding
+    // This prevents unnecessary initialization during regular wallet operations
+    try {
+        if (chrome.storage?.session) {
+            const sessionData = await chrome.storage.session.get(['current_wallet_operation']);
+            // Only initialize hardware wallet functionality if we're explicitly in a hardware wallet flow
+            if (!sessionData.current_wallet_operation || sessionData.current_wallet_operation !== 'hardware_wallet') {
+                log.debug('Skipping hardware wallet initialization - not in hardware wallet flow');
+                return;
+            }
+
+            log.info('Hardware wallet mode detected, initializing hardware wallet functionality');
+        } else {
+            // If session storage isn't available, we can't check the mode
+            log.debug('Session storage not available, skipping hardware wallet check');
+            return;
+        }
+    } catch (e) {
+        log.error('Error checking current wallet operation:', e);
+        // Skip initialization as a precaution
+        return;
+    }
+
     try {
         log.info('Starting hardware wallet state restoration...');
 

@@ -5,7 +5,7 @@ import Divider from "../../components/Divider"
 import { Classes, classnames } from "../../styles/classes"
 
 import importSeedIcon from "../../assets/images/icons/import_seed.svg"
-
+import privateKeyIcon from "../../assets/images/icons/key.svg"
 import newAccountIcon from "../../assets/images/icons/new_account.svg"
 import PageLayout from "../../components/PageLayout"
 import { useCheckUserIsOnboarded } from "../../context/hooks/useCheckUserIsOnboarded"
@@ -47,13 +47,20 @@ const SetupPage = () => {
                 How do you want to proceed?
             </span>
             <Divider />
-            <div className="flex flex-col w-full p-6 space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full p-6">
                 <SetupOption
                     title="Use your seed phrase"
                     description="Access your existing wallets and accounts using a seed phrase."
                     icon={importSeedIcon}
                     linkTo="/setup/import"
                     linkLabel="Import your wallet"
+                />
+                <SetupOption
+                    title="Import from private key"
+                    description="Import a single account using a private key."
+                    icon={privateKeyIcon}
+                    linkTo="/setup/import-private-key"
+                    linkLabel="Import with private key"
                 />
                 <SetupOption
                     title="Create a new account"

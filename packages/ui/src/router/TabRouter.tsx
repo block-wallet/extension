@@ -5,6 +5,7 @@ import BackupConfirmPage from "../routes/setup/BackupConfirmPage"
 import BackupNoticePage from "../routes/setup/BackupNoticePage"
 import PasswordSetupPage from "../routes/setup/PasswordSetupPage"
 import SeedImportPage from "../routes/setup/SeedImportPage"
+import PrivateKeyImportPage from "../routes/setup/PrivateKeyImportPage"
 import SetupDonePage from "../routes/setup/SetupDonePage"
 import SetupPage from "../routes/setup/SetupPage"
 import ResetPage from "../routes/setup/ResetPage"
@@ -24,6 +25,7 @@ const introRoutes = makeRoutes([
     { path: "/intro", exact: true, component: IntroductionPage },
     { path: "/setup", exact: true, component: SetupPage },
     { path: "/setup/import", exact: true, component: SeedImportPage },
+    { path: "/setup/import-private-key", exact: true, component: PrivateKeyImportPage },
     { path: "/setup/create", exact: true, component: PasswordSetupPage },
     { path: "/setup/create/notice", exact: true, component: BackupNoticePage },
     { path: "/setup/create/verify", exact: true, component: BackupConfirmPage },

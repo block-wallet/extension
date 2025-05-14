@@ -17,23 +17,27 @@ const SetupOption: FunctionComponent<{
     linkTo: string
     linkLabel: string
 }> = ({ title, description, icon, linkTo, linkLabel }) => (
-    <div className="relative flex flex-col items-center border rounded flex-1 p-6 ">
-        <img
-            src={icon}
-            alt="icon"
-            className="mb-4 text-4xl text-primary-grey-dark w-8 h-8"
-        />
-        <span className="text-sm font-semibold">{title}</span>
-        <span className="h-16 mt-4 text-xs text-primary-grey-dark text-center">
-            {description}
-        </span>
-        <Link
-            to={linkTo}
-            className={classnames(Classes.button, "w-full")}
-            draggable={false}
-        >
-            {linkLabel}
-        </Link>
+    <div className="relative flex flex-col items-center border rounded flex-1 p-6 h-[320px]">
+        <div className="flex flex-col items-center flex-grow">
+            <img
+                src={icon}
+                alt="icon"
+                className="mb-4 text-4xl text-primary-grey-dark w-8 h-8"
+            />
+            <span className="text-sm font-semibold mb-4">{title}</span>
+            <span className="text-xs text-primary-grey-dark text-center mb-auto">
+                {description}
+            </span>
+        </div>
+        <div className="w-full mt-6">
+            <Link
+                to={linkTo}
+                className={classnames(Classes.button, "w-full h-12 flex items-center justify-center")}
+                draggable={false}
+            >
+                {linkLabel}
+            </Link>
+        </div>
     </div>
 )
 
@@ -43,7 +47,7 @@ const SetupPage = () => {
 
     return (
         <PageLayout header className="relative">
-            <span className="my-6 text-lg font-semibold  ">
+            <span className="my-6 text-lg font-semibold">
                 How do you want to proceed?
             </span>
             <Divider />

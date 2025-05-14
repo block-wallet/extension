@@ -17,6 +17,14 @@ import log from "loglevel"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { useCheckUserIsOnboarded } from "../../context/hooks/useCheckUserIsOnboarded"
 
+// Define step labels for the create wallet flow
+export const CREATE_WALLET_STEP_LABELS = [
+    "Create Password",
+    "Backup Secret Phrase",
+    "Verify Secret Phrase",
+    "Setup Complete"
+]
+
 const schema = yup.object().shape({
     password: yup
         .string()
@@ -113,7 +121,14 @@ const PasswordSetupPage = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [passwordValues.password, trigger])
     return (
-        <PageLayout header maxWidth="max-w-md">
+        <PageLayout
+            header
+            maxWidth="max-w-md"
+            withSteps={true}
+            currentStep={1}
+            totalSteps={4}
+            stepLabels={CREATE_WALLET_STEP_LABELS}
+        >
             <span className="my-6 text-lg font-semibold">
                 Create a Password
             </span>

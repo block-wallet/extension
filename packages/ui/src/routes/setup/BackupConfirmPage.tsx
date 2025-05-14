@@ -16,6 +16,7 @@ import { useBlankState } from "../../context/background/backgroundHooks"
 import { closeCurrentTab } from "../../util/window"
 import IdleComponent from "../../components/IdleComponent"
 import PopupLayout from "../../components/popup/PopupLayout"
+import { CREATE_WALLET_STEP_LABELS } from "./PasswordSetupPage"
 
 export interface SeedPhraseWord {
     word: string
@@ -192,7 +193,10 @@ const BackupConfirmPage = () => {
             if (isSeedPhraseVerified) {
                 setVerificationError("")
                 setIsVerificationInProgress(false)
-                history.push({ pathname: doneLink })
+                history.push({
+                    pathname: doneLink,
+                    state: { from: "wallet_creation" }
+                })
             } else {
                 setVerificationError("Verification failed")
             }
@@ -236,6 +240,10 @@ const BackupConfirmPage = () => {
                     header={!isReminder}
                     maxWidth={isReminder ? "" : "max-w-md"}
                     className={"text-center"}
+                    withSteps={!isReminder}
+                    currentStep={3}
+                    totalSteps={4}
+                    stepLabels={CREATE_WALLET_STEP_LABELS}
                 >
                     <span className="font-semibold my-6   text-lg">
                         Confirm Secret Phrase
@@ -269,7 +277,7 @@ const BackupConfirmPage = () => {
                                 "font-semibold border-2 border-primary-blue-default max-w-[170px]",
                                 (!isPhraseValid() ||
                                     isVerificationInProgress) &&
-                                    "opacity-50 pointer-events-none"
+                                "opacity-50 pointer-events-none"
                             )}
                             onClick={confirmSeedPhrase}
                         >

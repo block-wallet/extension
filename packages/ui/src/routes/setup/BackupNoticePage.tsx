@@ -18,6 +18,7 @@ import ClickToReveal from "../../components/label/ClickToReveal"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { closeCurrentTab } from "../../util/window"
 import IdleComponent from "../../components/IdleComponent"
+import { CREATE_WALLET_STEP_LABELS } from "./PasswordSetupPage"
 
 const SideTips = () => (
     <div className="flex space-x-8 w-full text-sm text-left text-primary-black-default">
@@ -62,7 +63,15 @@ const BackupNoticePage = () => {
 
     return (
         <IdleComponent>
-            <PageLayout header maxWidth="max-w-[800px]" className="text-center">
+            <PageLayout
+                header
+                maxWidth="max-w-[800px]"
+                className="text-center"
+                withSteps={true}
+                currentStep={2}
+                totalSteps={4}
+                stepLabels={CREATE_WALLET_STEP_LABELS}
+            >
                 <span className="my-6 text-lg font-semibold">
                     Secret Phrase
                 </span>
@@ -80,6 +89,7 @@ const BackupNoticePage = () => {
                         revealMessage={"Click here to reveal secret words"}
                         revealed={revealed}
                         onClick={() => setRevealed(true)}
+                        allowDownload={true}
                     />
                 </div>
                 <Divider />

@@ -12,6 +12,7 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 
 import logo from "../../assets/images/logo.svg"
 import { LINKS } from "../../util/constants"
+import { CREATE_WALLET_STEP_LABELS } from "./PasswordSetupPage"
 
 const links = [
     {
@@ -42,6 +43,10 @@ const SetupDonePage = () => {
         completeSetup(sendNotification)
     }, [history])
 
+    // Determine if we are coming from the wallet creation flow
+    const isFromWalletCreation = history.location?.state?.from === "wallet_creation" ||
+        history.location?.pathname?.includes("/setup/create");
+
     const config = {
         angle: 90,
         spread: 360,
@@ -60,7 +65,15 @@ const SetupDonePage = () => {
             <div className="absolute w-full h-full flex flex-row items-center justify-center overflow-hidden z-10">
                 <Confetti active={confettiActive} config={config} />
             </div>
-            <PageLayout header centered className="relative overflow-hidden">
+            <PageLayout
+                header
+                centered
+                className="relative overflow-hidden"
+                withSteps={isFromWalletCreation}
+                currentStep={4}
+                totalSteps={4}
+                stepLabels={CREATE_WALLET_STEP_LABELS}
+            >
                 <div className="flex flex-col items-center relative py-14 z-10">
                     <div className="flex flex-col items-center my-12 space-y-6">
                         <span className="font-bold text-5xl text-center">

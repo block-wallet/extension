@@ -2,5 +2,13 @@
 	"recommendations": [
 		"esbenp.prettier-vscode",
 		"eamodio.gitlens",
+		"dbaeumer.vscode-eslint",
+		"ms-vscode.vscode-typescript-next",
+		"csstools.postcss",
+		"mikestead.dotenv",
+		"wix.vscode-import-cost",
+		"orta.vscode-jest",
+		"christian-kohler.path-intellisense",
+		"bradlc.vscode-tailwindcss"
 	]
 }

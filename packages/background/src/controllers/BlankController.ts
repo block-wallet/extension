@@ -256,6 +256,7 @@ import OnrampController from './OnrampController';
 import { Devices } from '../utils/types/hardware';
 // Import KeyringTypes
 import { KeyringTypes } from './KeyringControllerDerivated';
+import { PortfolioAnalyticsController, PortfolioAnalyticsEvents } from './PortfolioAnalyticsController';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -299,6 +300,7 @@ export default class BlankController extends EventEmitter {
     private readonly campaignsController: CampaignsController;
     private readonly notificationController: NotificationController;
     private readonly onrampController: OnrampController;
+    private readonly portfolioAnalyticsController: PortfolioAnalyticsController;
 
     // Stores
     private readonly store: ComposedStore<BlankAppState>;
@@ -497,6 +499,14 @@ export default class BlankController extends EventEmitter {
 
         this.onrampController = new OnrampController(this.networkController);
 
+        this.portfolioAnalyticsController = new PortfolioAnalyticsController(
+            this.accountTrackerController,
+            this.exchangeRatesController,
+            this.preferencesController,
+            this.networkController,
+            initState.PortfolioAnalyticsController
+        );
+
         this.notificationController = new NotificationController(
             this.preferencesController,
             this.transactionWatcherController,
@@ -527,6 +537,7 @@ export default class BlankController extends EventEmitter {
                 this.transactionWatcherController.store,
             BridgeController: this.bridgeController.store,
             CampaignsController: this.campaignsController.store,
+            PortfolioAnalyticsController: this.portfolioAnalyticsController.store,
         });
 
         this.UIStore = new ComposedStore<BlankAppUIState>({
@@ -1237,6 +1248,10 @@ export default class BlankController extends EventEmitter {
                 return this.discoverAccountsFromSeed(
                     request as RequestDiscoverAccountsFromSeed
                 );
+            case Messages.PORTFOLIO.GET_ANALYTICS:
+                return this.getPortfolioAnalytics();
+            case Messages.PORTFOLIO.REFRESH_ANALYTICS:
+                return this.refreshPortfolioAnalytics();
             default:
                 throw new Error(`Unable to handle message of type ${type}`);
         }
@@ -3782,5 +3797,19 @@ export default class BlankController extends EventEmitter {
             }
             throw new Error("Failed to discover accounts from the provided seed phrase.");
         }
+    }
+
+    /**
+     * Gets portfolio analytics data
+     */
+    private async getPortfolioAnalytics() {
+        return this.portfolioAnalyticsController.getAnalytics();
+    }
+
+    /**
+     * Refreshes portfolio analytics data
+     */
+    private async refreshPortfolioAnalytics(): Promise<void> {
+        return this.portfolioAnalyticsController.refreshAnalytics();
     }
 }

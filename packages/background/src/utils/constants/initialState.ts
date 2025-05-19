@@ -52,6 +52,7 @@ import { RemoteConfigsControllerState } from '@block-wallet/background/controlle
 import CACHED_INCOMPATIBLE_SITES from '@block-wallet/remote-configs/provider/incompatible_sites.json';
 import { CampaignsControllerState } from '@block-wallet/background/controllers/CampaignsController';
 import { OnrampControllerMemState } from '@block-wallet/background/controllers/OnrampController';
+import { PortfolioAnalyticsState } from '../../controllers/PortfolioAnalyticsController';
 
 export type BlankAppState = {
     AccountTrackerController: AccountTrackerState;
@@ -73,6 +74,7 @@ export type BlankAppState = {
     BridgeController: BridgeControllerState;
     RemoteConfigsController: RemoteConfigsControllerState;
     CampaignsController: CampaignsControllerState;
+    PortfolioAnalyticsController: PortfolioAnalyticsState;
 };
 
 export type BlankAppUIState = {
@@ -266,6 +268,12 @@ const initialState: BlankAppState = {
         provider: {
             incompatibleSites: CACHED_INCOMPATIBLE_SITES,
         },
+    },
+    PortfolioAnalyticsController: {
+        snapshots: [],
+        lastSnapshotTime: 0,
+        isTrackingEnabled: true,
+        retentionDays: 365,
     },
 };
 

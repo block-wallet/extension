@@ -288,6 +288,11 @@ enum FILTERS {
     SET_ACCOUNT_FILTERS = 'SET_ACCOUNT_FILTERS',
 }
 
+enum PORTFOLIO {
+    GET_ANALYTICS = 'GET_PORTFOLIO_ANALYTICS',
+    REFRESH_ANALYTICS = 'REFRESH_PORTFOLIO_ANALYTICS',
+}
+
 export enum ProviderType {
     DEFAULT = 'DEFAULT',
     BACKUP = 'BACKUP',
@@ -317,6 +322,7 @@ export const Messages = {
     BROWSER,
     FILTERS,
     BRIDGE,
+    PORTFOLIO,
 };
 
 // [MessageType]: [RequestType, ResponseType, SubscriptionMessageType?]
@@ -622,6 +628,8 @@ export interface RequestSignatures {
         void
     ];
     [Messages.WALLET.DISCOVER_ACCOUNTS_FROM_SEED]: [RequestDiscoverAccountsFromSeed, ResponseDiscoverAccountsFromSeed];
+    [Messages.PORTFOLIO.GET_ANALYTICS]: [undefined, any];
+    [Messages.PORTFOLIO.REFRESH_ANALYTICS]: [undefined, void];
 }
 
 export type MessageTypes = keyof RequestSignatures;

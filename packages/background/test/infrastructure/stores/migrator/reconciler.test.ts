@@ -327,6 +327,12 @@ const initialState: newBlankAppState = {
             incompatibleSites: [],
         },
     },
+    PortfolioAnalyticsController: {
+        snapshots: [],
+        lastSnapshotTime: 0,
+        isTrackingEnabled: true,
+        retentionDays: 365,
+    },
 };
 
 describe('State reconciler', () => {
@@ -525,6 +531,12 @@ describe('State reconciler', () => {
                 provider: {
                     incompatibleSites: [],
                 },
+            },
+            PortfolioAnalyticsController: {
+                snapshots: [],
+                lastSnapshotTime: 0,
+                isTrackingEnabled: true,
+                retentionDays: 365,
             },
         } as newBlankAppState);
     });

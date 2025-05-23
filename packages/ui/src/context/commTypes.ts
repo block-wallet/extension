@@ -206,6 +206,12 @@ enum FILTERS {
     SET_ACCOUNT_FILTERS = "SET_ACCOUNT_FILTERS",
 }
 
+// Portfolio analytics messages
+enum PORTFOLIO {
+    GET_ANALYTICS = "GET_PORTFOLIO_ANALYTICS",
+    REFRESH_ANALYTICS = "REFRESH_PORTFOLIO_ANALYTICS",
+}
+
 export const Messages = {
     ADDRESS,
     ACCOUNT,
@@ -227,6 +233,7 @@ export const Messages = {
     ADDRESS_BOOK,
     BROWSER,
     FILTERS,
+    PORTFOLIO,
 }
 
 export enum TransactionStatus {

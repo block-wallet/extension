@@ -1907,3 +1907,17 @@ export const discoverAccountsFromSeed = async (
         password,
     });
 };
+
+/**
+ * Gets portfolio analytics data
+ */
+export const getPortfolioAnalytics = async () => {
+    return sendMessage(Messages.PORTFOLIO.GET_ANALYTICS)
+}
+
+/**
+ * Refreshes portfolio analytics data
+ */
+export const refreshPortfolioAnalytics = async (): Promise<void> => {
+    return sendMessage(Messages.PORTFOLIO.REFRESH_ANALYTICS)
+}

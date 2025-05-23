@@ -63,6 +63,7 @@ import BuyPage from "../routes/buy/BuyPage"
 import Hotkeys from "../routes/settings/Hotkeys"
 import TokensPage from "../routes/tokens/TokensPage"
 import AccountsOrderPage from "../routes/account/AccountsOrderPage"
+import PortfolioAnalyticsPage from "../routes/portfolio/PortfolioAnalyticsPage"
 
 export const ROUTES_DEFINITION = [
     /* Root */
@@ -281,6 +282,8 @@ export const ROUTES_DEFINITION = [
     { path: "/welcome", exact: true, component: WelcomeInfo },
     /* Buy */
     { path: "/buy", exact: true, component: BuyPage },
+    /* Portfolio Analytics */
+    { path: "/portfolio", exact: true, component: PortfolioAnalyticsPage },
 ] as TransitionRouteProps[]
 
 export const appRoutes = makeRoutes(ROUTES_DEFINITION)

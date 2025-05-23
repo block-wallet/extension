@@ -113,9 +113,9 @@ const DAppConnection = () => {
                 className={classnames(
                     "relative flex flex-row items-center py-1  text-primary-grey-dark rounded-md group border-primary-200  text-xs cursor-pointer",
                     dAppConnected === "connected" &&
-                        "pl-2 pr-1 bg-green-100 hover:border-green-300",
+                    "pl-2 pr-1 bg-green-100 hover:border-green-300",
                     dAppConnected === "connected-warning" &&
-                        "pl-2 pr-1 bg-yellow-100 hover:border-yellow-300",
+                    "pl-2 pr-1 bg-yellow-100 hover:border-yellow-300",
                     dAppConnected === "not-connected" && "pointer-events-none"
                 )}
             >
@@ -138,9 +138,9 @@ const DAppConnection = () => {
                     className={classnames(
                         "mr-1 pointer-events-none",
                         dAppConnected === "connected" &&
-                            "text-secondary-green-default",
+                        "text-secondary-green-default",
                         dAppConnected === "connected-warning" &&
-                            "text-yellow-600"
+                        "text-yellow-600"
                     )}
                 >
                     {dAppConnected === "not-connected"
@@ -371,11 +371,10 @@ const PopupPage = () => {
                                     ? "Net Worth"
                                     : nativeCurrencyAmount}
                                 <div
-                                    title={`Switch to ${
-                                        displayNetWorth
-                                            ? "Native Token"
-                                            : "Net Worth"
-                                    }`}
+                                    title={`Switch to ${displayNetWorth
+                                        ? "Native Token"
+                                        : "Net Worth"
+                                        }`}
                                     className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                                     onClick={() => {
                                         setUserSettings({
@@ -497,6 +496,34 @@ const PopupPage = () => {
                                     </span>
                                 </Link>
                             )}
+                            <Link
+                                to="/portfolio"
+                                draggable={false}
+                                className="flex flex-col items-center space-y-2 group"
+                            >
+                                <div className="w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75 bg-primary-blue-default">
+                                    {isLoading ? (
+                                        <div className="flex flex-row items-center justify-center w-full h-full">
+                                            <AnimatedIcon
+                                                icon={
+                                                    AnimatedIconName.BlueCircleLoadingSkeleton
+                                                }
+                                                className="w-4 h-4 pointer-events-none"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-center w-full h-full">
+                                            <AnimatedIcon
+                                                icon={AnimatedIconName.PortfolioAnalytics}
+                                                className="cursor-pointer w-5 h-5"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                                <span className="text-[13px] font-medium">
+                                    Portfolio
+                                </span>
+                            </Link>
                             {isBridgeEnabled && (
                                 <Link
                                     to="/bridge"

@@ -69,7 +69,7 @@ const PortfolioMetricsCard: React.FC<PortfolioMetricsCardProps> = ({
 
     return (
         <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="mb-6">
+            <div className="mb-6 text-center">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
                     Portfolio Overview
                 </h2>

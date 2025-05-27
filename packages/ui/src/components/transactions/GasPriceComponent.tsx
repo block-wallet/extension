@@ -1,4 +1,4 @@
-import { FunctionComponent, useRef, useState, useEffect, useMemo } from "react"
+import { FunctionComponent, useRef, useState, useEffect, useMemo, memo } from "react"
 import classnames from "classnames"
 import { BigNumber } from "@ethersproject/bignumber"
 
@@ -943,4 +943,5 @@ const GasPriceComponent: FunctionComponent<{
         )
     }
 
-export default GasPriceComponent
+// OPTIMIZED: Wrapped with React.memo to prevent unnecessary re-renders of this complex component
+export default memo(GasPriceComponent)

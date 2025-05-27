@@ -1,6 +1,6 @@
 import { BigNumber } from "@ethersproject/bignumber"
 import { formatUnits } from "@ethersproject/units"
-import { FunctionComponent, useMemo } from "react"
+import { FunctionComponent, useMemo, memo } from "react"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { getAccountColor } from "../../util/getAccountColor"
 import Divider from "../Divider"
@@ -535,4 +535,5 @@ export const TransactionDetailsBasic: FunctionComponent<
     )
 }
 
-export default TransactionDetailsBasic
+// OPTIMIZED: Wrapped with React.memo to prevent unnecessary re-renders
+export default memo(TransactionDetailsBasic)

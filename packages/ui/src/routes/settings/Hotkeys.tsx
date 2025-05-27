@@ -14,7 +14,7 @@ import Divider from "../../components/Divider"
 import { DisplayHotkey } from "../../components/hotkeys/DisplayHotkey"
 import { getCurrentOS } from "../../context/util/platform"
 
-const LockTimeout = () => {
+const Hotkeys = () => {
     const history = useOnMountHistory()!
     const hotkeysEnabledCurrentStatus = useBlankState()?.hotkeysEnabled ?? false
     const [hotkeysEnabled, setHotkeysAllowed] = useState(
@@ -175,4 +175,4 @@ const LockTimeout = () => {
     )
 }
 
-export default LockTimeout
+export default Hotkeys

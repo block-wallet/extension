@@ -1,6 +1,7 @@
 import { ledgerBridge } from './ledgerBridge';
 import log from 'loglevel';
 import { Mutex } from 'async-mutex';
+import { storage } from './storage/OptimizedStorage';
 
 /**
  * Defines the possible states of a Ledger connection
@@ -432,7 +433,7 @@ export class LedgerConnectionManager {
     }
 
     /**
-     * Persist app status to storage
+     * Persist app status to storage (OPTIMIZED with batching)
      * @param isOpen Whether the Ethereum app is open
      */
     private async persistAppStatus(isOpen: boolean): Promise<void> {
@@ -441,16 +442,14 @@ export class LedgerConnectionManager {
         const appStatusKey = this.config.storageKeys?.ethereumAppStatus || 'ledger_eth_app_status';
 
         try {
-            await chrome.storage.session.set({
-                [appStatusKey]: {
-                    open: isOpen,
-                    timestamp: Date.now(),
-                    device: 'LEDGER',
-                    source: 'offscreen_verification_success',
-                    message: isOpen
-                        ? 'Ethereum app is open and ready'
-                        : 'Please open the Ethereum app on your Ledger device'
-                }
+            await storage.session.set(appStatusKey, {
+                open: isOpen,
+                timestamp: Date.now(),
+                device: 'LEDGER',
+                source: 'offscreen_verification_success',
+                message: isOpen
+                    ? 'Ethereum app is open and ready'
+                    : 'Please open the Ethereum app on your Ledger device'
             });
             console.log(`Stored Ethereum app status (open: ${isOpen}) in session storage`);
         } catch (e) {
@@ -627,51 +626,61 @@ export class LedgerConnectionManager {
 
             const statusKey = this.config.storageKeys?.connectionStatus || 'ledger_connection_status';
             const appStatusKey = this.config.storageKeys?.ethereumAppStatus || 'ledger_eth_app_status';
+            const timestamp = Date.now();
 
-            // Store connection status in session storage (temporary)
-            if (chrome.storage.session) {
-                await chrome.storage.session.set({
-                    [statusKey]: {
-                        connected: this.state === LedgerConnectionState.CONNECTED ||
-                            this.state === LedgerConnectionState.WAITING_FOR_APP ||
-                            this.state === LedgerConnectionState.APP_OPEN,
-                        appOpen: this.state === LedgerConnectionState.APP_OPEN,
-                        state: this.state,
-                        timestamp: Date.now(),
-                        transportType: this.connectionInfo.transportType,
-                        error: this.connectionInfo.error,
-                    }
-                });
+            const connectionData = {
+                connected: this.state === LedgerConnectionState.CONNECTED ||
+                    this.state === LedgerConnectionState.WAITING_FOR_APP ||
+                    this.state === LedgerConnectionState.APP_OPEN,
+                appOpen: this.state === LedgerConnectionState.APP_OPEN,
+                state: this.state,
+                timestamp,
+                transportType: this.connectionInfo.transportType,
+                error: this.connectionInfo.error,
+            };
 
-                // Store Ethereum app status
-                if (this.connectionInfo.appOpen !== undefined) {
-                    await chrome.storage.session.set({
-                        [appStatusKey]: {
-                            open: this.connectionInfo.appOpen,
-                            timestamp: this.connectionInfo.lastAppCheck || Date.now(),
-                            device: 'LEDGER',
-                            message: this.connectionInfo.appOpen
-                                ? 'Ethereum app is open and ready'
-                                : 'Please open the Ethereum app on your Ledger device'
-                        }
-                    });
+            // OPTIMIZED: Batch session storage operations
+            const sessionData: Record<string, any> = {
+                [statusKey]: connectionData
+            };
+
+            // Add Ethereum app status to session batch if available
+            if (this.connectionInfo.appOpen !== undefined) {
+                sessionData[appStatusKey] = {
+                    open: this.connectionInfo.appOpen,
+                    timestamp: this.connectionInfo.lastAppCheck || timestamp,
+                    device: 'LEDGER',
+                    message: this.connectionInfo.appOpen
+                        ? 'Ethereum app is open and ready'
+                        : 'Please open the Ethereum app on your Ledger device'
+                };
+            }
+
+            // OPTIMIZED: Batch local storage operations
+            const localData: Record<string, any> = {
+                [`${statusKey}_persistent`]: {
+                    connected: connectionData.connected,
+                    appOpen: connectionData.appOpen,
+                    state: this.state,
+                    timestamp,
+                    transportType: this.connectionInfo.transportType,
                 }
+            };
+
+            // Execute batched storage operations in parallel
+            const storagePromises = [];
+
+            if (chrome.storage.session) {
+                storagePromises.push(storage.session.setMultiple(sessionData));
             }
 
-            // Also store critical data in local storage for persistence across restarts
             if (chrome.storage.local) {
-                await chrome.storage.local.set({
-                    [`${statusKey}_persistent`]: {
-                        connected: this.state === LedgerConnectionState.CONNECTED ||
-                            this.state === LedgerConnectionState.WAITING_FOR_APP ||
-                            this.state === LedgerConnectionState.APP_OPEN,
-                        appOpen: this.state === LedgerConnectionState.APP_OPEN,
-                        state: this.state,
-                        timestamp: Date.now(),
-                        transportType: this.connectionInfo.transportType,
-                    }
-                });
+                storagePromises.push(storage.local.setMultiple(localData));
             }
+
+            // Wait for all storage operations to complete
+            await Promise.all(storagePromises);
+
         } catch (error) {
             log.error('Error persisting Ledger state to storage:', error);
         }

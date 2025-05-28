@@ -1,4 +1,5 @@
 import log from 'loglevel';
+import { hardwareWalletCache } from './hardware/HardwareWalletCache';
 
 export interface ResourceConfig {
     maxMemoryThreshold: number; // MB
@@ -13,6 +14,12 @@ export interface PerformanceMetrics {
     hardwareWalletOperations: number;
     storageOperations: number;
     lastCleanup: number;
+    hardwareWalletCacheStats?: {
+        hits: number;
+        misses: number;
+        hitRate: number;
+        totalEntries: number;
+    };
 }
 
 /**
@@ -120,6 +127,15 @@ export class ServiceWorkerResourceManager {
 
         // Remove old event listeners
         this.cleanEventListeners();
+
+        // Hardware wallet cache doesn't need explicit cleanup (has auto cleanup)
+        // But we'll log its stats for monitoring
+        try {
+            const hwCacheStats = hardwareWalletCache.getStats();
+            log.debug(`Hardware wallet cache stats - Entries: ${hwCacheStats.deviceInfoEntries + hwCacheStats.connectionStateEntries + hwCacheStats.addressCacheEntries}, Hit rate: ${hwCacheStats.hitRate.toFixed(1)}%`);
+        } catch (error) {
+            log.warn('Failed to get hardware wallet cache stats:', error);
+        }
 
         this.metrics.lastCleanup = now;
         log.debug('Resource cleanup completed');
@@ -366,7 +382,26 @@ export class ServiceWorkerResourceManager {
      */
     public getMetrics(): PerformanceMetrics {
         this.updateMemoryMetrics();
-        return { ...this.metrics };
+
+        // Include hardware wallet cache statistics
+        let hardwareWalletCacheStats;
+        try {
+            const cacheStats = hardwareWalletCache.getStats();
+            hardwareWalletCacheStats = {
+                hits: cacheStats.hits,
+                misses: cacheStats.misses,
+                hitRate: cacheStats.hitRate,
+                totalEntries: cacheStats.deviceInfoEntries + cacheStats.connectionStateEntries +
+                             cacheStats.addressCacheEntries + cacheStats.appStatusEntries
+            };
+        } catch (error) {
+            log.warn('Failed to get hardware wallet cache stats for metrics:', error);
+        }
+
+        return {
+            ...this.metrics,
+            hardwareWalletCacheStats
+        };
     }
 
     /**
@@ -383,6 +418,14 @@ export class ServiceWorkerResourceManager {
 
         // Remove event listeners
         this.eventListeners.clear();
+
+        // Cleanup hardware wallet cache
+        try {
+            hardwareWalletCache.cleanup();
+            log.debug('Hardware wallet cache cleaned up');
+        } catch (error) {
+            log.warn('Failed to cleanup hardware wallet cache:', error);
+        }
 
         log.info('ServiceWorkerResourceManager cleanup completed');
     }

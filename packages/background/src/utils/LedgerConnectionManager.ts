@@ -2,6 +2,8 @@ import { ledgerBridge } from './ledgerBridge';
 import log from 'loglevel';
 import { Mutex } from 'async-mutex';
 import { storage } from './storage/OptimizedStorage';
+import { hardwareWalletCache } from './hardware/HardwareWalletCache';
+import { Devices } from './types/hardware';
 
 /**
  * Defines the possible states of a Ledger connection
@@ -458,10 +460,17 @@ export class LedgerConnectionManager {
     }
 
     /**
-     * Helper method to check if the Ethereum app is open
+     * Helper method to check if the Ethereum app is open with caching optimization
      * Retries up to 3 times with short timeouts to handle app startup delay
      */
     private async _checkEthereumApp(): Promise<boolean> {
+        // Check cache first for recent app status
+        const cachedStatus = hardwareWalletCache.getCachedAppStatus(Devices.LEDGER);
+        if (cachedStatus) {
+            console.log(`Using cached Ethereum app status: ${cachedStatus.appOpen} (checked ${Date.now() - cachedStatus.lastCheck}ms ago)`);
+            return cachedStatus.appOpen;
+        }
+
         const MAX_RETRIES = 3;
         const RETRY_DELAY = 1000; // 1 second
 
@@ -472,6 +481,9 @@ export class LedgerConnectionManager {
                 }
 
                 const appOpen = await ledgerBridge.verifyEthereumAppOpen(true);
+
+                // Cache the result
+                hardwareWalletCache.cacheAppStatus(Devices.LEDGER, appOpen);
 
                 if (appOpen) {
                     console.log('Successfully detected Ethereum app is open');
@@ -490,6 +502,8 @@ export class LedgerConnectionManager {
         }
 
         console.log('Failed to detect Ethereum app after multiple attempts');
+        // Cache the failure result
+        hardwareWalletCache.cacheAppStatus(Devices.LEDGER, false);
         return false;
     }
 
@@ -954,7 +968,7 @@ export class LedgerConnectionManager {
     }
 
     /**
-     * Verifies if the Ethereum app is open on the Ledger device
+     * Verifies if the Ethereum app is open on the Ledger device with enhanced caching
      * @param bypassCache Whether to bypass cached app status
      * @returns Promise resolving to true if Ethereum app is open
      */
@@ -965,15 +979,28 @@ export class LedgerConnectionManager {
                 this.pendingOperations++; // Track pending operation
 
                 try {
-                    // Check if we have a cached result and bypass is not requested
-                    if (!bypassCache &&
-                        this.connectionInfo.appOpen !== undefined &&
-                        this.connectionInfo.lastAppCheck !== undefined) {
-                        const lastCheckAge = Date.now() - this.connectionInfo.lastAppCheck;
-                        // Use cached result if it's recent (last 30 seconds)
-                        if (lastCheckAge < 30000 && this.connectionInfo.appOpen) {
-                            console.log('[LEDGER] Using cached Ethereum app status');
-                            return this.connectionInfo.appOpen;
+                    // Check hardware wallet cache first (unless bypassed)
+                    if (!bypassCache) {
+                        const cachedStatus = hardwareWalletCache.getCachedAppStatus(Devices.LEDGER);
+                        if (cachedStatus) {
+                            console.log(`[LEDGER] Using cached app status: ${cachedStatus.appOpen} (checked ${Date.now() - cachedStatus.lastCheck}ms ago)`);
+
+                            // Update internal cache to match
+                            this.connectionInfo.appOpen = cachedStatus.appOpen;
+                            this.connectionInfo.lastAppCheck = cachedStatus.lastCheck;
+
+                            return cachedStatus.appOpen;
+                        }
+
+                        // Fall back to internal cache check
+                        if (this.connectionInfo.appOpen !== undefined &&
+                            this.connectionInfo.lastAppCheck !== undefined) {
+                            const lastCheckAge = Date.now() - this.connectionInfo.lastAppCheck;
+                            // Use cached result if it's recent (last 30 seconds)
+                            if (lastCheckAge < 30000 && this.connectionInfo.appOpen) {
+                                console.log('[LEDGER] Using internal cached Ethereum app status');
+                                return this.connectionInfo.appOpen;
+                            }
                         }
                     }
 
@@ -988,7 +1015,7 @@ export class LedgerConnectionManager {
 
                     // Use safe state comparison
                     const isAlreadyInAppOpenState = this.state === LedgerConnectionState.APP_OPEN;
-                    if (isAlreadyInAppOpenState) {
+                    if (isAlreadyInAppOpenState && !bypassCache) {
                         console.log('[LEDGER] Already in APP_OPEN state, returning true');
                         return true;
                     }
@@ -997,9 +1024,10 @@ export class LedgerConnectionManager {
                     const isOpen = await ledgerBridge.verifyEthereumAppOpen(bypassCache);
                     console.log('[LEDGER] Ethereum app status:', isOpen);
 
-                    // Update cache
+                    // Update both internal and hardware wallet caches
                     this.connectionInfo.appOpen = isOpen;
                     this.connectionInfo.lastAppCheck = Date.now();
+                    hardwareWalletCache.cacheAppStatus(Devices.LEDGER, isOpen);
 
                     // Update state if needed
                     if (isOpen) {
@@ -1023,9 +1051,10 @@ export class LedgerConnectionManager {
                 } catch (error) {
                     console.error('[LEDGER] Error verifying Ethereum app:', error);
 
-                    // Update cache with failure
+                    // Update both internal and hardware wallet caches with failure
                     this.connectionInfo.appOpen = false;
                     this.connectionInfo.lastAppCheck = Date.now();
+                    hardwareWalletCache.cacheAppStatus(Devices.LEDGER, false);
 
                     // Update state if needed - use safe comparison
                     const isInAppOpenState = this.state === LedgerConnectionState.APP_OPEN;

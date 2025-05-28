@@ -17,6 +17,7 @@ import { resolvePreferencesAfterWalletUpdate } from './utils/userPreferences';
 import { CONTENT } from './utils/types/communication';
 import { isManifestV3 } from './utils/manifest';
 import { Devices } from './utils/types/hardware';
+import { resourceManager } from './utils/ServiceWorkerResourceManager';
 
 // Set log level
 log.setLevel(process.env.NODE_ENV === 'production' ? 'warn' : 'debug');
@@ -38,7 +39,7 @@ const ensureStorageAvailable = async (): Promise<void> => {
 };
 
 /**
- * Load state from persistence
+ * OPTIMIZED: Load state from persistence with resource management
  *
  * @returns persisted state or initial state
  */
@@ -48,8 +49,13 @@ const getPersistedState = new Promise<BlankAppState>((resolve) => {
             // Ensure storage is available before proceeding
             await ensureStorageAvailable();
 
+            // Use resource manager for version check with caching
             const packageVersion = require('../package.json').version;
-            let version = await blankStateStore.getVersion();
+            let version = await resourceManager.manageStorageOperation(
+                'wallet_version_check',
+                () => blankStateStore.getVersion(),
+                300000 // 5 minute cache for version
+            );
 
             // If version is not set (i.e. First install) set the current package.json version
             if (!version) {
@@ -99,8 +105,16 @@ const getPersistedState = new Promise<BlankAppState>((resolve) => {
                 }
             };
 
-            // Get persisted state
-            blankStateStore.get('blankState', handleStoredState);
+            // OPTIMIZED: Get persisted state with resource management
+            const storedState = await resourceManager.manageStorageOperation(
+                'wallet_persisted_state',
+                () => new Promise<BlankAppState>((stateResolve) => {
+                    blankStateStore.get('blankState', stateResolve);
+                }),
+                60000 // 1 minute cache for state
+            );
+
+            await handleStoredState(storedState);
         } catch (error) {
             log.error('Error retrieving persisted state', error);
             resolve(initialState);
@@ -154,27 +168,41 @@ const initBlockWallet = async () => {
         devTools,
     });
 
-    // After initializing blankController, check if we're in hardware wallet mode
-    // and only restore hardware wallet connections if needed
+    // OPTIMIZED: After initializing blankController, check if we're in hardware wallet mode
+    // and only restore hardware wallet connections if needed with resource management
     if (isManifestV3()) {
-        // Check for hardware wallet mode
-        if (chrome.storage?.session) {
-            try {
-                const sessionData = await chrome.storage.session.get(['current_wallet_operation']);
-                if (sessionData.current_wallet_operation === 'hardware_wallet') {
-                    // Only run hardware wallet restoration in hardware wallet mode
-                    log.info('In hardware wallet mode - starting state restoration...');
-                    setTimeout(() => {
-                        restoreHardwareWalletConnections(blankController).catch(error => {
-                            log.error('Failed to restore hardware wallet connections:', error);
-                        });
-                    }, 0);
+        // Check for hardware wallet mode with resource manager caching
+        try {
+            const sessionData = await resourceManager.manageStorageOperation(
+                'hardware_wallet_mode_check',
+                () => chrome.storage?.session?.get(['current_wallet_operation']) || Promise.resolve({}),
+                60000 // 1 minute cache
+            );
+
+            if (sessionData.current_wallet_operation === 'hardware_wallet') {
+                // Only run hardware wallet restoration if resource manager allows it
+                if (!resourceManager.shouldDeferHardwareWalletOperation()) {
+                    log.info('In hardware wallet mode - starting optimized state restoration...');
+                    // Use resource manager to handle the operation
+                    resourceManager.manageHardwareWalletOperation(
+                        'hardware_wallet_restoration',
+                        () => restoreHardwareWalletConnections(blankController)
+                    ).catch(error => {
+                        log.error('Failed to restore hardware wallet connections:', error);
+                    });
                 } else {
-                    log.debug('Not in hardware wallet mode - skipping hardware wallet initialization');
+                    log.info('Hardware wallet restoration deferred due to resource constraints');
+                    // Set a flag for later restoration when resources are available
+                    chrome.storage?.session?.set({
+                        hardware_wallet_restoration_pending: true,
+                        hardware_wallet_restoration_deferred_at: Date.now()
+                    });
                 }
-            } catch (error) {
-                log.error('Error checking for hardware wallet mode:', error);
+            } else {
+                log.debug('Not in hardware wallet mode - skipping hardware wallet initialization');
             }
+        } catch (error) {
+            log.error('Error checking for hardware wallet mode:', error);
         }
     }
 
@@ -358,56 +386,8 @@ if (isManifestV3()) {
         }
     });
 
-    // Service worker keep-alive implementation
-    // Using a more reasonable interval that balances functionality with resource usage
-    // 5 minutes is more aligned with Chrome's recommendations
-    // Added small initial delay to speed up the first ping after installation
-    try {
-        if (chrome?.alarms?.create) {
-            chrome.alarms.create('keepAlive', {
-                periodInMinutes: 5,
-                delayInMinutes: 0.1,
-            });
-            log.info('Keep-alive alarm created successfully');
-        } else {
-            log.warn(
-                'chrome.alarms.create not available, skipping keep-alive setup'
-            );
-        }
-    } catch (error) {
-        log.error('Error creating keep-alive alarm:', error);
-    }
-
-    try {
-        if (chrome?.alarms?.onAlarm?.addListener) {
-            chrome.alarms.onAlarm.addListener((alarm) => {
-                if (alarm.name === 'keepAlive') {
-                    // Only fetch the keep-alive URL when needed
-                    try {
-                        fetch(chrome.runtime.getURL('keep-alive'))
-                            .catch((error) => {
-                                log.warn('Keep-alive fetch failed:', error);
-                            })
-                            .finally(() => {
-                                // Persist critical state regardless of fetch outcome
-                                persistCriticalState();
-                            });
-                    } catch (error) {
-                        log.error('Error during keep-alive fetch:', error);
-                        // Still try to persist state even if fetch fails
-                        persistCriticalState();
-                    }
-                }
-            });
-            log.info('Alarm listener added successfully');
-        } else {
-            log.warn(
-                'chrome.alarms.onAlarm.addListener not available, skipping listener setup'
-            );
-        }
-    } catch (error) {
-        log.error('Error adding alarm listener:', error);
-    }
+    // OPTIMIZED: Use resource manager's optimized keep-alive mechanism
+    resourceManager.setupOptimizedKeepAlive();
 
     // Use the storage API to persist important state between service worker restarts
     // This helps make the extension resilient to service worker terminations

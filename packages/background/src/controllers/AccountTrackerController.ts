@@ -66,12 +66,13 @@ import TransactionController from './transactions/TransactionController';
 import { resolveAllownaceParamsFromTransaction } from './transactions/utils/utils';
 import { HDPaths, HDPathDescription } from "../utils/constants/devices";
 import { LedgerBridge, ledgerBridge } from "../utils/ledgerBridge";
+import { resourceManager } from '../utils/ServiceWorkerResourceManager';
 
 /**
  * Checks if the current environment has DOM access
  * This is needed to work around the fact that LedgerBridgeKeyring tries to create DOM elements
  * which fails in MV3 service workers
- * 
+ *
  * @returns {boolean} True if the environment has a document with createElement
  */
 const hasDomAccess = (): boolean => {
@@ -2087,12 +2088,19 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
      * @param pageSize  The accounts page size
      * @returns A paginated list of accounts
      */
+    /**
+     * OPTIMIZED: Get hardware wallet accounts with resource management
+     */
     public async getHardwareWalletAccounts(
         device: Devices,
         pageIndex: number,
         pageSize: number
     ): Promise<DeviceAccountInfo[]> {
-        return this._keyringController.getMutex().runExclusive(async () => {
+        // OPTIMIZED: Use resource manager to handle this heavy operation
+        const operationKey = `hw_accounts_${device}_${pageIndex}_${pageSize}`;
+
+        return resourceManager.manageHardwareWalletOperation(operationKey, () =>
+            this._keyringController.getMutex().runExclusive(async () => {
             log.debug(`Fetching accounts for ${device}, page ${pageIndex}, size ${pageSize}`);
 
             const hasDOM = hasDomAccess();
@@ -2145,7 +2153,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 }
             }
 
-            // --- Existing Logic for UI context or non-Ledger devices --- 
+            // --- Existing Logic for UI context or non-Ledger devices ---
             log.debug(`[ATC] Handling account fetch in UI context or for non-Ledger device.`);
             let keyring = await this._keyringController.getKeyringFromDevice(device);
 
@@ -2492,7 +2500,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
 
                 throw e;
             }
-        });
+            })
+        );
     }
 
     public async getAccountNativeTokenBalanceForChain(

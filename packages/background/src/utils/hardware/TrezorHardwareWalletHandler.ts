@@ -1,5 +1,6 @@
 import { BaseHardwareWalletHandler } from './BaseHardwareWalletHandler';
 import { Devices } from '../types/hardware';
+import { hardwareWalletCache } from './HardwareWalletCache';
 import log from 'loglevel';
 import { KeyringTypes } from '../../controllers/KeyringControllerDerivated';
 import { hasDomAccess } from '../environment';
@@ -20,7 +21,7 @@ export class TrezorHardwareWalletHandler extends BaseHardwareWalletHandler {
 
     /**
      * Connects to a Trezor hardware wallet
-     * 
+     *
      * @returns Promise resolving to connection result
      */
     public async connect(): Promise<
@@ -95,7 +96,7 @@ export class TrezorHardwareWalletHandler extends BaseHardwareWalletHandler {
     /**
      * Completes the hardware wallet connection process
      * For Trezor, this initializes the keyring with the proper manifest
-     * 
+     *
      * @returns Promise resolving to true if the connection was successful
      */
     public async completeConnection(): Promise<boolean> {
@@ -155,7 +156,7 @@ export class TrezorHardwareWalletHandler extends BaseHardwareWalletHandler {
 
     /**
      * Sets the HD path for the Trezor device
-     * 
+     *
      * @param hdPath The HD path to set
      */
     public async setHDPath(hdPath: string): Promise<void> {
@@ -195,7 +196,7 @@ export class TrezorHardwareWalletHandler extends BaseHardwareWalletHandler {
 
     /**
      * Gets the current HD path for the Trezor device
-     * 
+     *
      * @returns The current HD path for the device
      */
     public async getHDPath(): Promise<string> {
@@ -242,9 +243,9 @@ export class TrezorHardwareWalletHandler extends BaseHardwareWalletHandler {
         }
     }
 
-    /**
-     * Imports accounts from the Trezor device
-     * 
+        /**
+     * Imports accounts from the Trezor device with address caching optimization
+     *
      * @param accountIndexes Array of account indexes to import
      * @returns Promise resolving to array of imported account addresses
      */
@@ -264,6 +265,29 @@ export class TrezorHardwareWalletHandler extends BaseHardwareWalletHandler {
                     if (accountIndexes.some((index) => index < 0)) {
                         throw new Error('Account indexes must be non-negative values');
                     }
+
+                    // Check cache for already derived addresses
+                    const hdPath = await this.getHDPath();
+                    const cachedAddresses: string[] = [];
+                    const uncachedIndexes: number[] = [];
+
+                    for (const index of accountIndexes) {
+                        const cachedAddress = hardwareWalletCache.getCachedAddress(this.device, hdPath, index);
+                        if (cachedAddress) {
+                            log.debug(`Using cached address for ${this.device} at ${hdPath}/${index}`);
+                            cachedAddresses[index] = cachedAddress;
+                        } else {
+                            uncachedIndexes.push(index);
+                        }
+                    }
+
+                    // If all addresses are cached, return them
+                    if (uncachedIndexes.length === 0) {
+                        log.debug(`All ${accountIndexes.length} addresses found in cache - skipping device derivation`);
+                        return accountIndexes.map(index => cachedAddresses[index]).filter(Boolean);
+                    }
+
+                    log.debug(`Found ${cachedAddresses.filter(Boolean).length} cached addresses, need to derive ${uncachedIndexes.length} more`);
 
                     // Check if a keyring already exists for this device
                     let keyring = await this.keyringController.getKeyringFromDevice(this.device);
@@ -293,9 +317,9 @@ export class TrezorHardwareWalletHandler extends BaseHardwareWalletHandler {
                         originalAccounts = [];
                     }
 
-                    // For each account to import
+                    // For each uncached account index to import
                     const addedAccounts = [];
-                    for (const index of accountIndexes) {
+                    for (const index of uncachedIndexes) {
                         try {
                             // Set the account index on the keyring
                             keyring.setAccountToUnlock(index);
@@ -304,10 +328,16 @@ export class TrezorHardwareWalletHandler extends BaseHardwareWalletHandler {
                             await this.keyringController.addNewAccount(keyring);
                             log.debug(`Added account at index ${index} to keyring`);
 
-                            // Track successful additions
+                            // Track successful additions and cache the derived address
                             const currentAccounts = await keyring.getAccounts();
                             if (currentAccounts.length > originalAccounts.length + addedAccounts.length) {
-                                addedAccounts.push(currentAccounts[currentAccounts.length - 1]);
+                                const newAddress = currentAccounts[currentAccounts.length - 1];
+                                addedAccounts.push(newAddress);
+
+                                // Cache the newly derived address
+                                hardwareWalletCache.cacheAddress(this.device, hdPath, index, newAddress);
+                                cachedAddresses[index] = newAddress;
+                                log.debug(`Cached newly derived address for ${this.device} at ${hdPath}/${index}`);
                             }
                         } catch (error) {
                             log.error(`Error adding account at index ${index}:`, error);
@@ -315,11 +345,11 @@ export class TrezorHardwareWalletHandler extends BaseHardwareWalletHandler {
                         }
                     }
 
-                    // Get the final accounts after import
-                    const finalAccounts = await keyring.getAccounts();
-                    log.debug(`Successfully imported accounts from ${this.device}`);
+                    // Combine cached and newly derived addresses in the correct order
+                    const finalAddresses = accountIndexes.map(index => cachedAddresses[index]).filter(Boolean);
+                    log.debug(`Successfully imported ${finalAddresses.length} accounts from ${this.device} (${addedAccounts.length} new, ${finalAddresses.length - addedAccounts.length} cached)`);
 
-                    return finalAccounts;
+                    return finalAddresses;
                 } catch (error) {
                     log.error(`Failed to import hardware wallet accounts:`, error);
                     throw error;
@@ -348,4 +378,4 @@ export class TrezorHardwareWalletHandler extends BaseHardwareWalletHandler {
             log.warn(`Error during Trezor cleanup: ${e.message}`);
         }
     }
-} 
+}

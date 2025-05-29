@@ -2,6 +2,7 @@ import { BaseHardwareWalletHandler } from './BaseHardwareWalletHandler';
 import { Devices } from '../types/hardware';
 import { ledgerBridge } from '../ledgerBridge';
 import { ledgerConnectionManager, LedgerConnectionState } from '../LedgerConnectionManager';
+import { hardwareWalletCache } from './HardwareWalletCache';
 import log from 'loglevel';
 import { forceNavigateTab } from '../manifest';
 import { KeyringTypes } from '../../controllers/KeyringControllerDerivated';
@@ -133,7 +134,7 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
 
     /**
      * Connects to a Ledger hardware wallet
-     * Uses ledgerConnectionManager to handle connection state
+     * Uses ledgerConnectionManager to handle connection state with caching optimization
      *
      * @returns Promise resolving to connection result
      */
@@ -147,12 +148,59 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
         }
     > {
         try {
-            log.debug("Using LedgerConnectionManager for Ledger connection");
-            console.log("[LEDGER] Using connection manager for Ledger connection");
+            log.debug("Using LedgerConnectionManager for Ledger connection with caching");
+            console.log("[LEDGER] Using connection manager for Ledger connection with caching");
+
+            // Check cached connection state first
+            const cachedState = hardwareWalletCache.getCachedConnectionState(this.device);
+            if (cachedState && cachedState.connected) {
+                log.debug(`Found cached connection state for ${this.device}`);
+                console.log(`[LEDGER] Found cached connection state - connected: ${cachedState.connected}, appOpen: ${cachedState.appOpen}`);
+
+                // If cached state shows we're connected and app is open, try to use it
+                if (cachedState.appOpen) {
+                    console.log("[LEDGER] Using cached state - already connected with app open");
+
+                    // Verify the cached state is still valid by doing a quick check
+                    try {
+                        const isStillConnected = await this.getConnectionManager().verifyEthereumAppOpen(false);
+                        if (isStillConnected) {
+                            console.log("[LEDGER] Cached state verified - returning successful connection");
+                            return {
+                                needsUserGesture: !this.hasDomAccess(),
+                                deviceName: this.device,
+                                message: "Ledger connected successfully with Ethereum app open (cached)."
+                            };
+                        } else {
+                            console.log("[LEDGER] Cached state invalid - clearing cache and proceeding with fresh connection");
+                            hardwareWalletCache.invalidateConnectionState(this.device);
+                        }
+                    } catch (e) {
+                        console.log("[LEDGER] Error verifying cached state - proceeding with fresh connection");
+                        hardwareWalletCache.invalidateConnectionState(this.device);
+                    }
+                }
+            }
 
             // Use the connection manager to connect to the device
             const result = await this.getConnectionManager().connect();
             console.log("[LEDGER] Connection result:", result);
+
+            // Cache the connection result
+            if (result.success) {
+                const { state, info } = this.getConnectionManager().getState();
+                hardwareWalletCache.cacheConnectionState({
+                    device: this.device,
+                    connected: true,
+                    appOpen: info.appOpen || false,
+                    transportType: result.transportType,
+                    lastConnection: Date.now(),
+                    lastAppCheck: Date.now(),
+                    hdPath: await this.getHDPath(),
+                    sessionId: '' // Will be set by cache
+                });
+                log.debug("Cached successful connection state");
+            }
 
             // Store the result in session storage for UI access
             if (chrome.storage?.session) {
@@ -467,7 +515,7 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
     }
 
     /**
-     * Imports accounts from the Ledger device
+     * Imports accounts from the Ledger device with address caching optimization
      * Handles both UI and service worker contexts
      *
      * @param accountIndexes Array of account indexes to import
@@ -490,6 +538,31 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
                         throw new Error('Account indexes must be non-negative values');
                     }
 
+                    // Check cache for already derived addresses
+                    const hdPath = await this.getHDPath();
+                    const cachedAddresses: string[] = [];
+                    const uncachedIndexes: number[] = [];
+
+                    for (const index of accountIndexes) {
+                        const cachedAddress = hardwareWalletCache.getCachedAddress(this.device, hdPath, index);
+                        if (cachedAddress) {
+                            log.debug(`Using cached address for ${this.device} at ${hdPath}/${index}`);
+                            cachedAddresses[index] = cachedAddress;
+                        } else {
+                            uncachedIndexes.push(index);
+                        }
+                    }
+
+                    // If all addresses are cached, return them
+                    if (uncachedIndexes.length === 0) {
+                        log.debug(`All ${accountIndexes.length} addresses found in cache - skipping device derivation`);
+                        return accountIndexes.map(index => cachedAddresses[index]).filter(Boolean);
+                    }
+
+                    log.debug(`Found ${cachedAddresses.filter(Boolean).length} cached addresses, need to derive ${uncachedIndexes.length} more`);
+
+                    // Proceed with derivation only for uncached addresses
+
                     // Special handling for service worker context where we don't have DOM access
                     if (!this.hasDomAccess()) {
                         log.debug('No DOM access when importing Ledger accounts - using offscreen approach');
@@ -502,10 +575,23 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
                         }
 
                         // Delegate account import to the ledger bridge in offscreen document
-                        log.debug(`Using ledgerBridge to import accounts: ${accountIndexes.join(',')}`);
-                        const importedAddresses = await ledgerBridge.getMultipleAccounts(accountIndexes);
+                        log.debug(`Using ledgerBridge to import accounts: ${uncachedIndexes.join(',')}`);
+                        const derivedAddresses = await ledgerBridge.getMultipleAccounts(uncachedIndexes);
 
-                        log.debug(`Successfully imported ${importedAddresses.length} accounts using ledgerBridge`);
+                        log.debug(`Successfully derived ${derivedAddresses.length} new accounts using ledgerBridge`);
+
+                        // Cache the newly derived addresses
+                        for (let i = 0; i < uncachedIndexes.length; i++) {
+                            const index = uncachedIndexes[i];
+                            const address = derivedAddresses[i];
+                            if (address) {
+                                hardwareWalletCache.cacheAddress(this.device, hdPath, index, address);
+                                cachedAddresses[index] = address;
+                            }
+                        }
+
+                        // Combine cached and newly derived addresses
+                        const importedAddresses = accountIndexes.map(index => cachedAddresses[index]).filter(Boolean);
 
                         // Need to add these accounts to our keyring state without direct keyring interaction
                         const keyring = await this.keyringController.getKeyringFromDevice(this.device);

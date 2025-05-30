@@ -1,5 +1,6 @@
 ENVIRONMENT				?= dev
 BROWSER					?= chrome
+VERSION					?=
 
 depcheck:
 	@cd packages/background && npx depcheck
@@ -56,7 +57,19 @@ else
 	@cp release-notes.json dist
 endif
 
+update-version:
+ifneq ($(VERSION),)
+	@echo "Updating version to $(VERSION)..."
+	@sed -i.bak 's/"version": "[^"]*"/"version": "$(VERSION)"/g' package.json && rm package.json.bak
+	@sed -i.bak 's/"version": "[^"]*"/"version": "$(VERSION)"/g' manifest/base.json && rm manifest/base.json.bak
+	@sed -i.bak 's/"version_name": "[^"]*"/"version_name": "$(VERSION)"/g' manifest/base.json && rm manifest/base.json.bak
+	@echo "Version updated to $(VERSION) in package.json and manifest/base.json"
+endif
+
 build:
+ifneq ($(VERSION),)
+	@$(MAKE) update-version VERSION=$(VERSION) --no-print-directory
+endif
 	@rm -Rf dist-firefox
 	@rm -Rf dist
 	@mkdir -p dist
@@ -72,6 +85,9 @@ endif
 	@$(MAKE) BROWSER=$(BROWSER) cp/release-notes --no-print-directory
 
 build/prod:
+ifneq ($(VERSION),)
+	@$(MAKE) update-version VERSION=$(VERSION) --no-print-directory
+endif
 	@rm -Rf dist/
 	@rm -Rf dist-firefox/
 	@mkdir -p dist
@@ -86,6 +102,9 @@ build/prod:
 	@cp release-notes.json dist-firefox
 
 build/v3:
+ifneq ($(VERSION),)
+	@$(MAKE) update-version VERSION=$(VERSION) --no-print-directory
+endif
 	@rm -Rf dist/
 	@mkdir -p dist
 	@yarn build-ledger-bundle
@@ -100,7 +119,10 @@ build/manifest:
 	@cd packages/ui && BROWSER=$(BROWSER) $(MAKE) build/manifest --no-print-directory
 
 build/prod-zip:
+ifneq ($(VERSION),)
+	@$(MAKE) update-version VERSION=$(VERSION) --no-print-directory
+endif
 	@rm -Rf dist/
-	@$(MAKE) ENVIRONMENT=prod build/prod
+	@$(MAKE) ENVIRONMENT=prod build/prod --no-print-directory
 	@zip -r -D block-extension-chrome.zip dist/
 	@zip -r -D block-extension-firefox.zip dist-firefox/

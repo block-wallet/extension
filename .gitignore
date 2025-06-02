@@ -50,5 +50,8 @@ asset-platforms-ids-list.json
 
 .npmrc
 
+# local blockchain for testing
+local-testnet/
+
 # archives
 *.zip

@@ -257,6 +257,7 @@ import { Devices } from '../utils/types/hardware';
 // Import KeyringTypes
 import { KeyringTypes } from './KeyringControllerDerivated';
 import { PortfolioAnalyticsController, PortfolioAnalyticsEvents } from './PortfolioAnalyticsController';
+import { RealtimeManager } from '../infrastructure/realtime/RealtimeManager';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -301,6 +302,7 @@ export default class BlankController extends EventEmitter {
     private readonly notificationController: NotificationController;
     private readonly onrampController: OnrampController;
     private readonly portfolioAnalyticsController: PortfolioAnalyticsController;
+    private readonly realtimeManager: RealtimeManager;
 
     // Stores
     private readonly store: ComposedStore<BlankAppState>;
@@ -507,6 +509,8 @@ export default class BlankController extends EventEmitter {
             initState.PortfolioAnalyticsController
         );
 
+        this.realtimeManager = new RealtimeManager();
+
         this.notificationController = new NotificationController(
             this.preferencesController,
             this.transactionWatcherController,
@@ -631,6 +635,26 @@ export default class BlankController extends EventEmitter {
             isAppUnlocked,
             activeSubscription
         );
+
+        // Manage real-time monitoring based on app state
+        this.manageRealtimeMonitoring(isAppUnlocked, activeSubscription);
+    }
+
+    /**
+     * Manages real-time monitoring based on app state
+     */
+    private async manageRealtimeMonitoring(isAppUnlocked: boolean, activeSubscription: boolean): Promise<void> {
+        try {
+            if (isAppUnlocked && activeSubscription) {
+                // Start real-time monitoring when app is unlocked and actively used
+                await this.transactionWatcherController.startRealtimeMonitoring();
+            } else {
+                // Stop real-time monitoring when app is locked or not actively used
+                await this.transactionWatcherController.stopRealtimeMonitoring();
+            }
+        } catch (error) {
+            log.error('[BlankController] Error managing real-time monitoring:', error);
+        }
     }
 
     /**
@@ -1523,6 +1547,14 @@ export default class BlankController extends EventEmitter {
         address,
     }: RequestAccountSelect): Promise<boolean> {
         this.preferencesController.setSelectedAddress(address);
+
+        // Add the new address to real-time monitoring if monitoring is active
+        try {
+            await this.transactionWatcherController.addAddressToRealtimeMonitoring(address);
+        } catch (error) {
+            log.warn('[BlankController] Failed to add address to real-time monitoring:', error);
+        }
+
         return true;
     }
 

@@ -7,6 +7,7 @@ import {
     Network,
 } from '../../utils/constants/networks';
 import { MINUTE } from './../../utils/constants/time';
+import log from 'loglevel';
 
 export interface BlockUpdatesControllerState {
     blockData: {
@@ -23,6 +24,7 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
     private readonly _blockNumberPullIntervalController: ActionIntervalController;
 
     private activeSubscriptions = false;
+    private chromeAlarmsSetup = false;
 
     constructor(
         private readonly _networkController: NetworkController,
@@ -46,6 +48,7 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
         );
 
         this.addNewOnBlockListener();
+        this.setupChromeAlarms();
     }
 
     /**
@@ -195,4 +198,86 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
             });
         }
     };
+
+    /**
+     * Setup Chrome Alarms for reliable block monitoring
+     * This ensures block monitoring continues even when service worker goes idle
+     */
+    private setupChromeAlarms(): void {
+        if (this.chromeAlarmsSetup) return;
+
+        try {
+            // Create alarms for different monitoring intervals
+            // Active monitoring - every 15 seconds when extension is actively used
+            chrome.alarms.create('blockMonitor-active', {
+                periodInMinutes: 0.25 // 15 seconds
+            });
+
+            // Passive monitoring - every 3 minutes when extension is in background
+            chrome.alarms.create('blockMonitor-passive', {
+                periodInMinutes: 3
+            });
+
+            // Real-time check - every 5 seconds for immediate responsiveness
+            chrome.alarms.create('blockMonitor-realtime', {
+                periodInMinutes: 0.083 // ~5 seconds
+            });
+
+            // Listen to all block monitoring alarms
+            chrome.alarms.onAlarm.addListener((alarm) => {
+                if (alarm.name.startsWith('blockMonitor-')) {
+                    this.handleChromeAlarmUpdate(alarm.name);
+                }
+            });
+
+            this.chromeAlarmsSetup = true;
+            log.info('[BlockUpdatesController] Chrome Alarms setup completed');
+
+        } catch (error) {
+            log.error('[BlockUpdatesController] Failed to setup Chrome Alarms:', error);
+        }
+    }
+
+    /**
+     * Handle Chrome Alarm triggered block updates
+     */
+    private handleChromeAlarmUpdate(alarmName: string): void {
+        const currentChainId = this._networkController.network.chainId;
+
+        // Determine update frequency based on alarm type and subscription status
+        let shouldUpdate = false;
+
+        switch (alarmName) {
+            case 'blockMonitor-realtime':
+                // Real-time updates only when actively subscribed
+                shouldUpdate = this.activeSubscriptions;
+                break;
+            case 'blockMonitor-active':
+                // Active updates when subscribed or recently active
+                shouldUpdate = this.activeSubscriptions;
+                break;
+            case 'blockMonitor-passive':
+                // Passive updates always run in background for basic sync
+                shouldUpdate = true;
+                break;
+        }
+
+        if (shouldUpdate) {
+            // Trigger a block number check
+            this._blockFetchController.getCurrentBlockNumber(currentChainId);
+            log.debug(`[BlockUpdatesController] Chrome Alarm triggered update: ${alarmName}`);
+        }
+    }
+
+    /**
+     * Cleanup Chrome Alarms when controller is disposed
+     */
+    public cleanup(): void {
+        if (this.chromeAlarmsSetup) {
+            chrome.alarms.clear('blockMonitor-active');
+            chrome.alarms.clear('blockMonitor-passive');
+            chrome.alarms.clear('blockMonitor-realtime');
+            this.chromeAlarmsSetup = false;
+        }
+    }
 }

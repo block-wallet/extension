@@ -26,6 +26,7 @@ import {
     TransactionStatus,
     TransferType,
     WatchedTransactionType,
+    MetaType,
 } from './transactions/utils/types';
 import { Block, Log } from '@ethersproject/abstract-provider';
 import { SignedTransaction } from './erc-20/transactions/SignedTransaction';
@@ -44,6 +45,7 @@ import {
     getTokenApprovalLogsTopics,
 } from '../utils/logsQuery';
 import { unixTimestampToJSTimestamp } from '../utils/timestamp';
+import { RealtimeManager, RealtimeProviderConfig, PendingTransaction } from '../infrastructure/realtime/RealtimeManager';
 
 interface TokenAllowanceEvent {
     [tokenAddress: string]: {
@@ -145,6 +147,7 @@ const EXPLORER_API_CALLS_DELAY = 2000 * MILISECOND;
 export class TransactionWatcherController extends BaseController<TransactionWatcherControllerState> {
     private readonly _mutex: Mutex;
     private readonly _txWatcherIntervalController: ActionIntervalController;
+    private readonly _realtimeManager: RealtimeManager;
 
     constructor(
         private readonly _networkController: NetworkController,
@@ -160,6 +163,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         this._txWatcherIntervalController = new ActionIntervalController(
             this._networkController
         );
+        this._realtimeManager = new RealtimeManager();
 
         this._networkController.on(NetworkEvents.NETWORK_CHANGE, () => {
             this.fetchAccountOnChainEvents();
@@ -202,6 +206,174 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         );
 
         this._fetchPendingTimestampsFromChain();
+
+        // Setup real-time monitoring event listeners
+        this._setupRealtimeEventListeners();
+    }
+
+    /**
+     * Setup real-time monitoring event listeners
+     */
+    private _setupRealtimeEventListeners(): void {
+        // Listen for new blocks from real-time connections
+        this._realtimeManager.on('new-block', async (chainId: number, blockNumber: number, blockHash: string, timestamp: number) => {
+            // Trigger the same block updates callback but with real-time data
+            await this._blockUpdatesCallback(chainId, blockNumber - 1, blockNumber);
+        });
+
+        // Listen for pending transactions
+        this._realtimeManager.on('pending-transaction', async (chainId: number, transaction: PendingTransaction) => {
+            await this._handleRealtimePendingTransaction(chainId, transaction);
+        });
+
+        // Monitor connection status
+        this._realtimeManager.on('connection-status', (chainId: number, connected: boolean) => {
+            if (connected) {
+                log.info(`[TransactionWatcher] Real-time monitoring connected for chain ${chainId}`);
+            } else {
+                log.warn(`[TransactionWatcher] Real-time monitoring disconnected for chain ${chainId}`);
+            }
+        });
+
+        // Handle connection errors
+        this._realtimeManager.on('connection-error', (chainId: number, error: string) => {
+            log.error(`[TransactionWatcher] Real-time monitoring error for chain ${chainId}: ${error}`);
+        });
+    }
+
+    /**
+     * Handle real-time pending transaction detection
+     */
+    private async _handleRealtimePendingTransaction(chainId: number, transaction: PendingTransaction): Promise<void> {
+        try {
+            const selectedAddress = this._preferencesController.getSelectedAddress();
+            if (!selectedAddress) return;
+
+            const normalizedSelected = selectedAddress.toLowerCase();
+            const normalizedFrom = transaction.from?.toLowerCase();
+            const normalizedTo = transaction.to?.toLowerCase();
+
+            // Check if this transaction is relevant to the selected address
+            if (normalizedFrom === normalizedSelected || normalizedTo === normalizedSelected) {
+
+                // Determine transaction direction
+                const isIncoming = normalizedTo === normalizedSelected;
+
+                // Create a minimal transaction meta for immediate notification
+                const transactionMeta: any = {
+                    id: transaction.hash,
+                    hash: transaction.hash,
+                    chainId,
+                    time: Date.now(),
+                    status: 'pending',
+                    from: transaction.from,
+                    to: transaction.to,
+                    value: transaction.value,
+                    origin: 'realtime-pending',
+                    isPending: true,
+                    isIncoming
+                };
+
+                // Emit immediate notification for UI responsiveness
+                this.emit(TransactionWatcherControllerEvents.INCOMING_TRANSACTION, {
+                    chainId,
+                    address: selectedAddress,
+                    transaction: transactionMeta,
+                    isPending: true
+                });
+
+                log.info(`[TransactionWatcher] Real-time pending transaction detected: ${transaction.hash} (${isIncoming ? 'incoming' : 'outgoing'})`);
+            }
+        } catch (error) {
+            log.error('[TransactionWatcher] Error handling real-time pending transaction:', error);
+        }
+    }
+
+        /**
+     * Start real-time monitoring for current chain and addresses
+     */
+    public async startRealtimeMonitoring(): Promise<void> {
+        try {
+            const chainId = this._networkController.network.chainId;
+            const selectedAddress = this._preferencesController.getSelectedAddress();
+
+            if (!selectedAddress) {
+                log.warn('[TransactionWatcher] No selected address for real-time monitoring');
+                return;
+            }
+
+            // Check if this is a local development chain
+            const localChains = [31337, 1337, 8545]; // Hardhat, Ganache, local dev chains
+            if (localChains.includes(chainId)) {
+                log.info(`[TransactionWatcher] Chain ${chainId} is a local development chain - real-time monitoring not available`);
+                return; // Skip real-time monitoring for local chains
+            }
+
+            // Get all addresses that should be monitored
+            const addressesToWatch = [selectedAddress];
+
+            // Use environment variables for API keys with Infura as fallback
+            const alchemyApiKey = process.env.REACT_APP_ALCHEMY_API_KEY || process.env.ALCHEMY_API_KEY || '';
+            const infuraApiKey = process.env.REACT_APP_INFURA_API_KEY || process.env.INFURA_API_KEY || '';
+
+            // Configure primary provider (Alchemy) with Infura fallback
+            const providerConfig: RealtimeProviderConfig = {
+                provider: 'alchemy',
+                apiKey: alchemyApiKey,
+                fallbackProvider: 'infura',
+                fallbackApiKey: infuraApiKey
+            };
+
+            // Skip real-time monitoring if no API keys are configured
+            if (!providerConfig.apiKey && !providerConfig.fallbackApiKey) {
+                log.warn('[TransactionWatcher] No API keys configured for real-time monitoring - skipping');
+                return;
+            }
+
+            // If primary API key is missing, use fallback as primary
+            if (!providerConfig.apiKey && providerConfig.fallbackApiKey) {
+                log.info('[TransactionWatcher] Using Infura as primary provider (Alchemy key not configured)');
+                providerConfig.provider = 'infura';
+                providerConfig.apiKey = providerConfig.fallbackApiKey;
+                providerConfig.fallbackProvider = undefined;
+                providerConfig.fallbackApiKey = undefined;
+            }
+
+            await this._realtimeManager.setupChainMonitoring(chainId, addressesToWatch, providerConfig);
+            log.info(`[TransactionWatcher] Real-time monitoring started for chain ${chainId}`);
+
+        } catch (error) {
+            // Log warning instead of error for unsupported chains
+            if (error.message?.includes('No WebSocket provider configured')) {
+                log.warn(`[TransactionWatcher] Real-time monitoring not supported for current chain - falling back to polling mode`);
+            } else {
+                log.error('[TransactionWatcher] Failed to start real-time monitoring:', error);
+            }
+        }
+    }
+
+    /**
+     * Stop real-time monitoring
+     */
+    public async stopRealtimeMonitoring(): Promise<void> {
+        try {
+            await this._realtimeManager.disconnectAll();
+            log.info('[TransactionWatcher] Real-time monitoring stopped');
+        } catch (error) {
+            log.error('[TransactionWatcher] Error stopping real-time monitoring:', error);
+        }
+    }
+
+    /**
+     * Add address to real-time monitoring
+     */
+    public async addAddressToRealtimeMonitoring(address: string): Promise<void> {
+        try {
+            await this._realtimeManager.addWatchedAddresses([address]);
+            log.info(`[TransactionWatcher] Added address ${address} to real-time monitoring`);
+        } catch (error) {
+            log.error(`[TransactionWatcher] Failed to add address ${address} to real-time monitoring:`, error);
+        }
     }
 
     /**

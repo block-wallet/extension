@@ -1,13 +1,19 @@
 // This script runs in the offscreen document and handles hardware wallet connections
+// and real-time blockchain monitoring
 
-// --- REMOVE DIRECT IMPORTS --- 
+// --- REMOVE DIRECT IMPORTS ---
 // import TransportWebHID from "@ledgerhq/hw-transport-webhid";
 // import Eth from "@ledgerhq/hw-app-eth";
 
-// --- ACCESS VIA GLOBAL BUNDLE --- 
+// --- ACCESS VIA GLOBAL BUNDLE ---
 // Access Ledger libraries from the global bundle
 const TransportWebHID = window.LedgerBundle?.TransportWebHID;
 const Eth = window.LedgerBundle?.Eth;
+
+// Real-time blockchain monitoring state
+let realtimeConnections = new Map(); // chainId -> WebSocket connection
+let watchedAddresses = new Set();
+let isMonitoringActive = false;
 
 // Add checks to ensure they loaded
 if (!TransportWebHID || !Eth) {
@@ -35,9 +41,291 @@ let ledgerDevice = null; // Store the device reference separately
 let operationInProgress = false; // Flag to track ongoing operations
 let lastOperationTime = 0; // Track when the last operation completed
 
+// Real-time blockchain monitoring functions
+class RealtimeBlockchainMonitor {
+    constructor() {
+        this.connections = new Map();
+        this.watchedAddresses = new Set();
+        this.reconnectAttempts = new Map();
+        this.maxReconnectAttempts = 5;
+        this.reconnectDelay = 1000; // Start with 1 second
+    }
+
+            async setupRealtimeConnection(chainId, providerConfig) {
+        try {
+            logMessage(`Setting up real-time connection for chain ${chainId} using ${providerConfig.provider}`, false);
+
+            // Close existing connection if any
+            await this.disconnectChain(chainId);
+
+            const wsUrl = this.getWebSocketUrl(chainId, providerConfig);
+            if (!wsUrl) {
+                // Gracefully handle unsupported chains
+                logMessage(`Real-time monitoring not available for chain ${chainId} with ${providerConfig.provider} - no WebSocket provider configured`, false);
+                throw new Error(`No WebSocket provider configured for chain ${chainId} with ${providerConfig.provider}`);
+            }
+
+            const ws = new WebSocket(wsUrl);
+            const connection = {
+                ws,
+                chainId,
+                isConnected: false,
+                subscriptions: new Set(),
+                lastHeartbeat: Date.now()
+            };
+
+                        ws.onopen = () => {
+                logMessage(`WebSocket connected for chain ${chainId} using ${providerConfig.provider}`, false);
+                connection.isConnected = true;
+                connection.provider = providerConfig.provider;
+                this.connections.set(chainId, connection);
+                this.resetReconnectAttempts(chainId);
+
+                // Subscribe to new blocks
+                this.subscribeToNewBlocks(connection);
+
+                // Subscribe to pending transactions for watched addresses
+                this.subscribeToPendingTransactions(connection);
+
+                // Notify background script
+                chrome.runtime.sendMessage({
+                    type: 'REALTIME_CONNECTION_STATUS',
+                    chainId,
+                    connected: true,
+                    provider: providerConfig.provider,
+                    timestamp: Date.now()
+                });
+            };
+
+            ws.onmessage = (event) => {
+                this.handleWebSocketMessage(connection, event.data);
+            };
+
+                        ws.onclose = (event) => {
+                logMessage(`WebSocket closed for chain ${chainId} (${providerConfig.provider}): ${event.code} ${event.reason}`, true);
+                connection.isConnected = false;
+                this.connections.delete(chainId);
+
+                // Attempt reconnection if not manually closed
+                if (event.code !== 1000) {
+                    this.scheduleReconnect(chainId, providerConfig);
+                }
+
+                chrome.runtime.sendMessage({
+                    type: 'REALTIME_CONNECTION_STATUS',
+                    chainId,
+                    connected: false,
+                    provider: providerConfig.provider,
+                    timestamp: Date.now()
+                });
+            };
+
+            ws.onerror = (error) => {
+                logMessage(`WebSocket error for chain ${chainId}: ${error}`, true);
+                chrome.runtime.sendMessage({
+                    type: 'REALTIME_CONNECTION_ERROR',
+                    chainId,
+                    error: error.message || 'WebSocket connection error',
+                    timestamp: Date.now(),
+                    provider: providerConfig.provider
+                });
+            };
+
+        } catch (error) {
+            logMessage(`Failed to setup real-time connection for chain ${chainId}: ${error.message}`, true);
+            throw error;
+        }
+    }
+
+        getWebSocketUrl(chainId, providerConfig) {
+        const { apiKey, provider } = providerConfig;
+
+        // Check for local development chains
+        const localChains = [31337, 1337, 8545]; // Hardhat, Ganache, local dev chains
+        if (localChains.includes(chainId)) {
+            logMessage(`Chain ${chainId} is a local development chain - WebSocket monitoring not available`, false);
+            return null; // No WebSocket support for local chains
+        }
+
+        // Map chain IDs to WebSocket URLs
+        const wsUrls = {
+            1: { // Ethereum Mainnet
+                alchemy: `wss://eth-mainnet.g.alchemy.com/v2/${apiKey}`,
+                infura: `wss://mainnet.infura.io/ws/v3/${apiKey}`
+            },
+            137: { // Polygon
+                alchemy: `wss://polygon-mainnet.g.alchemy.com/v2/${apiKey}`
+            },
+            42161: { // Arbitrum
+                alchemy: `wss://arbitrum-mainnet.g.alchemy.com/v2/${apiKey}`
+            },
+            10: { // Optimism
+                alchemy: `wss://opt-mainnet.g.alchemy.com/v2/${apiKey}`
+            },
+            5: { // Goerli Testnet
+                alchemy: `wss://eth-goerli.g.alchemy.com/v2/${apiKey}`
+            },
+            11155111: { // Sepolia Testnet
+                alchemy: `wss://eth-sepolia.g.alchemy.com/v2/${apiKey}`,
+                infura: `wss://sepolia.infura.io/ws/v3/${apiKey}`
+            },
+            80001: { // Mumbai Testnet
+                alchemy: `wss://polygon-mumbai.g.alchemy.com/v2/${apiKey}`
+            },
+            421613: { // Arbitrum Goerli
+                alchemy: `wss://arb-goerli.g.alchemy.com/v2/${apiKey}`
+            },
+            420: { // Optimism Goerli
+                alchemy: `wss://opt-goerli.g.alchemy.com/v2/${apiKey}`
+            }
+        };
+
+        const url = wsUrls[chainId]?.[provider];
+        if (!url) {
+            logMessage(`No WebSocket provider configured for chain ${chainId} with provider ${provider}`, false);
+        }
+        return url;
+    }
+
+    subscribeToNewBlocks(connection) {
+        const subscription = {
+            jsonrpc: '2.0',
+            method: 'eth_subscribe',
+            params: ['newHeads'],
+            id: `newHeads_${connection.chainId}_${Date.now()}`
+        };
+
+        connection.ws.send(JSON.stringify(subscription));
+        connection.subscriptions.add('newHeads');
+        logMessage(`Subscribed to new blocks for chain ${connection.chainId}`, false);
+    }
+
+    subscribeToPendingTransactions(connection) {
+        if (this.watchedAddresses.size === 0) return;
+
+        const addressArray = Array.from(this.watchedAddresses);
+        const subscription = {
+            jsonrpc: '2.0',
+            method: 'eth_subscribe',
+            params: ['alchemy_pendingTransactions', {
+                toAddress: addressArray,
+                fromAddress: addressArray
+            }],
+            id: `pendingTx_${connection.chainId}_${Date.now()}`
+        };
+
+        connection.ws.send(JSON.stringify(subscription));
+        connection.subscriptions.add('alchemy_pendingTransactions');
+        logMessage(`Subscribed to pending transactions for ${addressArray.length} addresses on chain ${connection.chainId}`, false);
+    }
+
+    handleWebSocketMessage(connection, data) {
+        try {
+            const message = JSON.parse(data);
+
+            // Handle subscription confirmations
+            if (message.id && message.result) {
+                logMessage(`Subscription confirmed: ${message.id} -> ${message.result}`, false);
+                return;
+            }
+
+            // Handle subscription data
+            if (message.method === 'eth_subscription') {
+                const { subscription, result } = message.params;
+
+                if (result.number) {
+                    // New block
+                    this.handleNewBlock(connection.chainId, result);
+                } else if (result.hash && (result.to || result.from)) {
+                    // Pending transaction
+                    this.handlePendingTransaction(connection.chainId, result);
+                }
+            }
+        } catch (error) {
+            logMessage(`Error parsing WebSocket message: ${error.message}`, true);
+        }
+    }
+
+    handleNewBlock(chainId, blockData) {
+        chrome.runtime.sendMessage({
+            type: 'REALTIME_NEW_BLOCK',
+            chainId,
+            blockNumber: parseInt(blockData.number, 16),
+            blockHash: blockData.hash,
+            timestamp: parseInt(blockData.timestamp, 16),
+            receivedAt: Date.now()
+        });
+    }
+
+    handlePendingTransaction(chainId, txData) {
+        chrome.runtime.sendMessage({
+            type: 'REALTIME_PENDING_TRANSACTION',
+            chainId,
+            transaction: {
+                hash: txData.hash,
+                from: txData.from,
+                to: txData.to,
+                value: txData.value,
+                gasPrice: txData.gasPrice,
+                gas: txData.gas,
+                input: txData.input
+            },
+            timestamp: Date.now()
+        });
+    }
+
+    updateWatchedAddresses(addresses) {
+        this.watchedAddresses = new Set(addresses);
+
+        // Resubscribe to pending transactions for all active connections
+        for (const connection of this.connections.values()) {
+            if (connection.isConnected) {
+                this.subscribeToPendingTransactions(connection);
+            }
+        }
+    }
+
+    async disconnectChain(chainId) {
+        const connection = this.connections.get(chainId);
+        if (connection && connection.ws) {
+            connection.ws.close(1000, 'Manual disconnect');
+            this.connections.delete(chainId);
+        }
+    }
+
+    scheduleReconnect(chainId, providerConfig) {
+        const attempts = this.reconnectAttempts.get(chainId) || 0;
+        if (attempts >= this.maxReconnectAttempts) {
+            logMessage(`Max reconnection attempts reached for chain ${chainId}`, true);
+            return;
+        }
+
+        const delay = this.reconnectDelay * Math.pow(2, attempts); // Exponential backoff
+        this.reconnectAttempts.set(chainId, attempts + 1);
+
+        setTimeout(() => {
+            logMessage(`Attempting to reconnect to chain ${chainId} (attempt ${attempts + 1})`, false);
+            this.setupRealtimeConnection(chainId, providerConfig);
+        }, delay);
+    }
+
+    resetReconnectAttempts(chainId) {
+        this.reconnectAttempts.set(chainId, 0);
+    }
+
+    disconnectAll() {
+        for (const chainId of this.connections.keys()) {
+            this.disconnectChain(chainId);
+        }
+    }
+}
+
+// Global realtime monitor instance
+const realtimeMonitor = new RealtimeBlockchainMonitor();
+
 // Initialize bridge
 function initHardwareWalletBridge() {
-    updateStatus('Hardware wallet bridge initialized');
+    updateStatus('Hardware wallet bridge and real-time monitor initialized');
 
     // Close any existing transport on page load to ensure clean state
     async function closeExistingTransports() {
@@ -96,6 +384,76 @@ function initHardwareWalletBridge() {
                     });
                 });
             return true; // Keep the message channel open for async response
+        }
+
+        // Real-time blockchain monitoring messages
+        if (message.type === 'REALTIME_SETUP_CONNECTION') {
+            realtimeMonitor.setupRealtimeConnection(message.chainId, message.providerConfig)
+                .then(() => {
+                    // Always send success response, even for unsupported chains
+                    sendResponse({
+                        success: true,
+                        chainId: message.chainId,
+                        timestamp: Date.now()
+                    });
+                })
+                .catch(error => {
+                    sendResponse({
+                        success: false,
+                        error: error.message,
+                        chainId: message.chainId,
+                        timestamp: Date.now()
+                    });
+                });
+            return true;
+        }
+
+        if (message.type === 'REALTIME_UPDATE_WATCHED_ADDRESSES') {
+            realtimeMonitor.updateWatchedAddresses(message.addresses);
+            sendResponse({
+                success: true,
+                addressCount: message.addresses.length,
+                timestamp: Date.now()
+            });
+            return false;
+        }
+
+        if (message.type === 'REALTIME_DISCONNECT_CHAIN') {
+            realtimeMonitor.disconnectChain(message.chainId);
+            sendResponse({
+                success: true,
+                chainId: message.chainId,
+                timestamp: Date.now()
+            });
+            return false;
+        }
+
+        if (message.type === 'REALTIME_DISCONNECT_ALL') {
+            realtimeMonitor.disconnectAll();
+            sendResponse({
+                success: true,
+                timestamp: Date.now()
+            });
+            return false;
+        }
+
+        if (message.type === 'REALTIME_GET_STATUS') {
+            const connectionStatus = {};
+            for (const [chainId, connection] of realtimeMonitor.connections) {
+                connectionStatus[chainId] = {
+                    connected: connection.isConnected,
+                    subscriptions: Array.from(connection.subscriptions),
+                    lastHeartbeat: connection.lastHeartbeat
+                };
+            }
+
+            sendResponse({
+                success: true,
+                connections: connectionStatus,
+                watchedAddresses: Array.from(realtimeMonitor.watchedAddresses),
+                timestamp: Date.now()
+            });
+            return false;
         }
     });
 
@@ -919,4 +1277,4 @@ document.addEventListener('DOMContentLoaded', initHardwareWalletBridge);
 // Let the extension know if the window is closing
 window.addEventListener('beforeunload', () => {
     chrome.runtime.sendMessage({ type: 'BRIDGE_CLOSING' });
-}); 
+});

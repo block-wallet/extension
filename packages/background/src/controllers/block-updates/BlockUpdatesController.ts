@@ -7,7 +7,6 @@ import {
     Network,
 } from '../../utils/constants/networks';
 import { MINUTE } from './../../utils/constants/time';
-import log from 'loglevel';
 
 export interface BlockUpdatesControllerState {
     blockData: {
@@ -231,10 +230,9 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
             });
 
             this.chromeAlarmsSetup = true;
-            log.info('[BlockUpdatesController] Chrome Alarms setup completed');
 
         } catch (error) {
-            log.error('[BlockUpdatesController] Failed to setup Chrome Alarms:', error);
+            console.error('[BlockUpdatesController] Failed to setup Chrome Alarms:', error);
         }
     }
 
@@ -265,7 +263,6 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
         if (shouldUpdate) {
             // Trigger a block number check
             this._blockFetchController.getCurrentBlockNumber(currentChainId);
-            log.debug(`[BlockUpdatesController] Chrome Alarm triggered update: ${alarmName}`);
         }
     }
 

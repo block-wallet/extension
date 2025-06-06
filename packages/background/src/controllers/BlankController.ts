@@ -258,6 +258,7 @@ import { Devices } from '../utils/types/hardware';
 import { KeyringTypes } from './KeyringControllerDerivated';
 import { PortfolioAnalyticsController, PortfolioAnalyticsEvents } from './PortfolioAnalyticsController';
 import { RealtimeManager } from '../infrastructure/realtime/RealtimeManager';
+import { NetworkEvents } from './NetworkController';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -573,6 +574,11 @@ export default class BlankController extends EventEmitter {
             this.manageControllers();
         });
 
+        // Listen for network changes to switch real-time monitoring
+        this.networkController.on(NetworkEvents.NETWORK_CHANGE, (network) => {
+            this.handleNetworkChange(network);
+        });
+
         // Trigger method to manage external requests amount on update of relevent stores
         this.blankProviderController.store.subscribe(() => {
             this.handleExternalRequestAmountChange();
@@ -619,8 +625,6 @@ export default class BlankController extends EventEmitter {
             }
         }
 
-        console.log(`[BlankController] manageControllers - Found ${Object.keys(this.subscriptions).length} subscriptions with names: [${subscriptionNames.join(', ')}], activeSubscription: ${activeSubscription}`);
-
         // Check if app is unlocked
         const isAppUnlocked =
             this.appStateController.store.getState().isAppUnlocked;
@@ -649,19 +653,37 @@ export default class BlankController extends EventEmitter {
      */
     private async manageRealtimeMonitoring(isAppUnlocked: boolean, activeSubscription: boolean): Promise<void> {
         try {
-            console.log(`[BlankController] manageRealtimeMonitoring called - isAppUnlocked: ${isAppUnlocked}, activeSubscription: ${activeSubscription}`);
-
             if (isAppUnlocked && activeSubscription) {
                 // Start real-time monitoring when app is unlocked and actively used
-                console.log('[BlankController] Starting real-time monitoring...');
                 await this.transactionWatcherController.startRealtimeMonitoring();
             } else {
                 // Stop real-time monitoring when app is locked or not actively used
-                console.log('[BlankController] Stopping real-time monitoring...');
                 await this.transactionWatcherController.stopRealtimeMonitoring();
             }
         } catch (error) {
             console.error('[BlankController] Error managing real-time monitoring:', error);
+        }
+    }
+
+    /**
+     * Handles network changes to switch real-time monitoring to the new network
+     */
+    private async handleNetworkChange(network: any): Promise<void> {
+        try {
+            console.log(`[BlankController] Network changed to ${network.name} (chainId: ${network.chainId})`);
+
+            // Get current app state
+            const isAppUnlocked = this.appStateController.store.getState().isAppUnlocked;
+            const hasActiveSubscription = Object.keys(this.subscriptions).length > 0;
+
+            // Only handle network switching if app is unlocked and has active subscriptions
+            if (isAppUnlocked && hasActiveSubscription) {
+                // Trigger real-time monitoring restart for the new network
+                await this.transactionWatcherController.handleNetworkSwitch(network.chainId);
+            }
+
+        } catch (error) {
+            console.error(`[BlankController] Error handling network change to ${network.name}:`, error);
         }
     }
 
@@ -682,7 +704,6 @@ export default class BlankController extends EventEmitter {
             timestamp: Date.now()
         };
 
-        console.log('[BlankController] DEBUG: Current realtime state:', state);
         return state;
     }
 
@@ -731,7 +752,6 @@ export default class BlankController extends EventEmitter {
         id: string,
         port: chrome.runtime.Port
     ): (data: SubscriptionMessageTypes[TMessageType]) => void {
-        console.log(`[BlankController] createSubscription called - id: ${id}, port.name: ${port.name}`);
         this.subscriptions[id] = port;
 
         // Check controllers
@@ -754,7 +774,7 @@ export default class BlankController extends EventEmitter {
                 }
             } catch (err) {
                 const safeError = toError(err);
-                log.error('[err]', safeError.message);
+                console.error('[err]', safeError.message);
                 if (
                     safeError.message
                         .toLowerCase()
@@ -776,14 +796,14 @@ export default class BlankController extends EventEmitter {
      */
     private unsubscribe(id: string): void {
         if (this.subscriptions[id]) {
-            log.debug(`Unsubscribing from ${id}`);
+            console.warn(`Unsubscribing from ${id}`);
 
             delete this.subscriptions[id];
 
             // Check controllers
             this.manageControllers();
         } else {
-            log.warn(`Unable to unsubscribe from ${id}`);
+            console.warn(`Unable to unsubscribe from ${id}`);
         }
     }
 
@@ -800,26 +820,20 @@ export default class BlankController extends EventEmitter {
         const from = port.name;
         const source = `${from}: ${id}: ${message}`;
 
-        console.log(`[BlankController] handler called - from: ${from}, message: ${message}, id: ${id}`);
-
         port.onDisconnect.addListener(() => {
             console.log(`[BlankController] port disconnected - id: ${id}, from: ${from}`);
             this.unsubscribe(id);
             const error = chrome.runtime.lastError;
             isPortConnected = false;
             if (error) {
-                log.error(error);
+                console.error(error);
             }
         });
-
-        log.trace('[in]', source);
 
         const promise = this.handle(id, message, request, port, portId);
 
         promise
             .then((response): void => {
-                log.trace('[out]', source);
-
                 if (!isPortConnected) {
                     throw new Error('Port has been disconnected');
                 }
@@ -836,7 +850,7 @@ export default class BlankController extends EventEmitter {
                 try {
                     port.postMessage(message);
                 } catch (error: any) {
-                    log.warn(message, error);
+                    console.warn(message, error);
                     throw error;
                 }
             })
@@ -844,7 +858,7 @@ export default class BlankController extends EventEmitter {
                 // Always pass an error object to the client
                 const safeError = toError(error);
 
-                log.error('[err]', source, safeError.message);
+                console.error('[err]', source, safeError.message);
                 this.blankProviderController.cancelPendingDAppRequests();
                 // only send message back to port if it's still connected
                 if (isPortConnected) {
@@ -1422,7 +1436,7 @@ export default class BlankController extends EventEmitter {
             );
             return getAccountJson(privateKey, encryptPassword);
         } catch (error) {
-            log.warn(error);
+            console.warn(error);
             throw new Error('Error exporting account');
         }
     }
@@ -1443,7 +1457,7 @@ export default class BlankController extends EventEmitter {
             await this.keyringController.verifyPassword(password);
             return await this.keyringController.exportAccount(address);
         } catch (error) {
-            log.warn(error);
+            console.warn(error);
             throw new Error('Error exporting account');
         }
     }
@@ -1585,7 +1599,7 @@ export default class BlankController extends EventEmitter {
         try {
             await this.transactionWatcherController.addAddressToRealtimeMonitoring(address);
         } catch (error) {
-            log.warn('[BlankController] Failed to add address to real-time monitoring:', error);
+            console.warn('[BlankController] Failed to add address to real-time monitoring:', error);
         }
 
         return true;
@@ -1634,13 +1648,11 @@ export default class BlankController extends EventEmitter {
      */
     private async unlockApp({ password }: RequestAppUnlock): Promise<boolean> {
         try {
-            console.log('[BlankController] unlockApp called');
             await this.appStateController.unlock(password);
-            console.log('[BlankController] App unlocked successfully');
             // Note: manageControllers() will be called automatically by the existing subscription
             return true;
         } catch (error) {
-            console.log('[BlankController] unlockApp failed:', error);
+            console.error('[BlankController] unlockApp failed:', error);
             return false;
         }
     }
@@ -2851,7 +2863,6 @@ export default class BlankController extends EventEmitter {
             const currentKeyringAccounts = await primaryKeyring.getAccounts();
             const accountsToAddCount = requiredNumberOfAccounts - currentKeyringAccounts.length;
             if (accountsToAddCount > 0) {
-                log.debug(`Deriving ${accountsToAddCount} additional accounts in keyring (up to index ${maxIndex})`);
                 await primaryKeyring.addAccounts(accountsToAddCount);
                 // Persist the keyring state after adding accounts
                 // Corrected method name
@@ -2872,7 +2883,7 @@ export default class BlankController extends EventEmitter {
             for (const index of indicesToImport) {
                 const address = allDerivedAccounts[index];
                 if (!address) {
-                    log.warn(`Could not get address for derived index ${index}. Skipping.`);
+                    console.warn(`Could not get address for derived index ${index}. Skipping.`);
                     continue;
                 }
                 const addressLower = address.toLowerCase();
@@ -2893,7 +2904,6 @@ export default class BlankController extends EventEmitter {
             }
 
             // 7. Directly update the AccountTrackerController state
-            log.debug(`Adding ${Object.keys(newAccountsState).length} accounts to AccountTracker state`);
             this.accountTrackerController.store.updateState({
                 accounts: newAccountsState,
                 hiddenAccounts: {}, // Ensure hidden accounts are cleared
@@ -2909,7 +2919,6 @@ export default class BlankController extends EventEmitter {
                 throw new Error("Could not determine address to select after import.");
             }
             this.preferencesController.setSelectedAddress(addressToSelect);
-            log.debug(`Set selected address to: ${addressToSelect}`);
 
             // 9. Unlock and Initialize
             if (!reImport) {
@@ -2942,7 +2951,7 @@ export default class BlankController extends EventEmitter {
             );
 
         } catch (error) {
-            log.error("Error during wallet import process:", error);
+            console.error("Error during wallet import process:", error);
             // Check error message for known issues (example)
             if (error instanceof Error) {
                 if (error.message.toLowerCase().includes("invalid mnemonic")) {
@@ -2999,7 +3008,7 @@ export default class BlankController extends EventEmitter {
             );
             return seedPhrase;
         } catch (error) {
-            log.warn(error);
+            console.warn(error);
             throw Error('Error verifying seed phrase');
         }
     }
@@ -3019,7 +3028,7 @@ export default class BlankController extends EventEmitter {
                 password
             );
         } catch (error) {
-            log.warn(error);
+            console.warn(error);
             throw Error('Error verifying seed phrase');
         }
         if (seedPhrase === vaultSeedPhrase) {
@@ -3050,7 +3059,6 @@ export default class BlankController extends EventEmitter {
      *
      */
     private stateSubscribe(id: string, port: chrome.runtime.Port): boolean {
-        console.log(`[BlankController] stateSubscribe called - id: ${id}, port.name: ${port.name}`);
         const cb = this.createSubscription<typeof Messages.STATE.SUBSCRIBE>(
             id,
             port
@@ -3724,7 +3732,7 @@ export default class BlankController extends EventEmitter {
             }
             return true;
         } catch (err) {
-            log.error(err);
+            console.error(err);
             return false;
         }
         */
@@ -3743,7 +3751,7 @@ export default class BlankController extends EventEmitter {
             );
             return true;
         } catch (err) {
-            log.error(err);
+            console.error(err);
             return false;
         }
         */
@@ -3847,7 +3855,6 @@ export default class BlankController extends EventEmitter {
         seedPhrase,
         password,
     }: RequestDiscoverAccountsFromSeed): Promise<ResponseDiscoverAccountsFromSeed> {
-        log.debug('Attempting to discover accounts from seed phrase');
         try {
             // Call the new method on KeyringController
             // We expect KeyringControllerDerivated to have this method added
@@ -3855,10 +3862,9 @@ export default class BlankController extends EventEmitter {
                 seedPhrase,
                 password
             );
-            log.debug(`Discovered ${accounts.length} accounts from seed`);
             return accounts;
         } catch (error) {
-            log.error('Error discovering accounts from seed:', error);
+            console.error('Error discovering accounts from seed:', error);
             // Re-throw specific errors if needed, or a generic one
             if (error instanceof Error && error.message.toLowerCase().includes("invalid mnemonic")) {
                 throw new Error("Invalid seed phrase provided for discovery.");

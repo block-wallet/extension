@@ -12,15 +12,11 @@ import { getVersion, openExtensionInBrowser } from './utils/window';
 import { setupConnection } from './infrastructure/connection';
 import { migrator } from './infrastructure/stores/migrator/migrator';
 import { DeepPartial } from './utils/types/helpers';
-import log, { LogLevelDesc } from 'loglevel';
 import { resolvePreferencesAfterWalletUpdate } from './utils/userPreferences';
 import { CONTENT } from './utils/types/communication';
 import { isManifestV3 } from './utils/manifest';
 import { Devices } from './utils/types/hardware';
 import { resourceManager } from './utils/ServiceWorkerResourceManager';
-
-// Set log level
-log.setLevel(process.env.NODE_ENV === 'production' ? 'warn' : 'debug');
 
 // Initialize Block State Store
 const blankStateStore = new BlankStorageStore();
@@ -32,9 +28,8 @@ const blankStateStore = new BlankStorageStore();
 const ensureStorageAvailable = async (): Promise<void> => {
     try {
         await blankStateStore.ensureStorageAvailable();
-        log.info('Storage API is available');
     } catch (error) {
-        log.error('Storage API not available, using initial state', error);
+        console.error('Storage API not available, using initial state', error);
     }
 };
 
@@ -116,7 +111,7 @@ const getPersistedState = new Promise<BlankAppState>((resolve) => {
 
             await handleStoredState(storedState);
         } catch (error) {
-            log.error('Error retrieving persisted state', error);
+            console.error('Error retrieving persisted state', error);
             resolve(initialState);
         }
     };
@@ -182,16 +177,14 @@ const initBlockWallet = async () => {
             if (sessionData.current_wallet_operation === 'hardware_wallet') {
                 // Only run hardware wallet restoration if resource manager allows it
                 if (!resourceManager.shouldDeferHardwareWalletOperation()) {
-                    log.info('In hardware wallet mode - starting optimized state restoration...');
                     // Use resource manager to handle the operation
                     resourceManager.manageHardwareWalletOperation(
                         'hardware_wallet_restoration',
                         () => restoreHardwareWalletConnections(blankController)
                     ).catch(error => {
-                        log.error('Failed to restore hardware wallet connections:', error);
+                        console.error('Failed to restore hardware wallet connections:', error);
                     });
                 } else {
-                    log.info('Hardware wallet restoration deferred due to resource constraints');
                     // Set a flag for later restoration when resources are available
                     chrome.storage?.session?.set({
                         hardware_wallet_restoration_pending: true,
@@ -199,10 +192,10 @@ const initBlockWallet = async () => {
                     });
                 }
             } else {
-                log.debug('Not in hardware wallet mode - skipping hardware wallet initialization');
+                console.log('Not in hardware wallet mode - skipping hardware wallet initialization');
             }
         } catch (error) {
-            log.error('Error checking for hardware wallet mode:', error);
+            console.error('Error checking for hardware wallet mode:', error);
         }
     }
 
@@ -258,12 +251,11 @@ const initBlockWallet = async () => {
     | 'error'
     | 'silent'
     */
-    log.setLevel((process.env.LOG_LEVEL as LogLevelDesc) || 'error');
 };
 
 // Start block wallet
 initBlockWallet().catch((error) => {
-    log.error(error.message || error);
+    console.error(error.message || error);
 });
 
 // On install, open onboarding tab
@@ -310,9 +302,6 @@ const registerBlankProviderContentScript = async () => {
 
                     // If already registered, no need to register again
                     if (existingScripts && existingScripts.length > 0) {
-                        console.log(
-                            'blankProvider content script is already registered'
-                        );
                         return true;
                     }
                 } catch (checkErr) {
@@ -334,7 +323,6 @@ const registerBlankProviderContentScript = async () => {
                     persistAcrossSessions: true, // Ensure script registration persists
                 },
             ]);
-            console.log('Successfully registered blankProvider content script');
             return true;
         } catch (err) {
             retries++;
@@ -345,9 +333,6 @@ const registerBlankProviderContentScript = async () => {
                 return false;
             }
 
-            console.log(
-                `Retrying content script registration (${retries}/${MAX_RETRIES})...`
-            );
             // Exponential backoff for retries
             await new Promise((resolve) =>
                 setTimeout(resolve, 500 * Math.pow(2, retries - 1))
@@ -402,7 +387,6 @@ if (isManifestV3()) {
     // This helps make the extension resilient to service worker terminations
     chrome.storage.session.onChanged.addListener((changes) => {
         // Respond to storage changes to restore state when the service worker restarts
-        console.log('Session storage changes detected', changes);
     });
 
     registerBlankProviderContentScript();
@@ -423,24 +407,24 @@ async function restoreHardwareWalletConnections(blankController: BlankController
             const sessionData = await chrome.storage.session.get(['current_wallet_operation']);
             // Only initialize hardware wallet functionality if we're explicitly in a hardware wallet flow
             if (!sessionData.current_wallet_operation || sessionData.current_wallet_operation !== 'hardware_wallet') {
-                log.debug('Skipping hardware wallet initialization - not in hardware wallet flow');
+                console.log('Skipping hardware wallet initialization - not in hardware wallet flow');
                 return;
             }
 
-            log.info('Hardware wallet mode detected, initializing hardware wallet functionality');
+            console.log('Hardware wallet mode detected, initializing hardware wallet functionality');
         } else {
             // If session storage isn't available, we can't check the mode
-            log.debug('Session storage not available, skipping hardware wallet check');
+            console.log('Session storage not available, skipping hardware wallet check');
             return;
         }
     } catch (e) {
-        log.error('Error checking current wallet operation:', e);
+        console.error('Error checking current wallet operation:', e);
         // Skip initialization as a precaution
         return;
     }
 
     try {
-        log.info('Starting hardware wallet state restoration...');
+        console.log('Starting hardware wallet state restoration...');
 
         // Create a map to store the most recent state for each device
         const deviceStates: Record<string, { state: any, source: string, timestamp: number }> = {};
@@ -458,7 +442,7 @@ async function restoreHardwareWalletConnections(blankController: BlankController
                     sessionResult.ledger_connection_status.connected &&
                     Date.now() - sessionResult.ledger_connection_status.timestamp < 300000) { // Valid in last 5 minutes
                     ledgerConnectionStatus = true;
-                    log.debug("Found valid Ledger connection status in session storage");
+                    console.log("Found valid Ledger connection status in session storage");
                 }
 
                 for (const key of hwSessionKeys) {
@@ -470,11 +454,11 @@ async function restoreHardwareWalletConnections(blankController: BlankController
                             source: 'session',
                             timestamp: state.timestamp
                         };
-                        log.debug(`Found ${deviceName} in session storage with timestamp ${state.timestamp}`);
+                        console.log(`Found ${deviceName} in session storage with timestamp ${state.timestamp}`);
                     }
                 }
             } catch (e) {
-                log.error('Failed to get hardware wallet state from session storage:', e);
+                console.error('Failed to get hardware wallet state from session storage:', e);
             }
         }
 
@@ -497,19 +481,19 @@ async function restoreHardwareWalletConnections(blankController: BlankController
                                 source: 'local',
                                 timestamp: state.timestamp
                             };
-                            log.debug(`Found ${deviceName} in local storage with timestamp ${state.timestamp}`);
+                            console.log(`Found ${deviceName} in local storage with timestamp ${state.timestamp}`);
                         }
                     }
                 }
             } catch (e) {
-                log.error('Failed to get hardware wallet state from local storage:', e);
+                console.error('Failed to get hardware wallet state from local storage:', e);
             }
         }
 
         // Restore each device state
         const devices = Object.keys(deviceStates);
         if (devices.length > 0) {
-            log.info(`Found ${devices.length} hardware wallet states to restore: ${devices.join(', ')}`);
+            console.log(`Found ${devices.length} hardware wallet states to restore: ${devices.join(', ')}`);
 
             const keyringController = blankController['keyringController'];
             if (!keyringController) {
@@ -519,11 +503,11 @@ async function restoreHardwareWalletConnections(blankController: BlankController
             for (const device of devices) {
                 try {
                     const { state, source } = deviceStates[device];
-                    log.info(`Restoring ${device} from ${source} storage`);
+                    console.log(`Restoring ${device} from ${source} storage`);
 
                     // Validate the state has required properties
                     if (!state.state || !state.type) {
-                        log.error(`Invalid state structure for ${device}, missing required properties`);
+                        console.error(`Invalid state structure for ${device}, missing required properties`);
                         continue;
                     }
 
@@ -538,16 +522,16 @@ async function restoreHardwareWalletConnections(blankController: BlankController
                                 if (result.ledger_connection_status &&
                                     result.ledger_connection_status.connected &&
                                     Date.now() - result.ledger_connection_status.timestamp < 300000) { // If connected in last 5 minutes
-                                    log.debug("Found valid Ledger connection status in session storage");
+                                    console.log("Found valid Ledger connection status in session storage");
                                     hasValidConnection = true;
                                 }
                             }
                         } catch (e) {
-                            log.warn("Error checking Ledger connection status:", e);
+                            console.warn("Error checking Ledger connection status:", e);
                         }
 
                         if (!hasValidConnection) {
-                            log.info("Ledger device requires user interaction for restoration");
+                            console.log("Ledger device requires user interaction for restoration");
 
                             // Don't attempt restore, just mark as needing interaction
                             try {
@@ -561,10 +545,10 @@ async function restoreHardwareWalletConnections(blankController: BlankController
                                             savedState: state
                                         }
                                     });
-                                    log.debug("Marked Ledger as requiring user interaction with saved state");
+                                    console.log("Marked Ledger as requiring user interaction with saved state");
                                 }
                             } catch (storageErr) {
-                                log.error("Failed to store Ledger interaction state:", storageErr);
+                                console.error("Failed to store Ledger interaction state:", storageErr);
                             }
 
                             continue; // Skip restore attempt
@@ -577,7 +561,7 @@ async function restoreHardwareWalletConnections(blankController: BlankController
                     });
 
                     if (restored === true) {
-                        log.info(`Successfully restored ${device} hardware wallet connection`);
+                        console.log(`Successfully restored ${device} hardware wallet connection`);
 
                         // Update connection status for Ledger
                         if (device === 'LEDGER' && chrome.storage?.session) {
@@ -589,7 +573,7 @@ async function restoreHardwareWalletConnections(blankController: BlankController
                             });
                         }
                     } else if (typeof restored === 'object' && restored.needsUserGesture) {
-                        log.info(`${device} hardware wallet connection requires user interaction`);
+                        console.log(`${device} hardware wallet connection requires user interaction`);
 
                         // Store this information in session storage for the UI to detect
                         try {
@@ -605,13 +589,13 @@ async function restoreHardwareWalletConnections(blankController: BlankController
                                 });
                             }
                         } catch (storageError) {
-                            log.error(`Failed to store interaction state for ${device}:`, storageError);
+                            console.error(`Failed to store interaction state for ${device}:`, storageError);
                         }
                     } else {
-                        log.warn(`Failed to restore ${device} hardware wallet connection`);
+                        console.warn(`Failed to restore ${device} hardware wallet connection`);
                     }
                 } catch (e) {
-                    log.error(`Error restoring ${device} hardware wallet connection:`, e);
+                    console.error(`Error restoring ${device} hardware wallet connection:`, e);
 
                     // If we get a user interaction error, mark it accordingly
                     if (e instanceof Error &&
@@ -629,18 +613,18 @@ async function restoreHardwareWalletConnections(blankController: BlankController
                                         error: e.message
                                     }
                                 });
-                                log.debug(`Marked ${device} as requiring user interaction due to error`);
+                                console.log(`Marked ${device} as requiring user interaction due to error`);
                             }
                         } catch (storageErr) {
-                            log.error(`Failed to store interaction state for ${device}:`, storageErr);
+                            console.error(`Failed to store interaction state for ${device}:`, storageErr);
                         }
                     }
                 }
             }
         } else {
-            log.info('No hardware wallet states found for restoration');
+            console.log('No hardware wallet states found for restoration');
         }
     } catch (e) {
-        log.error('Error in hardware wallet restoration process:', e);
+        console.error('Error in hardware wallet restoration process:', e);
     }
 }

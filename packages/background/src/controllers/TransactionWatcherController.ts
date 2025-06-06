@@ -3,7 +3,6 @@ import { isValidAddress, toChecksumAddress } from '@ethereumjs/util';
 import { BigNumber } from '@ethersproject/bignumber';
 import { TransactionResponse } from '@ethersproject/providers';
 import { LogDescription, ParamType } from '@ethersproject/abi';
-import log from 'loglevel';
 import { BaseController } from '../infrastructure/BaseController';
 import { ACTIONS_TIME_INTERVALS_DEFAULT_VALUES } from '../utils/constants/networks';
 import { MILISECOND, SECOND } from '../utils/constants/time';
@@ -228,16 +227,14 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
         // Monitor connection status
         this._realtimeManager.on('connection-status', (chainId: number, connected: boolean) => {
-            if (connected) {
-                log.info(`[TransactionWatcher] Real-time monitoring connected for chain ${chainId}`);
-            } else {
-                log.warn(`[TransactionWatcher] Real-time monitoring disconnected for chain ${chainId}`);
+            if (!connected) {
+                console.warn(`[TransactionWatcher] Real-time monitoring disconnected for chain ${chainId}`);
             }
         });
 
         // Handle connection errors
         this._realtimeManager.on('connection-error', (chainId: number, error: string) => {
-            log.error(`[TransactionWatcher] Real-time monitoring error for chain ${chainId}: ${error}`);
+            console.error(`[TransactionWatcher] Real-time monitoring error for chain ${chainId}: ${error}`);
         });
     }
 
@@ -282,10 +279,10 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                     isPending: true
                 });
 
-                log.info(`[TransactionWatcher] Real-time pending transaction detected: ${transaction.hash} (${isIncoming ? 'incoming' : 'outgoing'})`);
+                console.info(`[TransactionWatcher] Real-time pending transaction detected: ${transaction.hash} (${isIncoming ? 'incoming' : 'outgoing'})`);
             }
         } catch (error) {
-            log.error('[TransactionWatcher] Error handling real-time pending transaction:', error);
+            console.error('[TransactionWatcher] Error handling real-time pending transaction:', error);
         }
     }
 
@@ -294,12 +291,8 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
      */
     public async startRealtimeMonitoring(): Promise<void> {
         try {
-            console.log('[TransactionWatcher] startRealtimeMonitoring called');
-
             const chainId = this._networkController.network.chainId;
             const selectedAddress = this._preferencesController.getSelectedAddress();
-
-            console.log(`[TransactionWatcher] Chain ID: ${chainId}, Selected Address: ${selectedAddress}`);
 
             if (!selectedAddress) {
                 console.warn('[TransactionWatcher] No selected address for real-time monitoring');
@@ -365,9 +358,8 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
     public async stopRealtimeMonitoring(): Promise<void> {
         try {
             await this._realtimeManager.disconnectAll();
-            log.info('[TransactionWatcher] Real-time monitoring stopped');
         } catch (error) {
-            log.error('[TransactionWatcher] Error stopping real-time monitoring:', error);
+            console.error('[TransactionWatcher] Error stopping real-time monitoring:', error);
         }
     }
 
@@ -377,9 +369,8 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
     public async addAddressToRealtimeMonitoring(address: string): Promise<void> {
         try {
             await this._realtimeManager.addWatchedAddresses([address]);
-            log.info(`[TransactionWatcher] Added address ${address} to real-time monitoring`);
         } catch (error) {
-            log.error(`[TransactionWatcher] Failed to add address ${address} to real-time monitoring:`, error);
+            console.error(`[TransactionWatcher] Failed to add address ${address} to real-time monitoring:`, error);
         }
     }
 
@@ -403,10 +394,9 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                 timestamp: Date.now()
             };
 
-            log.info('[TransactionWatcher] Real-time monitoring status:', status);
             return status;
         } catch (error) {
-            log.error('[TransactionWatcher] Failed to get real-time monitoring status:', error);
+            console.error('[TransactionWatcher] Failed to get real-time monitoring status:', error);
             return { error: error.message };
         }
     }
@@ -416,8 +406,6 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
      */
     public async debugStartRealtimeMonitoring(providerConfig?: RealtimeProviderConfig): Promise<any> {
         try {
-            log.info('[TransactionWatcher] DEBUG: Starting real-time monitoring manually');
-
             const chainId = this._networkController.network.chainId;
             const selectedAddress = this._preferencesController.getSelectedAddress();
 
@@ -436,10 +424,9 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             await this._realtimeManager.setupChainMonitoring(chainId, [selectedAddress], config);
 
             const status = await this.getRealtimeMonitoringStatus();
-            log.info('[TransactionWatcher] DEBUG: Real-time monitoring started successfully');
             return status;
         } catch (error) {
-            log.error('[TransactionWatcher] DEBUG: Failed to start real-time monitoring:', error);
+            console.error('[TransactionWatcher] DEBUG: Failed to start real-time monitoring:', error);
             return { error: error.message };
         }
     }
@@ -784,7 +771,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                             newTransactions = result.transactions;
                             tokenAddresses = result.tokenAddresses;
                         } catch (e: any) {
-                            log.warn(
+                            console.warn(
                                 'fetchAccountOnChainEvents',
                                 '_getTransactionsFromAPI',
                                 e
@@ -809,7 +796,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                             newTransactions = result.transactions;
                             tokenAddresses = result.tokenAddresses;
                         } catch (e: any) {
-                            log.warn(
+                            console.warn(
                                 'fetchAccountOnChainEvents',
                                 '_getTransactionsFromChain',
                                 e
@@ -925,7 +912,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                     }
                 }
             } catch (e) {
-                log.warn('fetchAccountOnChainEvents', e.message || e);
+                console.warn('fetchAccountOnChainEvents', e.message || e);
             }
         });
     };
@@ -1171,7 +1158,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
             logData = SignedTransaction.parseLogData(_log.topics, _log.data);
         } catch (e) {
-            log.warn(
+            console.warn(
                 '_formatTransactionFromChain',
                 'parseLogData',
                 _log.transactionHash,
@@ -1189,7 +1176,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                     .getProvider()
                     .getTransaction(_log.transactionHash);
             } catch (e) {
-                log.warn(
+                console.warn(
                     '_formatTransactionFromChain',
                     'getTransaction',
                     _log.transactionHash,
@@ -1833,4 +1820,61 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             toChecksumAddress(a) === toChecksumAddress(b)
         );
     };
+
+    /**
+     * Handles network switching for real-time monitoring
+     */
+    public async handleNetworkSwitch(newChainId: number): Promise<void> {
+        try {
+            console.log(`[TransactionWatcherController] Switching real-time monitoring to chain ${newChainId}`);
+
+            // Check if this is a local development chain
+            const localChains = [31337, 1337, 8545]; // Hardhat, Ganache, local dev chains
+            if (localChains.includes(newChainId)) {
+                console.log(`[TransactionWatcher] Chain ${newChainId} is a local development chain - real-time monitoring not available`);
+                return; // Skip real-time monitoring for local chains
+            }
+
+            // Get the current selected account address
+            const selectedAddress = this._preferencesController.getSelectedAddress();
+            if (!selectedAddress) {
+                console.warn('[TransactionWatcherController] No selected address found for network switch');
+                return;
+            }
+
+            // Use environment variables for API keys with Infura as fallback
+            const alchemyApiKey = process.env.REACT_APP_ALCHEMY_API_KEY || process.env.ALCHEMY_API_KEY || '';
+            const infuraApiKey = process.env.REACT_APP_INFURA_API_KEY || process.env.INFURA_API_KEY || '';
+
+            // Configure primary provider (Alchemy) with Infura fallback
+            const providerConfig: RealtimeProviderConfig = {
+                provider: 'alchemy',
+                apiKey: alchemyApiKey,
+                fallbackProvider: 'infura',
+                fallbackApiKey: infuraApiKey
+            };
+
+            // Skip real-time monitoring if no API keys are configured
+            if (!providerConfig.apiKey && !providerConfig.fallbackApiKey) {
+                console.warn('[TransactionWatcherController] No API keys configured for real-time monitoring - skipping network switch');
+                return;
+            }
+
+            // If primary API key is missing, use fallback as primary
+            if (!providerConfig.apiKey && providerConfig.fallbackApiKey) {
+                console.log('[TransactionWatcherController] Using Infura as primary provider for network switch (Alchemy key not configured)');
+                providerConfig.provider = 'infura';
+                providerConfig.apiKey = providerConfig.fallbackApiKey;
+                providerConfig.fallbackProvider = undefined;
+                providerConfig.fallbackApiKey = undefined;
+            }
+
+            // Use the RealtimeManager's switchNetwork method
+            await this._realtimeManager.switchNetwork(newChainId, [selectedAddress], providerConfig);
+
+        } catch (error) {
+            console.error(`[TransactionWatcherController] Error switching to network ${newChainId}:`, error);
+            // Don't throw error to avoid breaking the network switch
+        }
+    }
 }

@@ -7,7 +7,6 @@ import { Origin, BackgroundActions } from "./commTypes"
 import { SiteMetadata } from "@block-wallet/provider/types"
 import { checkRedraw } from "./util/platform"
 import { isWindow } from "./util/isWindow"
-import log from "loglevel"
 
 export const handlers: Handlers = {}
 export let port: chrome.runtime.Port
@@ -24,7 +23,7 @@ const portConnection = () => {
                 port.onDisconnect.removeListener(disconectListener)
                 port.disconnect()
             } catch (e) {
-                log.warn("Error while disconnecting port", e)
+                console.warn("Error while disconnecting port", e)
             }
         }
 
@@ -35,13 +34,11 @@ const portConnection = () => {
         port.onMessage.addListener(messageListener)
         port.onDisconnect.addListener(disconectListener)
 
-        log.debug("Port reconnected successfully")
     } catch (err) {
-        log.error("Failed to reconnect port", err)
+        console.error("Failed to reconnect port", err)
 
         // If reconnection fails, try again after a short delay
         setTimeout(() => {
-            log.debug("Attempting port reconnection after failure")
             isPortConnected = false
             initialize()
         }, 500)
@@ -52,11 +49,8 @@ const disconectListener = () => {
     isPortConnected = false
     const error = chrome.runtime.lastError
     if (error) {
-        log.error("Port disconnected with error:", error.message)
-        console.error("Port disconnection error:", error.message)
+        console.error("Port disconnected with error:", error.message)
     } else {
-        log.debug("Port disconnected normally")
-        console.log("Port disconnected normally")
     }
 }
 
@@ -69,8 +63,7 @@ const messageListener = (data: TransportResponseMessage<MessageTypes>) => {
             isAutomaticClose = true
             window.close()
         } else {
-            log.error("Unknown response", data)
-            console.error("Unknown response from background:", data)
+            console.error("Unknown response", data)
         }
         return
     }
@@ -93,7 +86,6 @@ const messageListener = (data: TransportResponseMessage<MessageTypes>) => {
                 .toLowerCase()
                 .includes("attempting to use a disconnected port object")
         ) {
-            log.warn("Detected disconnected port error, attempting reconnection")
             console.warn("Detected disconnected port error, attempting reconnection")
             portConnection()
         }
@@ -109,10 +101,8 @@ const messageListener = (data: TransportResponseMessage<MessageTypes>) => {
  */
 const initPort = () => {
     try {
-        console.log("[POPUP] initPort() called, attempting connection...")
         // Open port
         port = chrome.runtime.connect({ name: Origin.EXTENSION })
-        console.log("[POPUP] Port connection successful:", port)
 
         // Check for error
         port.onDisconnect.addListener(disconectListener)
@@ -121,11 +111,8 @@ const initPort = () => {
         port.onMessage.addListener(messageListener)
 
         isPortConnected = true
-        console.log("[POPUP] Port initialized successfully")
-        log.debug("Port initialized successfully")
     } catch (err) {
         console.error("[POPUP] Failed to initialize port:", err)
-        log.error("Failed to initialize port", err)
         isPortConnected = false
 
         // Retry connection after a delay
@@ -138,19 +125,15 @@ const initPort = () => {
  * Checks if the background is running before connecting the port
  */
 export const initialize = () => {
-    console.log("[POPUP] initialize() called")
     chrome.runtime &&
         chrome.runtime.sendMessage(
             { message: "isBlankInitialized" },
             (response: any) => {
                 const error = chrome.runtime.lastError
-                console.log("[POPUP] Initialization response:", response, "Error:", error)
                 if (!response || error) {
-                    console.log("initialize", error)
                     setTimeout(initialize, 100)
                 } else {
                     if (response.isBlankInitialized === true) {
-                        console.log("[POPUP] Background initialized, attempting port connection")
                         if (!isPortConnected) {
                             initPort()
                         }

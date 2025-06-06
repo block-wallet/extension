@@ -1,5 +1,4 @@
 import { EventEmitter } from 'events';
-import log from 'loglevel';
 
 // Service Worker global types
 declare const clients: {
@@ -35,13 +34,54 @@ export class RealtimeManager extends EventEmitter {
     private activeConnections = new Set<number>();
     private watchedAddresses = new Set<string>();
     private providerConfigs = new Map<number, RealtimeProviderConfig>();
+    private currentChainId: number | null = null;
 
     constructor() {
         super();
         this.setupMessageListeners();
     }
 
-        /**
+    /**
+     * Switch to monitoring a different network
+     * This will disconnect from the current network and connect to the new one
+     */
+    async switchNetwork(
+        newChainId: number,
+        addresses: string[],
+        providerConfig: RealtimeProviderConfig
+    ): Promise<void> {
+        try {
+            console.log(`[RealtimeManager] Switching from chain ${this.currentChainId} to ${newChainId}`);
+
+            // Disconnect from current chain if active
+            if (this.currentChainId && this.isMonitoringActive(this.currentChainId)) {
+                await this.disconnectChain(this.currentChainId);
+            }
+
+            // Update current chain ID
+            this.currentChainId = newChainId;
+
+            // Setup monitoring for new chain
+            await this.setupChainMonitoring(newChainId, addresses, providerConfig);
+
+            console.log(`[RealtimeManager] Successfully switched to chain ${newChainId}`);
+
+        } catch (error) {
+            console.error(`[RealtimeManager] Failed to switch to network ${newChainId}:`, error);
+            // Still update the current chain ID even if monitoring setup fails
+            this.currentChainId = newChainId;
+            throw error;
+        }
+    }
+
+    /**
+     * Get the currently monitored chain ID
+     */
+    getCurrentChainId(): number | null {
+        return this.currentChainId;
+    }
+
+    /**
      * Setup real-time monitoring for a specific chain
      */
     async setupChainMonitoring(
@@ -50,12 +90,9 @@ export class RealtimeManager extends EventEmitter {
         providerConfig: RealtimeProviderConfig
     ): Promise<void> {
         try {
-            console.log(`[RealtimeManager] Setting up monitoring for chain ${chainId} with ${addresses.length} addresses`);
-
             // Check if this is a local development chain
             const localChains = [31337, 1337, 8545]; // Hardhat, Ganache, local dev chains
             if (localChains.includes(chainId)) {
-                log.info(`[RealtimeManager] Chain ${chainId} is a local development chain - skipping real-time monitoring`);
                 return; // Skip real-time monitoring for local chains
             }
 
@@ -79,7 +116,7 @@ export class RealtimeManager extends EventEmitter {
 
             // If primary provider fails and we have a fallback, try the fallback
             if (!response?.success && providerConfig.fallbackProvider && providerConfig.fallbackApiKey) {
-                log.warn(`[RealtimeManager] Primary provider (${providerConfig.provider}) failed for chain ${chainId}, trying fallback (${providerConfig.fallbackProvider})`);
+                console.warn(`[RealtimeManager] Primary provider (${providerConfig.provider}) failed for chain ${chainId}, trying fallback (${providerConfig.fallbackProvider})`);
 
                 const fallbackConfig: RealtimeProviderConfig = {
                     provider: providerConfig.fallbackProvider,
@@ -93,7 +130,6 @@ export class RealtimeManager extends EventEmitter {
                 });
 
                 if (response?.success) {
-                    log.info(`[RealtimeManager] Successfully connected using fallback provider (${providerConfig.fallbackProvider}) for chain ${chainId}`);
                     // Update stored config to reflect successful fallback
                     this.providerConfigs.set(chainId, fallbackConfig);
                 }
@@ -102,7 +138,7 @@ export class RealtimeManager extends EventEmitter {
             if (!response?.success) {
                 // Check if the error is about unsupported chain
                 if (response?.error?.includes('No WebSocket provider configured')) {
-                    log.warn(`[RealtimeManager] Real-time monitoring not supported for chain ${chainId} - continuing without WebSocket monitoring`);
+                    console.warn(`[RealtimeManager] Real-time monitoring not supported for chain ${chainId} - continuing without WebSocket monitoring`);
                     return; // Gracefully skip unsupported chains
                 }
                 throw new Error(`Failed to setup connection with all providers: ${response?.error}`);
@@ -115,7 +151,7 @@ export class RealtimeManager extends EventEmitter {
             });
 
             this.activeConnections.add(chainId);
-            console.log(`[RealtimeManager] Successfully setup monitoring for chain ${chainId}`);
+            this.currentChainId = chainId;
 
         } catch (error) {
             console.error(`[RealtimeManager] Failed to setup chain monitoring for ${chainId}:`, error);
@@ -144,10 +180,10 @@ export class RealtimeManager extends EventEmitter {
                         addresses: Array.from(this.watchedAddresses)
                     });
                 } else {
-                    log.warn('[RealtimeManager] Offscreen document not found for address update');
+                    console.warn('[RealtimeManager] Offscreen document not found for address update');
                 }
             } catch (error) {
-                log.warn('[RealtimeManager] Failed to update watched addresses:', error);
+                console.warn('[RealtimeManager] Failed to update watched addresses:', error);
             }
         }
     }
@@ -168,10 +204,10 @@ export class RealtimeManager extends EventEmitter {
                         addresses: Array.from(this.watchedAddresses)
                     });
                 } else {
-                    log.warn('[RealtimeManager] Offscreen document not found for address update');
+                    console.warn('[RealtimeManager] Offscreen document not found for address update');
                 }
             } catch (error) {
-                log.warn('[RealtimeManager] Failed to remove watched addresses:', error);
+                console.warn('[RealtimeManager] Failed to remove watched addresses:', error);
             }
         }
     }
@@ -188,7 +224,7 @@ export class RealtimeManager extends EventEmitter {
                     chainId
                 });
             } else {
-                log.warn(`[RealtimeManager] Offscreen document not found for chain ${chainId} disconnect`);
+                console.warn(`[RealtimeManager] Offscreen document not found for chain ${chainId} disconnect`);
             }
 
             this.activeConnections.delete(chainId);
@@ -196,7 +232,7 @@ export class RealtimeManager extends EventEmitter {
 
         } catch (error) {
             // Log error but don't throw - cleanup should be fail-safe
-            log.warn(`[RealtimeManager] Failed to disconnect chain ${chainId}:`, error);
+            console.warn(`[RealtimeManager] Failed to disconnect chain ${chainId}:`, error);
 
             // Still clean up local state
             this.activeConnections.delete(chainId);
@@ -215,7 +251,7 @@ export class RealtimeManager extends EventEmitter {
                     type: 'REALTIME_DISCONNECT_ALL'
                 });
             } else {
-                log.warn('[RealtimeManager] Offscreen document not found for disconnect all');
+                console.warn('[RealtimeManager] Offscreen document not found for disconnect all');
             }
 
             this.activeConnections.clear();
@@ -224,7 +260,7 @@ export class RealtimeManager extends EventEmitter {
 
         } catch (error) {
             // Log error but don't throw - cleanup should be fail-safe
-            log.warn('[RealtimeManager] Failed to disconnect all connections:', error);
+            console.warn('[RealtimeManager] Failed to disconnect all connections:', error);
 
             // Still clean up local state
             this.activeConnections.clear();
@@ -244,7 +280,7 @@ export class RealtimeManager extends EventEmitter {
 
             return response?.success ? response : null;
         } catch (error) {
-            log.error('[RealtimeManager] Failed to get connection status:', error);
+            console.error('[RealtimeManager] Failed to get connection status:', error);
             return null;
         }
     }
@@ -270,7 +306,6 @@ export class RealtimeManager extends EventEmitter {
         try {
             // Check if offscreen document already exists
             if (await this.hasOffscreenDocument()) {
-                console.log('[RealtimeManager] Offscreen document already exists');
                 return;
             }
 
@@ -281,12 +316,9 @@ export class RealtimeManager extends EventEmitter {
                 justification: 'Real-time blockchain event monitoring via WebSocket connections'
             });
 
-            console.log('[RealtimeManager] Offscreen document created');
-
         } catch (error) {
             // Handle the case where offscreen document already exists
             if (error.message?.includes('Only a single offscreen document may be created')) {
-                console.log('[RealtimeManager] Offscreen document already exists (detected via error)');
                 return; // Document exists, continue normally
             }
             console.error('[RealtimeManager] Failed to create offscreen document:', error);

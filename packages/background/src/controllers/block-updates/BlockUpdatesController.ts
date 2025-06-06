@@ -60,11 +60,11 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
     private addNewOnBlockListener() {
         if (!this.activeSubscriptions) {
             // when there is no active subscriptions (the extension is closed and locked)
-            // the blocks are synced every 3 minutes.
+            // the blocks are synced every 10 seconds.
             this._blockFetchController.addNewOnBlockListener(
                 this._networkController.network.chainId,
                 this._blockUpdates,
-                3 * MINUTE
+                10 * 1000 // 10 seconds
             );
         } else {
             this._blockFetchController.addNewOnBlockListener(
@@ -208,19 +208,19 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
 
         try {
             // Create alarms for different monitoring intervals
-            // Active monitoring - every 15 seconds when extension is actively used
+            // Active monitoring - every 5 seconds when extension is actively used
             chrome.alarms.create('blockMonitor-active', {
-                periodInMinutes: 0.25 // 15 seconds
+                periodInMinutes: 0.083 // 5 seconds
             });
 
-            // Passive monitoring - every 3 minutes when extension is in background
+            // Passive monitoring - every 10 seconds when extension is in background
             chrome.alarms.create('blockMonitor-passive', {
-                periodInMinutes: 3
+                periodInMinutes: 0.167 // 10 seconds
             });
 
-            // Real-time check - every 5 seconds for immediate responsiveness
+            // Real-time check - every 3 seconds for immediate responsiveness
             chrome.alarms.create('blockMonitor-realtime', {
-                periodInMinutes: 0.083 // ~5 seconds
+                periodInMinutes: 0.05 // 3 seconds
             });
 
             // Listen to all block monitoring alarms

@@ -225,8 +225,17 @@ const initBlockWallet = async () => {
     );
 
     // Setup connection
+    console.log('[BACKGROUND] Setting up chrome.runtime.onConnect listener');
     chrome.runtime.onConnect.addListener((port) => {
-        setupConnection(port, blankController);
+        console.log('[BACKGROUND] onConnect fired - port received:', port.name, port.sender?.url);
+        try {
+            console.log('[BACKGROUND] About to call setupConnection...');
+            console.log('[BACKGROUND] blankController available:', !!blankController);
+            setupConnection(port, blankController);
+            console.log('[BACKGROUND] setupConnection call completed');
+        } catch (error) {
+            console.error('[BACKGROUND] Error in setupConnection:', error);
+        }
     });
 
     // Set isBlankInitialized response and should inject response

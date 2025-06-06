@@ -388,8 +388,10 @@ function initHardwareWalletBridge() {
 
         // Real-time blockchain monitoring messages
         if (message.type === 'REALTIME_SETUP_CONNECTION') {
+            logMessage(`[Offscreen] Received REALTIME_SETUP_CONNECTION for chain ${message.chainId}`, false);
             realtimeMonitor.setupRealtimeConnection(message.chainId, message.providerConfig)
                 .then(() => {
+                    logMessage(`[Offscreen] Real-time connection setup successful for chain ${message.chainId}`, false);
                     // Always send success response, even for unsupported chains
                     sendResponse({
                         success: true,
@@ -398,6 +400,7 @@ function initHardwareWalletBridge() {
                     });
                 })
                 .catch(error => {
+                    logMessage(`[Offscreen] Real-time connection setup failed for chain ${message.chainId}: ${error.message}`, false);
                     sendResponse({
                         success: false,
                         error: error.message,

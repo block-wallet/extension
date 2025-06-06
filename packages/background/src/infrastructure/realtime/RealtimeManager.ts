@@ -50,7 +50,7 @@ export class RealtimeManager extends EventEmitter {
         providerConfig: RealtimeProviderConfig
     ): Promise<void> {
         try {
-            log.info(`[RealtimeManager] Setting up monitoring for chain ${chainId} with ${addresses.length} addresses`);
+            console.log(`[RealtimeManager] Setting up monitoring for chain ${chainId} with ${addresses.length} addresses`);
 
             // Check if this is a local development chain
             const localChains = [31337, 1337, 8545]; // Hardhat, Ganache, local dev chains
@@ -115,13 +115,13 @@ export class RealtimeManager extends EventEmitter {
             });
 
             this.activeConnections.add(chainId);
-            log.info(`[RealtimeManager] Successfully setup monitoring for chain ${chainId}`);
+            console.log(`[RealtimeManager] Successfully setup monitoring for chain ${chainId}`);
 
         } catch (error) {
-            log.error(`[RealtimeManager] Failed to setup chain monitoring for ${chainId}:`, error);
+            console.error(`[RealtimeManager] Failed to setup chain monitoring for ${chainId}:`, error);
             // Don't re-throw error for unsupported chains to avoid breaking the app
             if (error.message?.includes('No WebSocket provider configured')) {
-                log.warn(`[RealtimeManager] Continuing without real-time monitoring for chain ${chainId}`);
+                console.warn(`[RealtimeManager] Continuing without real-time monitoring for chain ${chainId}`);
                 return;
             }
             throw error;
@@ -137,10 +137,18 @@ export class RealtimeManager extends EventEmitter {
         }
 
         if (this.activeConnections.size > 0) {
-            await chrome.runtime.sendMessage({
-                type: 'REALTIME_UPDATE_WATCHED_ADDRESSES',
-                addresses: Array.from(this.watchedAddresses)
-            });
+            try {
+                if (await this.hasOffscreenDocument()) {
+                    await chrome.runtime.sendMessage({
+                        type: 'REALTIME_UPDATE_WATCHED_ADDRESSES',
+                        addresses: Array.from(this.watchedAddresses)
+                    });
+                } else {
+                    log.warn('[RealtimeManager] Offscreen document not found for address update');
+                }
+            } catch (error) {
+                log.warn('[RealtimeManager] Failed to update watched addresses:', error);
+            }
         }
     }
 
@@ -153,10 +161,18 @@ export class RealtimeManager extends EventEmitter {
         }
 
         if (this.activeConnections.size > 0) {
-            await chrome.runtime.sendMessage({
-                type: 'REALTIME_UPDATE_WATCHED_ADDRESSES',
-                addresses: Array.from(this.watchedAddresses)
-            });
+            try {
+                if (await this.hasOffscreenDocument()) {
+                    await chrome.runtime.sendMessage({
+                        type: 'REALTIME_UPDATE_WATCHED_ADDRESSES',
+                        addresses: Array.from(this.watchedAddresses)
+                    });
+                } else {
+                    log.warn('[RealtimeManager] Offscreen document not found for address update');
+                }
+            } catch (error) {
+                log.warn('[RealtimeManager] Failed to remove watched addresses:', error);
+            }
         }
     }
 
@@ -165,16 +181,26 @@ export class RealtimeManager extends EventEmitter {
      */
     async disconnectChain(chainId: number): Promise<void> {
         try {
-            await chrome.runtime.sendMessage({
-                type: 'REALTIME_DISCONNECT_CHAIN',
-                chainId
-            });
+            // Check if offscreen document exists before sending message
+            if (await this.hasOffscreenDocument()) {
+                await chrome.runtime.sendMessage({
+                    type: 'REALTIME_DISCONNECT_CHAIN',
+                    chainId
+                });
+            } else {
+                log.warn(`[RealtimeManager] Offscreen document not found for chain ${chainId} disconnect`);
+            }
 
             this.activeConnections.delete(chainId);
             this.providerConfigs.delete(chainId);
 
         } catch (error) {
-            log.error(`[RealtimeManager] Failed to disconnect chain ${chainId}:`, error);
+            // Log error but don't throw - cleanup should be fail-safe
+            log.warn(`[RealtimeManager] Failed to disconnect chain ${chainId}:`, error);
+
+            // Still clean up local state
+            this.activeConnections.delete(chainId);
+            this.providerConfigs.delete(chainId);
         }
     }
 
@@ -183,16 +209,27 @@ export class RealtimeManager extends EventEmitter {
      */
     async disconnectAll(): Promise<void> {
         try {
-            await chrome.runtime.sendMessage({
-                type: 'REALTIME_DISCONNECT_ALL'
-            });
+            // Check if offscreen document exists before sending message
+            if (await this.hasOffscreenDocument()) {
+                await chrome.runtime.sendMessage({
+                    type: 'REALTIME_DISCONNECT_ALL'
+                });
+            } else {
+                log.warn('[RealtimeManager] Offscreen document not found for disconnect all');
+            }
 
             this.activeConnections.clear();
             this.providerConfigs.clear();
             this.watchedAddresses.clear();
 
         } catch (error) {
-            log.error('[RealtimeManager] Failed to disconnect all connections:', error);
+            // Log error but don't throw - cleanup should be fail-safe
+            log.warn('[RealtimeManager] Failed to disconnect all connections:', error);
+
+            // Still clean up local state
+            this.activeConnections.clear();
+            this.providerConfigs.clear();
+            this.watchedAddresses.clear();
         }
     }
 
@@ -233,6 +270,7 @@ export class RealtimeManager extends EventEmitter {
         try {
             // Check if offscreen document already exists
             if (await this.hasOffscreenDocument()) {
+                console.log('[RealtimeManager] Offscreen document already exists');
                 return;
             }
 
@@ -243,10 +281,15 @@ export class RealtimeManager extends EventEmitter {
                 justification: 'Real-time blockchain event monitoring via WebSocket connections'
             });
 
-            log.info('[RealtimeManager] Offscreen document created');
+            console.log('[RealtimeManager] Offscreen document created');
 
         } catch (error) {
-            log.error('[RealtimeManager] Failed to create offscreen document:', error);
+            // Handle the case where offscreen document already exists
+            if (error.message?.includes('Only a single offscreen document may be created')) {
+                console.log('[RealtimeManager] Offscreen document already exists (detected via error)');
+                return; // Document exists, continue normally
+            }
+            console.error('[RealtimeManager] Failed to create offscreen document:', error);
             throw error;
         }
     }

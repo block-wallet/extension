@@ -289,23 +289,27 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         }
     }
 
-        /**
+    /**
      * Start real-time monitoring for current chain and addresses
      */
     public async startRealtimeMonitoring(): Promise<void> {
         try {
+            console.log('[TransactionWatcher] startRealtimeMonitoring called');
+
             const chainId = this._networkController.network.chainId;
             const selectedAddress = this._preferencesController.getSelectedAddress();
 
+            console.log(`[TransactionWatcher] Chain ID: ${chainId}, Selected Address: ${selectedAddress}`);
+
             if (!selectedAddress) {
-                log.warn('[TransactionWatcher] No selected address for real-time monitoring');
+                console.warn('[TransactionWatcher] No selected address for real-time monitoring');
                 return;
             }
 
             // Check if this is a local development chain
             const localChains = [31337, 1337, 8545]; // Hardhat, Ganache, local dev chains
             if (localChains.includes(chainId)) {
-                log.info(`[TransactionWatcher] Chain ${chainId} is a local development chain - real-time monitoring not available`);
+                console.log(`[TransactionWatcher] Chain ${chainId} is a local development chain - real-time monitoring not available`);
                 return; // Skip real-time monitoring for local chains
             }
 
@@ -315,6 +319,8 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             // Use environment variables for API keys with Infura as fallback
             const alchemyApiKey = process.env.REACT_APP_ALCHEMY_API_KEY || process.env.ALCHEMY_API_KEY || '';
             const infuraApiKey = process.env.REACT_APP_INFURA_API_KEY || process.env.INFURA_API_KEY || '';
+
+            console.log(`[TransactionWatcher] API Keys - Alchemy: ${alchemyApiKey ? 'SET' : 'NOT SET'}, Infura: ${infuraApiKey ? 'SET' : 'NOT SET'}`);
 
             // Configure primary provider (Alchemy) with Infura fallback
             const providerConfig: RealtimeProviderConfig = {
@@ -326,28 +332,29 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
             // Skip real-time monitoring if no API keys are configured
             if (!providerConfig.apiKey && !providerConfig.fallbackApiKey) {
-                log.warn('[TransactionWatcher] No API keys configured for real-time monitoring - skipping');
+                console.warn('[TransactionWatcher] No API keys configured for real-time monitoring - skipping');
                 return;
             }
 
             // If primary API key is missing, use fallback as primary
             if (!providerConfig.apiKey && providerConfig.fallbackApiKey) {
-                log.info('[TransactionWatcher] Using Infura as primary provider (Alchemy key not configured)');
+                console.log('[TransactionWatcher] Using Infura as primary provider (Alchemy key not configured)');
                 providerConfig.provider = 'infura';
                 providerConfig.apiKey = providerConfig.fallbackApiKey;
                 providerConfig.fallbackProvider = undefined;
                 providerConfig.fallbackApiKey = undefined;
             }
 
+            console.log(`[TransactionWatcher] Starting real-time monitoring with provider: ${providerConfig.provider}`);
             await this._realtimeManager.setupChainMonitoring(chainId, addressesToWatch, providerConfig);
-            log.info(`[TransactionWatcher] Real-time monitoring started for chain ${chainId}`);
+            console.log(`[TransactionWatcher] Real-time monitoring started for chain ${chainId}`);
 
         } catch (error) {
             // Log warning instead of error for unsupported chains
             if (error.message?.includes('No WebSocket provider configured')) {
-                log.warn(`[TransactionWatcher] Real-time monitoring not supported for current chain - falling back to polling mode`);
+                console.warn(`[TransactionWatcher] Real-time monitoring not supported for current chain - falling back to polling mode`);
             } else {
-                log.error('[TransactionWatcher] Failed to start real-time monitoring:', error);
+                console.error('[TransactionWatcher] Failed to start real-time monitoring:', error);
             }
         }
     }
@@ -373,6 +380,67 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             log.info(`[TransactionWatcher] Added address ${address} to real-time monitoring`);
         } catch (error) {
             log.error(`[TransactionWatcher] Failed to add address ${address} to real-time monitoring:`, error);
+        }
+    }
+
+    /**
+     * Debug method: Get real-time monitoring status
+     */
+    public async getRealtimeMonitoringStatus(): Promise<any> {
+        try {
+            const chainId = this._networkController.network.chainId;
+            const selectedAddress = this._preferencesController.getSelectedAddress();
+            const isMonitoring = this._realtimeManager.isMonitoringActive(chainId);
+            const watchedAddresses = this._realtimeManager.getWatchedAddresses();
+            const connectionStatus = await this._realtimeManager.getConnectionStatus();
+
+            const status = {
+                chainId,
+                selectedAddress,
+                isMonitoring,
+                watchedAddresses,
+                connectionStatus,
+                timestamp: Date.now()
+            };
+
+            log.info('[TransactionWatcher] Real-time monitoring status:', status);
+            return status;
+        } catch (error) {
+            log.error('[TransactionWatcher] Failed to get real-time monitoring status:', error);
+            return { error: error.message };
+        }
+    }
+
+    /**
+     * Debug method: Manually start real-time monitoring with custom config
+     */
+    public async debugStartRealtimeMonitoring(providerConfig?: RealtimeProviderConfig): Promise<any> {
+        try {
+            log.info('[TransactionWatcher] DEBUG: Starting real-time monitoring manually');
+
+            const chainId = this._networkController.network.chainId;
+            const selectedAddress = this._preferencesController.getSelectedAddress();
+
+            if (!selectedAddress) {
+                throw new Error('No selected address');
+            }
+
+            // Use custom config or default
+            const config = providerConfig || {
+                provider: 'alchemy',
+                apiKey: 'demo', // Demo key for testing
+                fallbackProvider: 'infura',
+                fallbackApiKey: 'demo'
+            };
+
+            await this._realtimeManager.setupChainMonitoring(chainId, [selectedAddress], config);
+
+            const status = await this.getRealtimeMonitoringStatus();
+            log.info('[TransactionWatcher] DEBUG: Real-time monitoring started successfully');
+            return status;
+        } catch (error) {
+            log.error('[TransactionWatcher] DEBUG: Failed to start real-time monitoring:', error);
+            return { error: error.message };
         }
     }
 

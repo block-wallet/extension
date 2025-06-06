@@ -610,12 +610,16 @@ export default class BlankController extends EventEmitter {
     private manageControllers() {
         // Get active subscription
         let activeSubscription = false;
+        const subscriptionNames: string[] = [];
         for (const key in this.subscriptions) {
+            subscriptionNames.push(this.subscriptions[key].name);
             if (this.subscriptions[key].name === Origin.EXTENSION) {
                 activeSubscription = true;
                 break;
             }
         }
+
+        console.log(`[BlankController] manageControllers - Found ${Object.keys(this.subscriptions).length} subscriptions with names: [${subscriptionNames.join(', ')}], activeSubscription: ${activeSubscription}`);
 
         // Check if app is unlocked
         const isAppUnlocked =
@@ -645,16 +649,41 @@ export default class BlankController extends EventEmitter {
      */
     private async manageRealtimeMonitoring(isAppUnlocked: boolean, activeSubscription: boolean): Promise<void> {
         try {
+            console.log(`[BlankController] manageRealtimeMonitoring called - isAppUnlocked: ${isAppUnlocked}, activeSubscription: ${activeSubscription}`);
+
             if (isAppUnlocked && activeSubscription) {
                 // Start real-time monitoring when app is unlocked and actively used
+                console.log('[BlankController] Starting real-time monitoring...');
                 await this.transactionWatcherController.startRealtimeMonitoring();
             } else {
                 // Stop real-time monitoring when app is locked or not actively used
+                console.log('[BlankController] Stopping real-time monitoring...');
                 await this.transactionWatcherController.stopRealtimeMonitoring();
             }
         } catch (error) {
-            log.error('[BlankController] Error managing real-time monitoring:', error);
+            console.error('[BlankController] Error managing real-time monitoring:', error);
         }
+    }
+
+        /**
+     * Debug method: Check current state that affects real-time monitoring
+     */
+    public debugCheckRealtimeState(): any {
+        const isAppUnlocked = this.appStateController.store.getState().isAppUnlocked;
+        const activeSubscriptions = Object.keys(this.subscriptions).length;
+        const hasActiveSubscription = activeSubscriptions > 0;
+
+        const state = {
+            isAppUnlocked,
+            activeSubscriptions,
+            hasActiveSubscription,
+            shouldStartRealtime: isAppUnlocked && hasActiveSubscription,
+            subscriptionIds: Object.keys(this.subscriptions),
+            timestamp: Date.now()
+        };
+
+        console.log('[BlankController] DEBUG: Current realtime state:', state);
+        return state;
     }
 
     /**
@@ -702,6 +731,7 @@ export default class BlankController extends EventEmitter {
         id: string,
         port: chrome.runtime.Port
     ): (data: SubscriptionMessageTypes[TMessageType]) => void {
+        console.log(`[BlankController] createSubscription called - id: ${id}, port.name: ${port.name}`);
         this.subscriptions[id] = port;
 
         // Check controllers
@@ -770,7 +800,10 @@ export default class BlankController extends EventEmitter {
         const from = port.name;
         const source = `${from}: ${id}: ${message}`;
 
+        console.log(`[BlankController] handler called - from: ${from}, message: ${message}, id: ${id}`);
+
         port.onDisconnect.addListener(() => {
+            console.log(`[BlankController] port disconnected - id: ${id}, from: ${from}`);
             this.unsubscribe(id);
             const error = chrome.runtime.lastError;
             isPortConnected = false;
@@ -1601,9 +1634,13 @@ export default class BlankController extends EventEmitter {
      */
     private async unlockApp({ password }: RequestAppUnlock): Promise<boolean> {
         try {
+            console.log('[BlankController] unlockApp called');
             await this.appStateController.unlock(password);
+            console.log('[BlankController] App unlocked successfully');
+            // Note: manageControllers() will be called automatically by the existing subscription
             return true;
-        } catch {
+        } catch (error) {
+            console.log('[BlankController] unlockApp failed:', error);
             return false;
         }
     }
@@ -3013,6 +3050,7 @@ export default class BlankController extends EventEmitter {
      *
      */
     private stateSubscribe(id: string, port: chrome.runtime.Port): boolean {
+        console.log(`[BlankController] stateSubscribe called - id: ${id}, port.name: ${port.name}`);
         const cb = this.createSubscription<typeof Messages.STATE.SUBSCRIBE>(
             id,
             port

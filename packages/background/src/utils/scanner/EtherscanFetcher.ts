@@ -5,6 +5,7 @@ import { sleep } from '../sleep';
 interface EtherscanFetcherConfig {
     maxRetries: number;
     explorerAPIDelay: number;
+    apiKey?: string;
 }
 
 const MAX_REQUEST_RETRY = 20;
@@ -28,12 +29,18 @@ export class EtherscanFetcher {
     ): Promise<{ result: T[]; status: string }> {
         let retry = 0;
         while (retry < this.config.maxRetries) {
+            // Add API key to parameters if available
+            const requestParams = { ...params };
+            if (this.config.apiKey) {
+                requestParams.apikey = this.config.apiKey;
+            }
+
             const result = await httpClient.request<{
                 status: string;
                 message: string;
                 result: T[];
             }>(`${this.etherscanApiUrl}/api`, {
-                params: params,
+                params: requestParams,
                 timeout: 30000,
             });
 

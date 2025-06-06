@@ -229,11 +229,23 @@ export class ContractSignatureParser {
             return undefined;
         }
 
-        let retry = 0;
+                let retry = 0;
         // this retry is for the rate limit of the api.
         // as the rate limit error is a valid http response retryHandling does not catch it.
         while (retry < MAX_REQUEST_RETRY) {
             // this retry is for network/http errors
+            const apiKey = process.env.ETHERSCAN_API_KEY || '';
+            const params: Record<string, any> = {
+                module: 'contract',
+                action: 'getabi',
+                address,
+            };
+
+            // Add API key if available
+            if (apiKey) {
+                params.apikey = apiKey;
+            }
+
             const result = await retryHandling(
                 () =>
                     httpClient.request<{
@@ -241,11 +253,7 @@ export class ContractSignatureParser {
                         result: string;
                         message?: string;
                     }>(`${etherscanAPI}/api`, {
-                        params: {
-                            module: 'contract',
-                            action: 'getabi',
-                            address,
-                        },
+                        params,
                         timeout: 30000,
                     }),
                 API_CALLS_DELAY

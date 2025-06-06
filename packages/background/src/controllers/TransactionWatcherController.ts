@@ -312,8 +312,9 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             // Use environment variables for API keys with Infura as fallback
             const alchemyApiKey = process.env.REACT_APP_ALCHEMY_API_KEY || process.env.ALCHEMY_API_KEY || '';
             const infuraApiKey = process.env.REACT_APP_INFURA_API_KEY || process.env.INFURA_API_KEY || '';
+            const etherscanApiKey = process.env.ETHERSCAN_API_KEY || '';
 
-            console.log(`[TransactionWatcher] API Keys - Alchemy: ${alchemyApiKey ? 'SET' : 'NOT SET'}, Infura: ${infuraApiKey ? 'SET' : 'NOT SET'}`);
+            console.log(`[TransactionWatcher] API Keys - Alchemy: ${alchemyApiKey ? 'SET' : 'NOT SET'}, Infura: ${infuraApiKey ? 'SET' : 'NOT SET'}, Etherscan: ${etherscanApiKey ? 'SET' : 'NOT SET'}`);
 
             // Configure primary provider (Alchemy) with Infura fallback
             const providerConfig: RealtimeProviderConfig = {
@@ -757,8 +758,10 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
                     if (fetchEtherscanApi && etherscanApiUrl) {
                         try {
+                            const apiKey = process.env.ETHERSCAN_API_KEY || '';
                             const etherscanFetcher = new EtherscanFetcher(
-                                etherscanApiUrl
+                                etherscanApiUrl,
+                                { apiKey }
                             );
                             const result = await this._getTransactionsFromAPI(
                                 etherscanFetcher,
@@ -860,17 +863,41 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
                     //fetch allowances events
                     if (!forceChainQuery && etherscanApiUrlValid) {
-                        const etherscanFetcher = new EtherscanFetcher(
-                            etherscanApiUrl
-                        );
-                        ({ logs: approvalLogs } =
-                            await this._getTokenApprovalLogsFromAPI(
-                                etherscanFetcher,
-                                address,
-                                tokenAllowanceEventsState.lastBlockQueried,
-                                currentBlock,
-                                transactionType
-                            ));
+                        try {
+                            const apiKey = process.env.ETHERSCAN_API_KEY || '';
+                            const etherscanFetcher = new EtherscanFetcher(
+                                etherscanApiUrl,
+                                { apiKey }
+                            );
+                            ({ logs: approvalLogs } =
+                                await this._getTokenApprovalLogsFromAPI(
+                                    etherscanFetcher,
+                                    address,
+                                    tokenAllowanceEventsState.lastBlockQueried,
+                                    currentBlock,
+                                    transactionType
+                                ));
+                        } catch (e: any) {
+                            console.warn(
+                                'fetchAccountOnChainEvents',
+                                '_getTokenApprovalLogsFromAPI',
+                                e.message || e
+                            );
+                            // Fall back to chain data on API error
+                            const lastBlockQueried =
+                                rpcLogsFetcher.getOldestSafeBlockToFetchERC20Logs(
+                                    tokenAllowanceEventsState.lastBlockQueried,
+                                    currentBlock
+                                );
+                            ({ logs: approvalLogs } =
+                                await this._getTokenApprovalLogsFromChain(
+                                    rpcLogsFetcher,
+                                    address,
+                                    currentBlock,
+                                    lastBlockQueried,
+                                    transactionType
+                                ));
+                        }
                     } else {
                         const lastBlockQueried =
                             rpcLogsFetcher.getOldestSafeBlockToFetchERC20Logs(
@@ -1417,9 +1444,23 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                 page: 1,
             });
 
-        // the request failed
+        // Handle different API error statuses
         if (status === '-999') {
-            throw Error('etherscan api error');
+            console.warn(
+                `[TransactionWatcher] Etherscan API error for ${transactionType} transactions on chain ${chainId} for address ${address}:`,
+                'Status -999 typically indicates rate limiting or API key issues. Falling back to chain data.'
+            );
+            throw new Error(`Etherscan API unavailable (status: ${status}) for ${transactionType} transactions on chain ${chainId}. This is usually due to rate limiting or API key issues.`);
+        } else if (status === '-32000') {
+            console.warn(
+                `[TransactionWatcher] Etherscan API rate limiting for ${transactionType} transactions on chain ${chainId} for address ${address}. Falling back to chain data.`
+            );
+            throw new Error(`Etherscan API rate limited (status: ${status}) for ${transactionType} transactions on chain ${chainId}. Please try again later.`);
+        } else if (status === '-32005') {
+            console.warn(
+                `[TransactionWatcher] Etherscan API timeout for ${transactionType} transactions on chain ${chainId} for address ${address}. Falling back to chain data.`
+            );
+            throw new Error(`Etherscan API timeout (status: ${status}) for ${transactionType} transactions on chain ${chainId}. Please try again later.`);
         }
 
         if (!this._isAPIResponseValid(result, status)) {
@@ -1501,9 +1542,23 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         };
         const { result, status } = await etherscanFetcher.fetch<Log>(params);
 
-        // the request failed
+        // Handle different API error statuses
         if (status === '-999') {
-            throw Error('etherscan api error');
+            console.warn(
+                `[TransactionWatcher] Etherscan API error for ${transactionType} approval logs on address ${address}:`,
+                'Status -999 typically indicates rate limiting or API key issues. Falling back to chain data.'
+            );
+            throw new Error(`Etherscan API unavailable (status: ${status}) for ${transactionType} approval logs. This is usually due to rate limiting or API key issues.`);
+        } else if (status === '-32000') {
+            console.warn(
+                `[TransactionWatcher] Etherscan API rate limiting for ${transactionType} approval logs on address ${address}. Falling back to chain data.`
+            );
+            throw new Error(`Etherscan API rate limited (status: ${status}) for ${transactionType} approval logs. Please try again later.`);
+        } else if (status === '-32005') {
+            console.warn(
+                `[TransactionWatcher] Etherscan API timeout for ${transactionType} approval logs on address ${address}. Falling back to chain data.`
+            );
+            throw new Error(`Etherscan API timeout (status: ${status}) for ${transactionType} approval logs. Please try again later.`);
         }
 
         if (!this._isAPIResponseValid(result, status)) {
@@ -1523,7 +1578,31 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         result: EtherscanTransaction[] | Log[],
         status: string
     ): boolean => {
-        return status === '1' && Array.isArray(result) && result.length > 0;
+        if (status === '1' && Array.isArray(result) && result.length > 0) {
+            return true;
+        }
+
+        // Log debug information for non-success statuses
+        if (status !== '1') {
+            console.debug(`[TransactionWatcher] Etherscan API returned non-success status: ${status}`);
+
+            // Common Etherscan status codes:
+            // '0' = No records found (this is normal)
+            // '-999' = Error occurred (handled separately above)
+            // '-32000' = Rate limiting
+            // '-32005' = Request timeout
+            if (status === '0') {
+                console.debug('[TransactionWatcher] No records found in Etherscan API response (normal)');
+            } else if (status === '-32000') {
+                console.warn('[TransactionWatcher] Etherscan API rate limiting detected');
+            } else if (status === '-32005') {
+                console.warn('[TransactionWatcher] Etherscan API request timeout');
+            } else {
+                console.debug(`[TransactionWatcher] Unexpected Etherscan API status: ${status}`);
+            }
+        }
+
+        return false;
     };
 
     /**

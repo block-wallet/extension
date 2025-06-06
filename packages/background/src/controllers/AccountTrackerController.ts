@@ -1628,9 +1628,17 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             const zero = BigNumber.from('0x00');
 
             // Clean the current data.
-            const account = cloneDeep(
-                this.store.getState().accounts[accountAddress]
-            );
+            const existingAccount = this.store.getState().accounts[accountAddress];
+            const account = existingAccount ? cloneDeep(existingAccount) : {
+                address: accountAddress,
+                name: `Account ${Object.keys(this.store.getState().accounts).length + 1}`,
+                index: this._getNewAccountIndex(this.store.getState().accounts),
+                accountType: AccountType.HD_ACCOUNT,
+                balances: {},
+                allowances: {},
+                status: AccountStatus.ACTIVE,
+            } as AccountInfo;
+
             if (!account.balances) {
                 account.balances = {};
             }
@@ -1772,6 +1780,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         )
             ? account.balances[chainId].nativeTokenBalance
             : accountKey in stateAccounts &&
+                stateAccounts[accountKey].balances &&
                 chainId in stateAccounts[accountKey].balances
                 ? stateAccounts[accountKey].balances[chainId].nativeTokenBalance
                 : Zero;
@@ -1779,6 +1788,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         let finalTokens: AccountBalanceTokens = {};
         if (
             accountKey in stateAccounts &&
+            stateAccounts[accountKey].balances &&
             chainId in stateAccounts[accountKey].balances &&
             stateAccounts[accountKey].balances[chainId].tokens
         ) {
@@ -1799,14 +1809,28 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             }
         }
 
+        // Ensure account exists in state before updating
+        const currentAccounts = this.store.getState().accounts;
+        const existingAccount = currentAccounts[accountKey];
+
+        // If account doesn't exist, create a basic structure
+        if (!existingAccount) {
+            console.warn(`[AccTrk] Account ${accountAddress} doesn't exist in store, creating basic account structure`);
+        }
+
         const newState = {
             accounts: {
-                ...this.store.getState().accounts,
+                ...currentAccounts,
                 [accountKey]: {
-                    ...this.store.getState().accounts[accountKey],
+                    // Use the account info passed to this method, or the existing account, or create minimal structure
+                    address: accountAddress,
+                    name: account?.name || existingAccount?.name || `Account ${Object.keys(currentAccounts).length + 1}`,
+                    index: account?.index || existingAccount?.index || this._getNewAccountIndex(currentAccounts),
+                    accountType: account?.accountType || existingAccount?.accountType || AccountType.HD_ACCOUNT,
+                    status: account?.status || existingAccount?.status || AccountStatus.ACTIVE,
+                    allowances: account?.allowances || existingAccount?.allowances || {},
                     balances: {
-                        ...this.store.getState().accounts[accountKey]
-                            .balances,
+                        ...(existingAccount?.balances || {}),
                         [chainId]: {
                             nativeTokenBalance: finalNativeTokenBalance,
                             tokens: finalTokens,
@@ -1939,7 +1963,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
     private _buildBalancesForChain(chainId: number) {
         const accounts = this.store.getState().accounts;
         for (const accountAddress in accounts) {
-            const balances = accounts[accountAddress].balances;
+            const account = accounts[accountAddress];
+            const balances = account?.balances || {};
 
             if (!(chainId in balances)) {
                 this.store.updateState({
@@ -1982,12 +2007,16 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
      */
     public resetAccount(address: string): void {
         const stateAccounts = this.store.getState().accounts;
-        stateAccounts[address].balances = {};
-        stateAccounts[address].allowances = {};
 
-        this.store.updateState({
-            accounts: stateAccounts,
-        });
+        // Check if account exists before resetting
+        if (stateAccounts[address]) {
+            stateAccounts[address].balances = {};
+            stateAccounts[address].allowances = {};
+
+            this.store.updateState({
+                accounts: stateAccounts,
+            });
+        }
     }
 
     /**
@@ -2058,7 +2087,13 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         }
 
         const accountAddress = accounts[accountIndex];
-        return this.store.getState().accounts[accountAddress] as AccountInfo;
+        const account = this.store.getState().accounts[accountAddress];
+
+        if (!account) {
+            throw new Error(`Account not found for address: ${accountAddress}`);
+        }
+
+        return account;
     }
 
     /**

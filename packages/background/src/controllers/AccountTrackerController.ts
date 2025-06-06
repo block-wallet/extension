@@ -290,7 +290,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         });
                     }
                 } catch (err) {
-                    log.warn(
+                    console.warn(
                         'An error ocurred while updating the accounts',
                         err.message
                     );
@@ -316,7 +316,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         chainId
                     );
                 } catch (err) {
-                    log.warn(
+                    console.warn(
                         'An error ocurred while updating the accounts',
                         err.message
                     );
@@ -369,7 +369,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 address: string,
                 transactionType: WatchedTransactionType
             ) => {
-                console.log(`[AccTrk] Incoming ${transactionType} transaction detected for ${address} on chain ${chainId}. Triggering balance update.`);
                 if (transactionType === WatchedTransactionType.Native) {
                     await this.updateAccounts(
                         {
@@ -385,7 +384,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         this._transactionWatcherController.on(
             TransactionWatcherControllerEvents.NEW_ERC20_TRANSACTIONS,
             async (chainId: number, accountAddress: string) => {
-                console.log(`[AccTrk] New ERC20 transactions detected for ${accountAddress} on chain ${chainId}. Triggering balance update.`);
                 const assetAddresses: string[] = [];
 
                 assetAddresses.push(
@@ -454,19 +452,16 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         this._transactionController.on(
             TransactionEvents.STATUS_UPDATE,
             (transactionMeta: TransactionMeta) => {
-                console.log(`[AccTrk] Received STATUS_UPDATE for Tx ID: ${transactionMeta.id}, Status: ${transactionMeta.status}`);
                 // Existing allowance handling
                 if (
                     transactionMeta.transactionCategory ===
                     TransactionCategories.TOKEN_METHOD_APPROVE
                 ) {
-                    console.log(`[AccTrk] Handling approval tx update for ${transactionMeta.id}`);
                     this._onApprovalTransactionUpdate(transactionMeta);
                 }
 
                 // Handle confirmed transactions for balance update
                 if (transactionMeta.status === TransactionStatus.CONFIRMED) {
-                    console.log(`[AccTrk] Handling confirmed tx update for ${transactionMeta.id}`);
                     this._onTransactionConfirmed(transactionMeta);
                 }
             }
@@ -508,7 +503,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         const params = resolveAllownaceParamsFromTransaction(transactionMeta);
 
         if (!params) {
-            log.warn(
+            console.warn(
                 'Unable to resolve spender and token address from transaction',
                 transactionMeta
             );
@@ -521,7 +516,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         const account = accounts[accountKey] || hiddenAccounts[accountKey];
 
         if (!account) {
-            log.warn(`Account not found for address: ${accountAddress}`);
+            console.warn(`Account not found for address: ${accountAddress}`);
             return;
         }
 
@@ -665,7 +660,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 networkProvider
             );
         } catch (e) {
-            log.warn('Unable to get total supply of token:', tokenAddress, e);
+            console.warn('Unable to get total supply of token:', tokenAddress, e);
         }
 
         return {
@@ -690,7 +685,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         const networkProvider =
             this._networkController.getProviderForChainId(chainId);
         if (!networkProvider) {
-            log.warn(
+            console.warn(
                 'No network provider for the specified chain id:',
                 chainId
             );
@@ -717,7 +712,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     networkProvider
                 );
                 if (!currentToken) {
-                    log.warn(
+                    console.warn(
                         'Unable to resolve token with address',
                         tokenAddress
                     );
@@ -790,7 +785,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         spender: contractInfo,
                     };
                 } catch (e) {
-                    log.warn(
+                    console.warn(
                         `Error fetching spender: ${spender} allowance for token ${tokenAddress}`,
                         e
                     );
@@ -935,7 +930,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                                 : undefined,
                         };
                     } catch (e) {
-                        log.warn(
+                        console.warn(
                             'Error requesting _tokenOperationsController.allowance',
                             e
                         );
@@ -975,7 +970,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         const account = accounts[accountKey] || hiddenAccounts[accountKey];
 
         if (!account) {
-            log.warn(`Account not found for address: ${accountAddress}`);
+            console.warn(`Account not found for address: ${accountAddress}`);
             release();
             return;
         }
@@ -1069,7 +1064,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     queryFromBlock = oldTtransaction.blockNumber;
                 }
             } catch (e) {
-                log.warn('Error getting old allowance transaction by hash', e);
+                console.warn('Error getting old allowance transaction by hash', e);
             }
             if (!queryFromBlock) {
                 //Query only one batch in case we don't have the queryFromBlock
@@ -1554,7 +1549,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         chainId: number = this._networkController.network.chainId
     ): Promise<void> {
         const { addresses, assetAddresses } = updateAccountsOptions;
-        console.log(`[AccTrk] updateAccounts called for Chain: ${chainId}, Addrs: ${addresses?.join(', ') || 'All'}, Assets: ${assetAddresses.join(', ') || 'All'}`);
         const release = !addresses
             ? await this._mutex.acquire()
             : () => {
@@ -1575,7 +1569,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             if (provider) {
                 for (let i = 0; i < _addresses.length; i++) {
                     const address = _addresses[i];
-                    console.log(`[AccTrk] Updating balances for account: ${address}`);
 
                     // If the chain changed we abort these operations
                     // Set $BLANK as visible on network change if available
@@ -1621,9 +1614,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         accountAddress: string,
         assetAddressToGetBalance: string[]
     ) {
-        console.log(`[AccTrk] _updateAccountBalance for ${accountAddress} on chain ${chainId}, assets: ${assetAddressToGetBalance.join(', ')}`);
-        // We try to fetch the balances from the SingleBalancesContract and fallback
-        // to the regular getBalances call in case it fails or it is not available.
         try {
             const zero = BigNumber.from('0x00');
 
@@ -1747,7 +1737,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 deletedUserTokens
             );
         } catch (error) {
-            log.warn(
+            console.warn(
                 'Block Account Tracker single call balance fetch failed',
                 error
             );
@@ -1769,7 +1759,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         assetAddressToGetBalance: string[],
         deletedUserTokens: string[]
     ): void {
-        console.log(`[AccTrk] _updateAccountBalanceState for ${accountAddress} on chain ${chainId}`);
         const stateAccounts = this.store.getState().accounts;
 
         // Normalize the account address to match storage format
@@ -1839,10 +1828,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 },
             },
         };
-        console.log(`[AccTrk] Updating state for ${accountAddress}. New balances[${chainId}]:`, newState.accounts[accountKey].balances[chainId]);
         this.store.updateState(newState);
 
-        console.log(`[AccTrk] Emitting BALANCE_UPDATED for ${accountAddress}, chain ${chainId}`);
         this.emit(
             AccountTrackerEvents.BALANCE_UPDATED,
             chainId,
@@ -1885,7 +1872,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         chainId
                     );
                 } catch (error) {
-                    log.warn(
+                    console.warn(
                         'Error in _getAddressBalances calling getAddressBalancesFromSingleCallBalancesContract',
                         error
                     );
@@ -1903,7 +1890,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 );
             }
         } catch (error) {
-            log.warn('Error in _getAddressBalances', error);
+            console.warn('Error in _getAddressBalances', error);
             throw error;
         }
     }
@@ -1946,7 +1933,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
 
             return balances;
         } catch (error) {
-            log.warn(
+            console.warn(
                 'Error in _getAddressBalancesFromMultipleCallBalances',
                 error
             );
@@ -2136,41 +2123,35 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
 
         return resourceManager.manageHardwareWalletOperation(operationKey, () =>
             this._keyringController.getMutex().runExclusive(async () => {
-            log.debug(`Fetching accounts for ${device}, page ${pageIndex}, size ${pageSize}`);
-
             const hasDOM = hasDomAccess();
 
             // Special handling for Ledger in Service Worker context
             if (device === Devices.LEDGER && !hasDOM) {
-                log.debug(`[ATC] Handling Ledger account fetch in Service Worker context.`);
 
                 // Step 1: Verify connection and app status via offscreen document
                 try {
                     const connectionStatus = await this._keyringController.connectHardwareKeyring(device);
                     if (typeof connectionStatus === 'object') {
                         if (connectionStatus.needsEthereumApp) {
-                            log.warn('[ATC] Ledger Ethereum app needs to be opened.');
+                            console.warn('[ATC] Ledger Ethereum app needs to be opened.');
                             throw new Error('LEDGER_ETHEREUM_APP_CLOSED');
                         }
                         // Ignore needsUserGesture here, it just confirms SW context after permission grant
-                        log.debug('[ATC] Ledger connection via offscreen confirmed.');
                     } else if (connectionStatus !== true) {
-                        log.error('[ATC] Ledger connection check failed.');
+                        console.error('[ATC] Ledger connection check failed.');
                         throw new Error('Failed to verify Ledger connection');
                     }
                 } catch (connectionError) {
-                    log.error('[ATC] Error during Ledger connection verification:', connectionError);
+                    console.error('[ATC] Error during Ledger connection verification:', connectionError);
                     throw connectionError; // Propagate specific errors like APP_CLOSED
                 }
 
                 // Step 2: Fetch accounts using the ledgerBridge proxy
                 try {
-                    log.debug(`[ATC] Calling ledgerBridge.getAccounts proxy (page: ${pageIndex}, size: ${pageSize})`);
                     // Note: Assuming default HD path logic is handled elsewhere or standard path is okay
                     // If specific HD path needed, it must be passed from UI -> ATC -> ledgerBridge
                     const accountsFromBridge = await ledgerBridge.getAccounts(pageIndex, pageSize);
 
-                    log.debug(`[ATC] Received ${accountsFromBridge?.length || 0} accounts from bridge.`);
 
                     // Step 3: Format accounts into DeviceAccountInfo[]
                     const formattedAccounts: DeviceAccountInfo[] = accountsFromBridge.map((acc: { address: string; index: number; balance?: string }) => ({
@@ -2183,33 +2164,29 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     return formattedAccounts;
 
                 } catch (proxyError) {
-                    log.error('[ATC] Error fetching Ledger accounts via bridge proxy:', proxyError);
+                    console.error('[ATC] Error fetching Ledger accounts via bridge proxy:', proxyError);
                     throw new Error(`Failed to get accounts from Ledger: ${proxyError.message}`);
                 }
             }
 
             // --- Existing Logic for UI context or non-Ledger devices ---
-            log.debug(`[ATC] Handling account fetch in UI context or for non-Ledger device.`);
             let keyring = await this._keyringController.getKeyringFromDevice(device);
 
             // If no keyring exists, try to connect/restore/create
             if (!keyring) {
-                log.warn(`No keyring found for ${device}, attempting to restore from session storage`);
+                console.warn(`No keyring found for ${device}, attempting to restore from session storage`);
 
                 try {
                     // First, try to connect the hardware wallet directly
                     // This is important for MV3 where service worker might restart
                     try {
-                        log.debug(`Attempting to directly connect to ${device} before restoration`);
                         const connectionResult = await this._keyringController.connectHardwareKeyring(device);
 
                         if (connectionResult === true) {
-                            log.info(`Successfully connected to ${device}`);
                             // Get the keyring after connection
                             keyring = await this._keyringController.getKeyringFromDevice(device);
 
                             if (keyring) {
-                                log.info(`Successfully initialized ${device} keyring through direct connection`);
                                 // Persist this newly created keyring for future restoration
                                 await this._keyringController['persistHardwareKeyringState'](device);
                             }
@@ -2217,9 +2194,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                             typeof connectionResult === 'object' &&
                             connectionResult.needsUserGesture
                         ) {
-                            log.debug(
-                                `${device} connection requires user gesture for full initialization`
-                            );
                             // Throw a specific error to signal the UI about the need for user interaction
                             if (chrome.storage?.session) {
                                 try {
@@ -2230,9 +2204,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                                             deviceName: connectionResult.deviceName
                                         }
                                     });
-                                    log.debug("Stored user interaction requirement in session storage");
                                 } catch (e) {
-                                    log.error("Failed to store user interaction requirement:", e);
+                                    console.error("Failed to store user interaction requirement:", e);
                                 }
                             }
                             throw new Error('LEDGER_USER_GESTURE_REQUIRED');
@@ -2240,39 +2213,34 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                             typeof connectionResult === 'object' &&
                             connectionResult.needsEthereumApp
                         ) {
-                            log.debug(
-                                `${device} connected but Ethereum app is not open`
-                            );
                             // Throw a specific error to signal the UI about the need to open Ethereum app
                             throw new Error('LEDGER_ETHEREUM_APP_CLOSED');
                         } else {
-                            log.error(`Failed to connect to ${device}`);
+                            console.error(`Failed to connect to ${device}`);
                         }
                     } catch (connectionError) {
-                        log.error(`Failed to directly connect to ${device}:`, connectionError);
+                        console.error(`Failed to directly connect to ${device}:`, connectionError);
                     }
 
                     // If direct connection didn't work, try restoration from storage
                     if (!keyring) {
                         const restorationResult = await this._keyringController.tryRestoreHardwareWalletFromStorage(device);
                         if (restorationResult === true) {
-                            log.info(`Successfully restored ${device} keyring from session storage`);
 
                             // Get the keyring again after restoration
                             keyring = await this._keyringController.getKeyringFromDevice(device);
 
                             if (!keyring) {
-                                log.error(`Keyring restoration for ${device} reported success but keyring still not found`);
+                                console.error(`Keyring restoration for ${device} reported success but keyring still not found`);
                             }
                         } else if (typeof restorationResult === 'object' && restorationResult.needsUserGesture) {
-                            log.info(`${device} restoration requires user interaction`);
                             throw new Error(`Hardware wallet connection requires user interaction`);
                         } else {
-                            log.error(`Failed to restore keyring for ${device} from session storage`);
+                            console.error(`Failed to restore keyring for ${device} from session storage`);
                         }
                     }
                 } catch (restoreError) {
-                    log.error(`Error during keyring restoration for ${device}:`, restoreError);
+                    console.error(`Error during keyring restoration for ${device}:`, restoreError);
                 }
             }
 
@@ -2280,13 +2248,11 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             if (!keyring) {
                 // Before giving up, try one last approach - recreate the keyring from scratch
                 try {
-                    log.debug(`Last resort: trying to create a new keyring for ${device}`);
 
                     // Try to connect to the hardware wallet directly
                     const connectionResult = await this._keyringController.connectHardwareKeyring(device);
 
                     if (connectionResult === true) {
-                        log.info(`Successfully created new keyring for ${device}`);
                         keyring = await this._keyringController.getKeyringFromDevice(device);
 
                         // Ensure we persist this new keyring state for future restorations
@@ -2297,9 +2263,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         typeof connectionResult === 'object' &&
                         connectionResult.needsUserGesture
                     ) {
-                        log.debug(
-                            `${device} connection requires user gesture for full initialization`
-                        );
                         // Throw a specific error to signal the UI about the need for user interaction
                         if (chrome.storage?.session) {
                             try {
@@ -2310,23 +2273,22 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                                         deviceName: connectionResult.deviceName
                                     }
                                 });
-                                log.debug("Stored user interaction requirement in session storage");
                             } catch (e) {
-                                log.error("Failed to store user interaction requirement:", e);
+                                console.error("Failed to store user interaction requirement:", e);
                             }
                         }
                         throw new Error('LEDGER_USER_GESTURE_REQUIRED');
                     } else {
-                        log.error(`Failed to establish connection with ${device}`);
+                        console.error(`Failed to establish connection with ${device}`);
                     }
                 } catch (e) {
-                    log.error(`Failed to create new keyring for ${device}:`, e);
+                    console.error(`Failed to create new keyring for ${device}:`, e);
                 }
             }
 
             // If we still don't have a keyring, throw an error
             if (!keyring) {
-                log.error(`No keyring found for ${device} after all recovery attempts`);
+                console.error(`No keyring found for ${device} after all recovery attempts`);
                 throw new Error('No keyring found');
             }
 
@@ -2334,27 +2296,24 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             let currentHDPath = '';
             try {
                 currentHDPath = await this._keyringController.getHDPathForDevice(device);
-                log.debug(`Using HD path: ${currentHDPath} for ${device}`);
             } catch (e) {
-                log.error('Failed to get HD path:', e);
+                console.error('Failed to get HD path:', e);
             }
 
             // Check if the keyring is unlocked, if not unlock it
             if (device !== Devices.KEYSTONE) {
                 try {
                     if (!keyring.isUnlocked()) {
-                        log.debug(`${device} keyring is locked, attempting to unlock`);
                         await keyring.unlock();
                     }
                 } catch (e) {
-                    log.error(`Failed to unlock keyring for ${device}:`, e);
+                    console.error(`Failed to unlock keyring for ${device}:`, e);
                     throw e;
                 }
             }
 
             // Get accounts from the keyring
             try {
-                log.debug(`Using keyring for ${device} to fetch accounts...`);
 
                 // Add timeout handling to prevent indefinite hanging
                 const ACCOUNT_FETCH_TIMEOUT = 45000; // 45 seconds timeout
@@ -2376,9 +2335,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         })
                     ]);
 
-                    log.debug(
-                        `Received ${deviceAccounts.length} accounts from ${device} keyring using path ${currentHDPath}`
-                    );
 
                     // If we successfully got accounts, no need to try alternatives
                     if (deviceAccounts.length > 0) {
@@ -2386,7 +2342,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         try {
                             await this._keyringController['persistHardwareKeyringState'](device);
                         } catch (e) {
-                            log.error(`Failed to persist keyring state after getting accounts:`, e);
+                            console.error(`Failed to persist keyring state after getting accounts:`, e);
                         }
 
                         return deviceAccounts.map((address: string, index: number) => ({
@@ -2397,13 +2353,12 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     }
                 } catch (e) {
                     fetchError = e;
-                    log.warn(`Failed to get accounts with primary HD path ${currentHDPath}:`, e);
+                    console.warn(`Failed to get accounts with primary HD path ${currentHDPath}:`, e);
                     console.warn(`[LEDGER] Failed to get accounts with primary HD path ${currentHDPath}:`, e);
                 }
 
                 // If we failed to get accounts or got empty results, try alternative HD paths
                 if (device === Devices.LEDGER && (deviceAccounts.length === 0 || fetchError)) {
-                    log.debug(`Trying alternative HD paths for ${device}...`);
                     console.log(`[LEDGER] Trying alternative HD paths...`);
 
                     // Common alternative paths for Ledger
@@ -2421,7 +2376,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     // Try each alternative path
                     for (const path of pathsToTry) {
                         try {
-                            log.debug(`Trying alternative HD path: ${path}`);
                             console.log(`[LEDGER] Trying alternative HD path: ${path}`);
 
                             // Try to set the alternative path
@@ -2440,9 +2394,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                                 })
                             ]);
 
-                            log.debug(
-                                `Received ${deviceAccounts.length} accounts from ${device} using alternative path ${path}`
-                            );
                             console.log(
                                 `[LEDGER] Received ${deviceAccounts.length} accounts using path ${path}`
                             );
@@ -2462,10 +2413,9 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                                                 accountCount: deviceAccounts.length
                                             }
                                         });
-                                        log.debug(`Stored successful HD path ${path} in session storage`);
                                     }
                                 } catch (e) {
-                                    log.error(`Failed to persist working HD path state:`, e);
+                                    console.error(`Failed to persist working HD path state:`, e);
                                 }
 
                                 return deviceAccounts.map((address: string, index: number) => ({
@@ -2475,7 +2425,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                                 }));
                             }
                         } catch (e) {
-                            log.warn(`Failed to get accounts with alternative HD path ${path}:`, e);
+                            console.warn(`Failed to get accounts with alternative HD path ${path}:`, e);
                             console.warn(`[LEDGER] Failed with path ${path}:`, e.message);
                             // Continue to the next path
                         }
@@ -2483,12 +2433,11 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
 
                     // If we exhausted all paths and still don't have accounts, revert to original path
                     if (deviceAccounts.length === 0) {
-                        log.warn(`No accounts found with any HD path, reverting to original: ${currentHDPath}`);
                         console.warn(`[LEDGER] No accounts found with any HD path, reverting to original`);
                         try {
                             await this._keyringController.setHDPath(device, currentHDPath);
                         } catch (e) {
-                            log.error(`Failed to revert to original HD path:`, e);
+                            console.error(`Failed to revert to original HD path:`, e);
                         }
 
                         // If we had an original error, throw it now
@@ -2500,20 +2449,16 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
 
                 // If we still have no accounts, throw an error
                 if (deviceAccounts.length === 0) {
-                    log.error(`No accounts found for ${device} with any HD path`);
                     console.error(`[LEDGER] No accounts found with any HD path`);
                     throw new Error('No accounts found. Please ensure the Ethereum app is open on your device.');
                 }
 
-                log.debug(
-                    `Received ${deviceAccounts.length} accounts from ${device} keyring`
-                );
 
                 // After successfully getting accounts, persist the keyring state
                 try {
                     await this._keyringController['persistHardwareKeyringState'](device);
                 } catch (e) {
-                    log.error(`Failed to persist keyring state after getting accounts:`, e);
+                    console.error(`Failed to persist keyring state after getting accounts:`, e);
                 }
 
                 return deviceAccounts.map((address: string, index: number) => ({
@@ -2522,7 +2467,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     name: `${device} ${pageIndex * pageSize + index + 1}`,
                 }));
             } catch (e) {
-                log.error(`Failed to get accounts from keyring:`, e);
+                console.error(`Failed to get accounts from keyring:`, e);
 
                 // Enhance error message for specific errors
                 if (e.message.includes('LEDGER_ACCOUNT_FETCH_TIMEOUT')) {
@@ -2535,8 +2480,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
 
                 throw e;
             }
-            })
-        );
+        })
+    );
     }
 
     public async getAccountNativeTokenBalanceForChain(
@@ -2638,77 +2583,65 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         pageSize: number
     ): Promise<DeviceAccountInfo[]> {
         try {
-            log.debug(`Attempting to get hardware wallet accounts for ${device} (page ${pageIndex}, size ${pageSize})`);
-
             // First try the standard method
             try {
                 const accounts = await this.getHardwareWalletAccounts(device, pageIndex, pageSize);
                 if (accounts && accounts.length > 0) {
-                    log.debug(`Successfully retrieved ${accounts.length} accounts for ${device}`);
                     return accounts;
                 }
             } catch (e) {
-                log.warn(`Standard account retrieval failed for ${device}:`, e);
+                console.warn(`Standard account retrieval failed for ${device}:`, e);
                 // Continue to fallbacks
             }
 
             // First fallback: Try to reconnect the hardware wallet
-            log.debug(`Attempting to reconnect ${device} before retrieving accounts`);
             try {
                 const connectionResult = await this._keyringController.connectHardwareKeyring(device);
                 if (connectionResult === true) {
-                    log.debug(`Successfully reconnected to ${device}, retrying account retrieval`);
                     const accounts = await this.getHardwareWalletAccounts(device, pageIndex, pageSize);
                     if (accounts && accounts.length > 0) {
-                        log.debug(`Successfully retrieved ${accounts.length} accounts after reconnection`);
                         return accounts;
                     }
                 } else if (typeof connectionResult === 'object' && connectionResult.needsUserGesture) {
-                    log.debug(`${device} connection requires user interaction`);
                     // For user interaction, we can't proceed with automatic account retrieval
                     throw new Error(`Hardware wallet connection requires user interaction`);
                 }
             } catch (reconnectError) {
-                log.error(`Failed to reconnect to ${device}:`, reconnectError);
+                console.error(`Failed to reconnect to ${device}:`, reconnectError);
                 // Continue to next fallback
             }
 
             // Second fallback: Try to restore from storage
-            log.debug(`Attempting to restore ${device} from storage`);
             try {
                 const restored = await this._keyringController.tryRestoreHardwareWalletFromStorage(device);
                 if (restored) {
-                    log.debug(`Successfully restored ${device} from storage, retrying account retrieval`);
                     const accounts = await this.getHardwareWalletAccounts(device, pageIndex, pageSize);
                     if (accounts && accounts.length > 0) {
-                        log.debug(`Successfully retrieved ${accounts.length} accounts after restoration`);
                         return accounts;
                     }
                 }
             } catch (restoreError) {
-                log.error(`Failed to restore ${device} from storage:`, restoreError);
+                console.error(`Failed to restore ${device} from storage:`, restoreError);
                 // Continue to last resort
             }
 
             // Last resort: Try with a fixed pageIndex and pageSize
             if (pageIndex !== 0 || pageSize !== 5) {
-                log.debug(`Trying with default pagination (page 0, size 5) for ${device}`);
                 try {
                     const accounts = await this.getHardwareWalletAccounts(device, 0, 5);
                     if (accounts && accounts.length > 0) {
-                        log.debug(`Successfully retrieved ${accounts.length} accounts with default pagination`);
                         return accounts;
                     }
                 } catch (e) {
-                    log.error(`Failed to get accounts with default pagination:`, e);
+                    console.error(`Failed to get accounts with default pagination:`, e);
                 }
             }
 
             // If we got here, all attempts failed
-            log.error(`Failed to retrieve accounts for ${device} after all fallback attempts`);
+            console.error(`Failed to retrieve accounts for ${device} after all fallback attempts`);
             throw new Error(`Could not retrieve accounts from ${device}`);
         } catch (error) {
-            log.error(`Error in getHardwareWalletAccountsWithFallback:`, error);
+            console.error(`Error in getHardwareWalletAccountsWithFallback:`, error);
             throw error;
         }
     }
@@ -2718,14 +2651,13 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
      * @param transactionMeta - The metadata of the confirmed transaction.
      */
     private _onTransactionConfirmed(transactionMeta: TransactionMeta): void {
-        console.log(`[AccTrk] _onTransactionConfirmed called for Tx ID: ${transactionMeta.id}`);
         const { accounts, hiddenAccounts } = this.store.getState();
         const txChainId = transactionMeta.chainId;
         const txFrom = transactionMeta.transactionParams.from;
         const txTo = transactionMeta.transactionParams.to;
 
         if (!txFrom || !txChainId) {
-            log.warn("Confirmed transaction missing sender or chainId", transactionMeta);
+            console.warn("Confirmed transaction missing sender or chainId", transactionMeta);
             return;
         }
 
@@ -2775,10 +2707,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         // Add more category checks if needed
 
         if (assetAddressesToUpdate.length > 0) {
-            log.debug(`[AccTrk] Transaction confirmed, planning balance update for accounts: ${involvedAddresses.join(", ")}, assets: ${assetAddressesToUpdate.join(", ")}`);
             // Use Promise.allSettled to avoid one failure stopping others
             Promise.allSettled(involvedAddresses.map(addr => {
-                console.log(`[AccTrk] Calling updateAccounts for ${addr} on chain ${txChainId} due to confirmed Tx ${transactionMeta.id}`);
                 return this.updateAccounts(
                     {
                         addresses: [addr], // Update one account at a time
@@ -2788,10 +2718,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 );
             }
             )).catch(err => {
-                log.error("[AccTrk] Error during post-confirmation balance update:", err);
+                console.error("[AccTrk] Error during post-confirmation balance update:", err);
             });
-        } else {
-            console.log(`[AccTrk] Tx ID: ${transactionMeta.id} confirmed, but no relevant assets/accounts found for immediate balance update.`);
         }
     }
 }

@@ -63,7 +63,9 @@ ifneq ($(VERSION),)
 	@sed -i.bak 's/"version": "[^"]*"/"version": "$(VERSION)"/g' package.json && rm package.json.bak
 	@sed -i.bak 's/"version": "[^"]*"/"version": "$(VERSION)"/g' manifest/base.json && rm manifest/base.json.bak
 	@sed -i.bak 's/"version_name": "[^"]*"/"version_name": "$(VERSION)"/g' manifest/base.json && rm manifest/base.json.bak
-	@echo "Version updated to $(VERSION) in package.json and manifest/base.json"
+	@sed -i.bak 's/"version": "[^"]*"/"version": "$(VERSION)"/g' public/manifest.json && rm public/manifest.json.bak
+	@sed -i.bak 's/"version_name": "[^"]*"/"version_name": "$(VERSION)"/g' public/manifest.json && rm public/manifest.json.bak
+	@echo "Version updated to $(VERSION) in package.json, manifest/base.json, and public/manifest.json"
 endif
 
 build:

@@ -1230,6 +1230,66 @@
                 }
             ],
             "version": "1.2.15"
+        },
+        {
+            "sections": [
+                {
+                    "title": "🚀 Major Infrastructure Updates",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Real-time Transaction Monitoring: New WebSocket integration with Alchemy/Infura for instant blockchain updates and transaction notifications."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Hardware Wallet Performance: Intelligent caching system reduces Ledger/Trezor connection times by up to 80%."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Optimized Network Polling: Reduced blockchain polling intervals from 45s to 5s for 9x faster data updates."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Service Worker Resource Management: Enhanced memory management and keep-alive optimization for better stability."
+                        }
+                    ]
+                },
+                {
+                    "title": "⚡ Performance Improvements",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Smart Address Derivation: Cached address derivation eliminates redundant hardware wallet operations."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Adaptive Timing System: Dynamic interval adjustments based on network conditions and failure rates."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Provider Subscriptions: Reduced update intervals from 15s to 5s for instant blockchain state changes."
+                        }
+                    ]
+                },
+                {
+                    "title": "🔧 Technical Enhancements",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Enhanced API Support: Improved support for Alchemy, Infura, and Etherscan API keys with automatic fallback."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Memory Optimization: Automatic cache cleanup and monitoring to prevent resource exhaustion."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Offscreen Document Integration: Optimized WebSocket connections for MV3 compliance."
+                        }
+                    ]
+                }
+            ],
+            "version": "1.8.0"
         }
     ]
 }

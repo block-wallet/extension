@@ -1617,8 +1617,9 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         try {
             const zero = BigNumber.from('0x00');
 
-            // Clean the current data.
-            const existingAccount = this.store.getState().accounts[accountAddress];
+            // Clean the current data. Use normalized key to find existing account data.
+            const storageKey = this._getStorageKey(accountAddress);
+            const existingAccount = this.store.getState().accounts[storageKey];
             const account = existingAccount ? cloneDeep(existingAccount) : {
                 address: accountAddress,
                 name: `Account ${Object.keys(this.store.getState().accounts).length + 1}`,
@@ -1813,7 +1814,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 [accountKey]: {
                     // Use the account info passed to this method, or the existing account, or create minimal structure
                     address: accountAddress,
-                    name: account?.name || existingAccount?.name || `Account ${Object.keys(currentAccounts).length + 1}`,
+                    name: existingAccount?.name || account?.name || `Account ${Object.keys(currentAccounts).length + 1}`,
                     index: account?.index || existingAccount?.index || this._getNewAccountIndex(currentAccounts),
                     accountType: account?.accountType || existingAccount?.accountType || AccountType.HD_ACCOUNT,
                     status: account?.status || existingAccount?.status || AccountStatus.ACTIVE,

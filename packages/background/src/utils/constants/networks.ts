@@ -99,48 +99,48 @@ export interface ActionsTimeInterval {
 
 // If the interval is < than blockNumberPull the action will happend 'every new block'.
 export const ACTIONS_TIME_INTERVALS_DEFAULT_VALUES = {
-    blockNumberPull: 5 * SECOND,
-    balanceFetch: 8 * SECOND,
-    gasPricesUpdate: 10 * SECOND,
-    exchangeRatesFetch: 15 * SECOND,
-    transactionsStatusesUpdate: 5 * SECOND,
-    providerSubscriptionsUpdate: 5 * SECOND,
-    transactionWatcherUpdate: 10 * SECOND,
+    blockNumberPull: 45 * SECOND,
+    balanceFetch: 80 * SECOND,
+    gasPricesUpdate: 30 * SECOND,
+    exchangeRatesFetch: 1 * MINUTE,
+    transactionsStatusesUpdate: 15 * SECOND,
+    providerSubscriptionsUpdate: 15 * SECOND,
+    transactionWatcherUpdate: 90 * SECOND,
 };
 
 export const FAST_TIME_INTERVALS_DEFAULT_VALUES = {
     ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
     ...{
-        blockNumberPull: 3 * SECOND,
-        balanceFetch: 5 * SECOND,
-        gasPricesUpdate: 5 * SECOND,
-        transactionsStatusesUpdate: 3 * SECOND,
-        providerSubscriptionsUpdate: 3 * SECOND,
-        transactionWatcherUpdate: 7 * SECOND,
+        blockNumberPull: 20 * SECOND,
+        balanceFetch: 30 * SECOND,
+        gasPricesUpdate: 15 * SECOND,
+        transactionsStatusesUpdate: 6 * SECOND,
+        providerSubscriptionsUpdate: 6 * SECOND,
+        transactionWatcherUpdate: 45 * SECOND,
     },
 };
 
 export const TESTNET_TIME_INTERVALS_DEFAULT_VALUES = {
     ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
     ...{
-        blockNumberPull: 5 * SECOND,
-        balanceFetch: 10 * SECOND,
-        gasPricesUpdate: 8 * SECOND,
-        transactionsStatusesUpdate: 5 * SECOND,
-        providerSubscriptionsUpdate: 5 * SECOND,
-        transactionWatcherUpdate: 10 * SECOND,
+        blockNumberPull: 45 * SECOND,
+        balanceFetch: 80 * SECOND,
+        gasPricesUpdate: 30 * SECOND,
+        transactionsStatusesUpdate: 15 * SECOND,
+        providerSubscriptionsUpdate: 15 * SECOND,
+        transactionWatcherUpdate: 90 * SECOND,
     },
 };
 
 export const SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES = {
     ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
     ...{
-        blockNumberPull: 8 * SECOND,
-        balanceFetch: 12 * SECOND,
-        gasPricesUpdate: 10 * SECOND,
-        transactionsStatusesUpdate: 8 * SECOND,
-        providerSubscriptionsUpdate: 8 * SECOND,
-        transactionWatcherUpdate: 15 * SECOND,
+        blockNumberPull: 60 * SECOND,
+        balanceFetch: 120 * SECOND,
+        gasPricesUpdate: 45 * SECOND,
+        transactionsStatusesUpdate: 20 * SECOND,
+        providerSubscriptionsUpdate: 20 * SECOND,
+        transactionWatcherUpdate: 120 * SECOND,
     },
 };
 

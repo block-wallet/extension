@@ -70,9 +70,13 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
     }
 
     useEffect(() => {
-        window.addEventListener("click", (e: any) => {
+        // Create event handler function
+        const handleClick = (e: MouseEvent) => {
             checkTargetClick(e.target)
-        })
+        }
+
+        // Add event listener
+        window.addEventListener("click", handleClick)
 
         if (displayRef.current !== null) {
             const midToTopDistanceCalc =
@@ -83,18 +87,23 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
             const maxHeightInPxCalc =
                 midToTopDistanceCalc < viewHeight
                     ? 600 - // Total Window Height
-                      (topMargin + bottomMargin) - // Top margin + Bottom margin
-                      16 - // Padding Bottom
-                      popupMargin - // Popup margin
-                      displayRef.current.getBoundingClientRect().bottom + // Top of Display element
-                      displayRef.current.getBoundingClientRect().height
+                    (topMargin + bottomMargin) - // Top margin + Bottom margin
+                    16 - // Padding Bottom
+                    popupMargin - // Popup margin
+                    displayRef.current.getBoundingClientRect().bottom + // Top of Display element
+                    displayRef.current.getBoundingClientRect().height
                     : displayRef.current.getBoundingClientRect().top - // Top of Display element
-                      16 - // Padding Top
-                      topMargin - // Top margin
-                      popupMargin // Popup margin
+                    16 - // Padding Top
+                    topMargin - // Top margin
+                    popupMargin // Popup margin
 
             setMaxHeightInPx(maxHeightInPxCalc)
             setMidToTopDistance(midToTopDistanceCalc)
+        }
+
+        // Cleanup function to remove event listener
+        return () => {
+            window.removeEventListener("click", handleClick)
         }
         // eslint-disable-next-line
     }, [])

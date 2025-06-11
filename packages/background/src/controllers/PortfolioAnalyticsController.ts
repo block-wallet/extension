@@ -60,6 +60,7 @@ export class PortfolioAnalyticsController extends BaseController<PortfolioAnalyt
     private readonly SNAPSHOT_INTERVAL = 60 * 60 * 1000;
     private readonly DEFAULT_RETENTION_DAYS = 365;
     private readonly MAX_SNAPSHOTS = 8760;
+    private cleanupIntervalId?: NodeJS.Timeout;
 
     constructor(
         private readonly _accountTrackerController: AccountTrackerController,
@@ -374,9 +375,19 @@ export class PortfolioAnalyticsController extends BaseController<PortfolioAnalyt
     }
 
     private _scheduleCleanup(): void {
-        setInterval(() => {
+        this.cleanupIntervalId = setInterval(() => {
             this._cleanupOldSnapshots();
         }, 24 * 60 * 60 * 1000);
+    }
+
+    /**
+     * Destroys the controller and cleans up resources
+     */
+    public destroy(): void {
+        if (this.cleanupIntervalId) {
+            clearInterval(this.cleanupIntervalId);
+            this.cleanupIntervalId = undefined;
+        }
     }
 
     /**

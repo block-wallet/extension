@@ -21,6 +21,7 @@ const AssetAllocationChart: React.FC<AssetAllocationChartProps> = ({
 }) => {
     const [hoveredAsset, setHoveredAsset] = useState<string | null>(null);
     const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
+    const [showAllAssets, setShowAllAssets] = useState(false);
 
     const colors = [
         '#3B82F6',
@@ -37,16 +38,19 @@ const AssetAllocationChart: React.FC<AssetAllocationChartProps> = ({
         .sort(([, a], [, b]) => b.percentage - a.percentage)
         .slice(0, 8);
 
+    // Show only top 4 assets by default, with option to expand
+    const displayAssets = showAllAssets ? sortedAssets : sortedAssets.slice(0, 4);
+
     if (isLoading) {
         return (
-            <div className="bg-white rounded-lg shadow-md p-6 animate-pulse">
-                <div className="h-7 bg-gray-200 rounded mb-6"></div>
+            <div className="bg-white rounded-lg shadow-md p-4 animate-pulse">
+                <div className="h-6 bg-gray-200 rounded mb-4"></div>
                 <div className="flex items-center justify-center">
-                    <div className="w-56 h-56 bg-gray-200 rounded-full"></div>
+                    <div className="w-40 h-40 bg-gray-200 rounded-full"></div>
                 </div>
-                <div className="mt-6 space-y-3">
-                    {[...Array(4)].map((_, i) => (
-                        <div key={i} className="h-6 bg-gray-200 rounded"></div>
+                <div className="mt-4 space-y-2">
+                    {[...Array(3)].map((_, i) => (
+                        <div key={i} className="h-4 bg-gray-200 rounded"></div>
                     ))}
                 </div>
             </div>
@@ -55,11 +59,11 @@ const AssetAllocationChart: React.FC<AssetAllocationChartProps> = ({
 
     if (sortedAssets.length === 0) {
         return (
-            <div className="bg-white rounded-lg shadow-md p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
+            <div className="bg-white rounded-lg shadow-md p-4">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 text-center">
                     Asset Allocation
                 </h3>
-                <div className="text-center py-12 text-gray-500 text-lg">
+                <div className="text-center py-8 text-gray-500">
                     No assets to display
                 </div>
             </div>
@@ -84,68 +88,73 @@ const AssetAllocationChart: React.FC<AssetAllocationChartProps> = ({
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
+        <div className="bg-white rounded-lg shadow-md p-4 overflow-x-hidden">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 text-center">
                 Asset Allocation
             </h3>
 
-            <div className="flex flex-col lg:flex-row items-center gap-8">
-                <div className="flex-shrink-0">
-                    <div
-                        className="w-56 h-56 rounded-full border-4 border-white shadow-lg transform transition-transform duration-200 hover:scale-105"
-                        style={pieChartStyle}
-                    ></div>
-                </div>
+            <div className="flex flex-col items-center space-y-4">
+                {/* Compact pie chart */}
+                <div
+                    className="w-40 h-40 rounded-full border-2 border-white shadow-lg"
+                    style={pieChartStyle}
+                ></div>
 
-                <div className="flex-1 space-y-3 w-full">
-                    {sortedAssets.map(([symbol, data], index) => (
+                {/* Compact asset list */}
+                <div className="w-full space-y-2">
+                    {displayAssets.map(([symbol, data], index) => (
                         <div
                             key={symbol}
-                            className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 cursor-pointer ${hoveredAsset === symbol || selectedAsset === symbol
-                                ? 'bg-blue-50 shadow-md transform scale-102'
+                            className={`flex items-center justify-between p-2 rounded-lg transition-all duration-200 cursor-pointer ${hoveredAsset === symbol || selectedAsset === symbol
+                                ? 'bg-blue-50 shadow-sm'
                                 : 'hover:bg-gray-50'
                                 }`}
                             onMouseEnter={() => setHoveredAsset(symbol)}
                             onMouseLeave={() => setHoveredAsset(null)}
                             onClick={() => handleAssetClick(symbol)}
                         >
-                            <div className="flex items-center">
+                            <div className="flex items-center flex-1 min-w-0">
                                 <div
-                                    className={`w-5 h-5 rounded-full mr-4 transition-all duration-200 ${hoveredAsset === symbol || selectedAsset === symbol
-                                        ? 'scale-125 shadow-lg'
-                                        : ''
-                                        }`}
+                                    className="w-3 h-3 rounded-full mr-3 flex-shrink-0"
                                     style={{ backgroundColor: colors[index % colors.length] }}
                                 ></div>
-                                <span className="font-semibold text-gray-900 text-lg">{symbol}</span>
+                                <span className="font-medium text-gray-900 text-sm truncate">{symbol}</span>
                             </div>
-                            <div className="text-right">
-                                <div className="font-bold text-gray-900 text-lg">
+                            <div className="text-right flex-shrink-0 ml-2">
+                                <div className="font-bold text-gray-900 text-sm">
                                     {data.percentage.toFixed(1)}%
                                 </div>
-                                <div className="text-sm text-gray-600 font-medium">
+                                <div className="text-xs text-gray-600 break-all">
                                     {formatCurrency(data.value, { currency })}
                                 </div>
                             </div>
                         </div>
                     ))}
-                </div>
-            </div>
 
-            <div className="mt-8 pt-6 border-t border-gray-200">
-                <div className="grid grid-cols-2 gap-4 text-center">
-                    <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="text-sm font-medium text-gray-600 mb-1">Total Assets</div>
-                        <div className="text-xl font-bold text-gray-900">{sortedAssets.length}</div>
-                        <div className="text-xs text-gray-500">tokens</div>
+                    {/* Show more/less toggle */}
+                    {sortedAssets.length > 4 && (
+                        <button
+                            onClick={() => setShowAllAssets(!showAllAssets)}
+                            className="w-full text-center py-2 text-sm text-blue-500 hover:text-blue-600 transition-colors"
+                        >
+                            {showAllAssets
+                                ? 'Show Less'
+                                : `Show ${sortedAssets.length - 4} More Assets`
+                            }
+                        </button>
+                    )}
+                </div>
+
+                {/* Compact summary stats */}
+                <div className="w-full grid grid-cols-2 gap-2 pt-2 border-t border-gray-200">
+                    <div className="bg-gray-50 rounded-lg p-2 text-center">
+                        <div className="text-xs font-medium text-gray-600 mb-1">Total Assets</div>
+                        <div className="text-sm font-bold text-gray-900">{sortedAssets.length}</div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="text-sm font-medium text-gray-600 mb-1">Largest Holding</div>
-                        <div className="text-xl font-bold text-gray-900">
+                    <div className="bg-gray-50 rounded-lg p-2 text-center">
+                        <div className="text-xs font-medium text-gray-600 mb-1">Top Asset</div>
+                        <div className="text-sm font-bold text-gray-900">
                             {sortedAssets[0] ? sortedAssets[0][0] : 'N/A'}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                            {sortedAssets[0] ? `${sortedAssets[0][1].percentage.toFixed(1)}%` : ''}
                         </div>
                     </div>
                 </div>

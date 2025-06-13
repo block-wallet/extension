@@ -101,17 +101,26 @@ const SendPage = () => {
         const fetchRecents = async () => {
             try {
                 const recents = await addressBookGetRecentAddresses(5)
-                const formattedRecents: RecentAddressInfo[] = Object.entries(recents).map(([address, entry]) => ({
-                    address: address,
-                    name: entry.name || `Account ${formatHashLastChars(address)}`,
-                }));
-                setRecentAddresses(formattedRecents);
+                const formattedRecents: RecentAddressInfo[] = Object.entries(recents).map(([address, entry]) => {
+                    // Prefer the name from the user accounts (includes renamed accounts) if available.
+                    const matchingAccount = [currentAccount, ...myAccounts].find(
+                        (acc) => normalizeAddress(acc.address) === normalizeAddress(address)
+                    )
+
+                    return {
+                        address: address,
+                        name:
+                            matchingAccount?.name || entry.name || `Account ${formatHashLastChars(address)}`,
+                    }
+                })
+                setRecentAddresses(formattedRecents)
             } catch (error) {
                 console.error("Error fetching recent addresses:", error)
             }
-        };
-        fetchRecents();
-    }, [])
+        }
+        fetchRecents()
+        // Running this effect again if the accounts list changes ensures we always have the latest names.
+    }, [myAccounts, currentAccount])
 
     // Handlers
     const onSubmit = handleSubmit(async (data: AddressFormData) => {

@@ -128,6 +128,8 @@ import {
     RequestDiscoverAccountsFromSeed,
     ResponseDiscoverAccountsFromSeed,
     DiscoveredAccountInfo,
+    RequestGetValidCurrencies,
+    RequestSetThemePreference,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -1323,6 +1325,8 @@ export default class BlankController extends EventEmitter {
                 return this.getPortfolioAnalytics();
             case Messages.PORTFOLIO.REFRESH_ANALYTICS:
                 return this.refreshPortfolioAnalytics();
+            case Messages.WALLET.SET_THEME_PREFERENCE:
+                return this.setThemePreference(request as RequestSetThemePreference);
             default:
                 throw new Error(`Unable to handle message of type ${type}`);
         }
@@ -3887,5 +3891,13 @@ export default class BlankController extends EventEmitter {
      */
     private async refreshPortfolioAnalytics(): Promise<void> {
         return this.portfolioAnalyticsController.refreshAnalytics();
+    }
+
+    /**
+     * Sets the theme preference for the wallet
+     * @param theme The theme preference to set
+     */
+    private async setThemePreference({ theme }: RequestSetThemePreference): Promise<void> {
+        this.preferencesController.updateThemePreference(theme);
     }
 }

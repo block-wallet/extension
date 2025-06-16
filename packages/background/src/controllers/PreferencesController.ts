@@ -19,6 +19,8 @@ export interface UserSettings {
 
     // Indicates if the wallet displays net worth in native currency value or native token balance.
     displayNetWorth: boolean;
+    // Theme preference for the wallet UI
+    theme: 'light' | 'dark' | 'system';
 }
 
 export interface Note {
@@ -334,6 +336,19 @@ export class PreferencesController extends BaseController<PreferencesControllerS
             settings: {
                 ...this.settings,
                 defaultBrowserWallet: enabled,
+            },
+        });
+    }
+
+    /**
+     * Updates the theme preference in the store.
+     * @param theme The user's preferred theme ('light', 'dark', or 'system')
+     */
+    public updateThemePreference(theme: 'light' | 'dark' | 'system'): void {
+        return this.store.updateState({
+            settings: {
+                ...this.settings,
+                theme: theme,
             },
         });
     }

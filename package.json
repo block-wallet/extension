@@ -8,7 +8,8 @@
         "build": "make build",
         "build-prod": "make build/prod",
         "test": "make test",
-        "build-ledger-bundle": "webpack --config webpack/ledger-bundle.config.js"
+        "build-ledger-bundle": "webpack --config webpack/ledger-bundle.config.js",
+        "testnet": "cd local-testnet && npx hardhat node --hostname 127.0.0.1"
     },
     "dependencies": {
         "@ledgerhq/errors": "^6.19.1",

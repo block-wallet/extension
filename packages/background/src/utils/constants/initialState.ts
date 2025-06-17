@@ -172,6 +172,7 @@ const initialState: BlankAppState = {
             hideDepositsExternalAccountsWarning: false,
             hideBridgeInsufficientNativeTokenWarning: false, // Shown by default
             displayNetWorth: true,
+            theme: 'system', // Default theme preference
         },
         releaseNotesSettings: {
             lastVersionUserSawNews: '0.1.3',

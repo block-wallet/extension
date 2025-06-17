@@ -245,6 +245,7 @@ enum WALLET {
     HARDWARE_IS_LINKED = 'HARDWARE_IS_LINKED',
     HARDWARE_COMPLETE_CONNECTION = 'HARDWARE_COMPLETE_CONNECTION',
     SET_DEFAULT_GAS = 'SET_DEFAULT_GAS',
+    SET_THEME_PREFERENCE = 'SET_THEME_PREFERENCE',
     // qr hardware devices
     HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT = 'HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT',
     HARDWARE_QR_SUBMIT_SIGNATURE = 'HARDWARE_QR_SUBMIT_SIGNATURE',
@@ -565,6 +566,7 @@ export interface RequestSignatures {
         void
     ];
     [Messages.WALLET.SET_DEFAULT_GAS]: [RequestSetDefaultGas, void];
+    [Messages.WALLET.SET_THEME_PREFERENCE]: [RequestSetThemePreference, void];
 
     [Messages.WALLET.UPDATE_ANTI_PHISHING_IMAGE]: [
         RequestUpdateAntiPhishingImage,
@@ -1102,6 +1104,10 @@ export interface RequestToggleDefaultBrowserWallet {
 
 export interface RequestSetDefaultGas {
     defaultGasOption: DefaultGasOptions;
+}
+
+export interface RequestSetThemePreference {
+    theme: 'light' | 'dark' | 'system';
 }
 
 export interface RequestRejectTransaction {

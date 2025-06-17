@@ -251,6 +251,7 @@ const initialState: newBlankAppState = {
             hideDepositsExternalAccountsWarning: false,
             hideBridgeInsufficientNativeTokenWarning: false,
             displayNetWorth: true,
+            theme: 'system',
         },
         releaseNotesSettings: {
             lastVersionUserSawNews: '0.1.3',
@@ -501,6 +502,7 @@ describe('State reconciler', () => {
                     hideDepositsExternalAccountsWarning: false,
                     hideBridgeInsufficientNativeTokenWarning: false,
                     displayNetWorth: true,
+                    theme: 'system',
                 },
                 releaseNotesSettings: {
                     lastVersionUserSawNews: '0.1.3',

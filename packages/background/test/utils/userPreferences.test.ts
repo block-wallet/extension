@@ -60,7 +60,8 @@ describe('userPreferences tests', () => {
                             hideEstimatedGasExceedsThresholdWarning: false,
                             hideDepositsExternalAccountsWarning: false,
                             hideBridgeInsufficientNativeTokenWarning: false,
-                            displayNetWorth: true
+                            displayNetWorth: true,
+                            theme: 'system'
                         },
                     },
                     '2.0.0'
@@ -87,8 +88,8 @@ describe('userPreferences tests', () => {
                             hideEstimatedGasExceedsThresholdWarning: false,
                             hideDepositsExternalAccountsWarning: false,
                             hideBridgeInsufficientNativeTokenWarning: false,
-                            displayNetWorth: true
-
+                            displayNetWorth: true,
+                            theme: 'system'
                         },
                         releaseNotesSettings: {
                             lastVersionUserSawNews: '2.0.0',
@@ -119,8 +120,8 @@ describe('userPreferences tests', () => {
                             hideEstimatedGasExceedsThresholdWarning: false,
                             hideDepositsExternalAccountsWarning: false,
                             hideBridgeInsufficientNativeTokenWarning: false,
-                            displayNetWorth: true
-
+                            displayNetWorth: true,
+                            theme: 'system'
                         },
                         releaseNotesSettings: {
                             lastVersionUserSawNews: '1.0.0',

@@ -37,6 +37,7 @@ testInitState = {
         hideDepositsExternalAccountsWarning: false,
         hideBridgeInsufficientNativeTokenWarning: false,
         displayNetWorth: true,
+        theme: 'system',
     },
     releaseNotesSettings: {
         lastVersionUserSawNews: '0.1.3',

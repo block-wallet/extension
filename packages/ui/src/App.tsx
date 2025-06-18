@@ -7,6 +7,7 @@ import { isPopup } from "./context/util/isPopup"
 import PopupRouter from "./router/PopupRouter"
 import TabRouter from "./router/TabRouter"
 import { WindowIdProvider } from "./context/hooks/useWindowId"
+import { ThemeProvider } from "./context/ThemeProvider"
 
 const AppLoading = () => {
     return (
@@ -19,12 +20,14 @@ const AppLoading = () => {
 const App = () => {
     const blankState = useBlankState()
     return blankState ? (
-        <ModalProvider>
-            <WindowIdProvider>
-                <GlobalModal />
-                {isPopup() ? <PopupRouter /> : <TabRouter />}
-            </WindowIdProvider>
-        </ModalProvider>
+        <ThemeProvider>
+            <ModalProvider>
+                <WindowIdProvider>
+                    <GlobalModal />
+                    {isPopup() ? <PopupRouter /> : <TabRouter />}
+                </WindowIdProvider>
+            </ModalProvider>
+        </ThemeProvider>
     ) : (
         <AppLoading />
     )

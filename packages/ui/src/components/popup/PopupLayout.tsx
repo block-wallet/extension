@@ -26,63 +26,63 @@ const PopupLayout: FunctionComponent<{
     showProviderStatus,
     hotkeysPermissions,
 }) => {
-    const { preventResize, cancelPreventResize } = usePreventWindowResize()
+        const { preventResize, cancelPreventResize } = usePreventWindowResize()
 
-    const fullHeader = (
-        <>
-            {header}
-            <hr className="border-0.5 border-primary-grey-hover w-full" />
-        </>
-    )
+        const fullHeader = (
+            <>
+                {header}
+                <hr className="border-0.5 border-primary-grey-hover dark:border-gray-700 w-full" />
+            </>
+        )
 
-    useBeforeunload(() => {
-        if (!isAutomaticClose) {
-            rejectUnconfirmedRequests()
-        }
-    })
+        useBeforeunload(() => {
+            if (!isAutomaticClose) {
+                rejectUnconfirmedRequests()
+            }
+        })
 
-    useLayoutEffect(() => {
-        preventResize()
-        return () => cancelPreventResize()
-    }, [preventResize, cancelPreventResize])
+        useLayoutEffect(() => {
+            preventResize()
+            return () => cancelPreventResize()
+        }, [preventResize, cancelPreventResize])
 
-    useSubmitOnEnter(submitOnEnter ?? {})
+        useSubmitOnEnter(submitOnEnter ?? {})
 
-    const padding = { paddingTop: header ? "69px" : "0" }
+        const padding = { paddingTop: header ? "69px" : "0" }
 
-    //Lets check if this currentLocation has hotkeys, in case we have something we show it in footer.
-    const hotkeyByPath = useCheckLocationHotkeys(hotkeysPermissions)
-    return (
-        <PageLayout screen className="max-h-screen popup-layout">
-            <div className="absolute top-0 left-0 w-full popup-layout z-40">
-                {fullHeader}
-            </div>
-            <div
-                className="flex-1 flex flex-col w-full h-0 max-h-screen overflow-auto main-content"
-                style={padding}
-            >
-                {showProviderStatus && <ProviderStatus />}
-                {children}
-            </div>
-            {footer ? (
-                <>
-                    <hr className="border-0.5 border-primary-grey-hover w-full" />
-                    {footer}
-                    {hotkeyByPath && (
+        //Lets check if this currentLocation has hotkeys, in case we have something we show it in footer.
+        const hotkeyByPath = useCheckLocationHotkeys(hotkeysPermissions)
+        return (
+            <PageLayout screen className="max-h-screen popup-layout">
+                <div className="absolute top-0 left-0 w-full popup-layout z-40">
+                    {fullHeader}
+                </div>
+                <div
+                    className="flex-1 flex flex-col w-full h-0 max-h-screen overflow-auto main-content"
+                    style={padding}
+                >
+                    {showProviderStatus && <ProviderStatus />}
+                    {children}
+                </div>
+                {footer ? (
+                    <>
+                        <hr className="border-0.5 border-primary-grey-hover dark:border-gray-700 w-full" />
+                        {footer}
+                        {hotkeyByPath && (
+                            <HotkeysCollapsedMessage
+                                hotkeysPermissions={hotkeysPermissions}
+                            />
+                        )}
+                    </>
+                ) : (
+                    hotkeyByPath && (
                         <HotkeysCollapsedMessage
                             hotkeysPermissions={hotkeysPermissions}
                         />
-                    )}
-                </>
-            ) : (
-                hotkeyByPath && (
-                    <HotkeysCollapsedMessage
-                        hotkeysPermissions={hotkeysPermissions}
-                    />
-                )
-            )}
-        </PageLayout>
-    )
-}
+                    )
+                )}
+            </PageLayout>
+        )
+    }
 
 export default PopupLayout

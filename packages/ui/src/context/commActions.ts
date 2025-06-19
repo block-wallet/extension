@@ -1813,6 +1813,14 @@ export const setHotkeysEnabled = async (enabled: boolean): Promise<void> => {
 }
 
 /**
+ * Sets the user's theme preference
+ * @param theme The user's preferred theme ('light', 'dark', or 'system')
+ */
+export const setThemePreference = async (theme: 'light' | 'dark' | 'system'): Promise<void> => {
+    return sendMessage(Messages.WALLET.SET_THEME_PREFERENCE, { theme })
+}
+
+/**
  * Enable/Disable hotkeys
  *
  * @param enabled Allow hotkeys on the extension

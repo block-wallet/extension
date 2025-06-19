@@ -76,8 +76,8 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
             if (keepState) {
                 newState = lastLocation?.state
                     ? (lastLocation?.state as any & {
-                          keepState: true
-                      })
+                        keepState: true
+                    })
                     : {}
             }
             if (goBackState) {
@@ -117,7 +117,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
     return (
         <div
             className={classnames(
-                "z-10 flex flex-row items-center px-6 py-4 bg-white bg-opacity-95 max-w-full",
+                "z-10 flex flex-row items-center px-6 py-4 bg-white dark:bg-gray-800 bg-opacity-95 dark:bg-opacity-95 max-w-full",
                 className
             )}
             style={{ minHeight: "69px" }}
@@ -144,7 +144,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
                 <span
                     title={title}
                     className={classnames(
-                        "text-base font-semibold",
+                        "text-base font-semibold text-gray-900 dark:text-gray-100",
                         icon && "w-56"
                     )}
                 >

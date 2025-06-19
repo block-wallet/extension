@@ -43,6 +43,7 @@ import ReleaseNotesPreferencesPage from "../routes/preferences/ReleaseNotesPrefe
 import OnDemandReleaseNotesPage from "../components/releaseNotes/OnDemandReleaseNotesPage"
 import WelcomeInfo from "../components/info/WelcomeInfo"
 import NotificationsAndWarningsPage from "../routes/preferences/NotificationsAndWarningsPage"
+import ThemePreferencesPage from "../routes/preferences/ThemePreferencesPage"
 import { TransitionRouteProps } from "./TransitionRoute"
 import ApprovePage from "../routes/transaction/ApprovePage"
 import AddAccountPage from "../routes/account/AddAccountPage"
@@ -198,6 +199,11 @@ export const ROUTES_DEFINITION = [
         path: "/settings/preferences/defaultGas",
         exact: true,
         component: DefaultGasPreferencesPage,
+    },
+    {
+        path: "/settings/preferences/theme",
+        exact: true,
+        component: ThemePreferencesPage,
     },
 
     { path: "/settings/tokens/add", exact: true, component: AddTokensPage },

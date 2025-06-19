@@ -447,6 +447,7 @@ export const initBackgroundState: BackgroundStateType = {
             hideDepositsExternalAccountsWarning: false,
             hideBridgeInsufficientNativeTokenWarning: false,
             displayNetWorth: true,
+            theme: 'system',
         },
         releaseNotesSettings: {
             lastVersionUserSawNews: "0.1.1",

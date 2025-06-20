@@ -14,6 +14,10 @@ import VerticalSelect from "../../components/input/VerticalSelect"
 
 const PreferencesPage = () => {
     const history = useHistory()
+
+    // Using a data URL for theme icon (sun/moon icon)
+    const themeIcon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z'/%3E%3C/svg%3E"
+
     const options = [
         {
             icon: lock,
@@ -39,6 +43,11 @@ const PreferencesPage = () => {
             icon: gas,
             label: "Default Gas Setting",
             to: "/settings/preferences/defaultGas",
+        },
+        {
+            icon: themeIcon,
+            label: "Theme",
+            to: "/settings/preferences/theme",
         },
         {
             icon: bell,

@@ -151,7 +151,7 @@ const Select: FC<SelectProps> & CompoundProps = ({
                 <div
                     hidden={!showMenu}
                     className={classnames(
-                        "absolute shadow-md rounded-md mt-1 bg-white select-none h-auto max-h-52 overflow-y-scroll select-menu z-[20000]",
+                        "absolute shadow-md rounded-md mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 select-none h-auto max-h-52 overflow-y-scroll select-menu z-[20000]",
                         getMenuClassnamesForType({ type })
                     )}
                     style={{ maxWidth: "305px" }}
@@ -207,20 +207,24 @@ const SelectOption: FC<ItemProps> & CompoundMember = ({
     return (
         <li
             className={classnames(
-                "cursor-pointer flex flex-row justify-between px-3 py-2 items-center hover:bg-gray-100 space-x-3",
-                disabled && "!cursor-default !bg-gray-200 !hover:bg-gray-200"
+                "cursor-pointer flex flex-row justify-between px-3 py-2 items-center hover:bg-gray-100 dark:hover:bg-gray-700 space-x-3 text-gray-900 dark:text-gray-100",
+                disabled && "!cursor-default !bg-gray-200 dark:!bg-gray-700 !hover:bg-gray-200 dark:!hover:bg-gray-700 opacity-50",
+                selected && "bg-gray-50 dark:bg-gray-700/50"
             )}
             onClick={() => (onClick && !disabled ? onClick(value) : void 0)}
         >
             <span
                 className={classnames(
                     "leading-loose",
-                    selected && "font-semibold"
+                    selected && "font-semibold text-primary-blue-default dark:text-primary-blue-300"
                 )}
             >
                 {children}
             </span>
-            <span className={classnames(!selected && "invisible")}>
+            <span className={classnames(
+                !selected && "invisible",
+                "text-primary-blue-default dark:text-primary-blue-300"
+            )}>
                 <BsCheck size={14} />
             </span>
         </li>

@@ -90,13 +90,13 @@ export class Classes {
         "text-gray-900 border-primary-black-default hover:text-white hover:bg-primary-black-default"
     )
     static inputLabel = classnames(
-        "text-[13px] font-medium text-primary-grey-dark"
+        "text-[13px] font-medium text-gray-700 dark:text-gray-300"
     )
     static inputBordered = classnames(
-        "text-xs font-semibold text-primary-black-default rounded-lg border-1 border-[#D7D9D7] min-h-[40px] placeholder:font-normal placeholder-primary-grey-dark focus:ring-0 focus:ring-primary-blue-default hover:border-primary-blue-default"
+        "text-xs font-semibold text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 rounded-lg border-1 border-gray-300 dark:border-gray-600 min-h-[40px] placeholder:font-normal placeholder-gray-500 dark:placeholder-gray-400 focus:ring-0 focus:ring-primary-blue-default hover:border-primary-blue-default dark:hover:border-primary-blue-400"
     )
     static input = classnames(
-        "w-full text-xs font-semibold rounded-lg text-primary-black-default py-2 px-3 mt-2 border-1 border-[#D7D9D7] min-h-[40px] placeholder:font-normal placeholder-primary-grey-dark focus:ring-0 focus:ring-primary-blue-default hover:border-primary-blue-default"
+        "w-full text-xs font-semibold rounded-lg text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 py-2 px-3 mt-2 border-1 border-gray-300 dark:border-gray-600 min-h-[40px] placeholder:font-normal placeholder-gray-500 dark:placeholder-gray-400 focus:ring-0 focus:ring-primary-blue-default hover:border-primary-blue-default dark:hover:border-primary-blue-400"
     )
     static inputBorder = classnames(
         "w-full text-xs px-3 py-2 mt-1 font-semibold rounded-lg border-1 border-primary-grey-hover placeholder:font-normal min-h-[40px] placeholder-primary-grey-dark focus:ring-0 hover:border-primary-blue-default focus:ring-primary-blue-default"
@@ -165,7 +165,7 @@ export class Classes {
     )
     static selectStyle = classnames(
         this.selectBaseStyle,
-        "text-primary-black-default border rounded-lg font-semibold placeholder:font-normal group border-[#D7D9D7] hover:border-primary-blue-default px-3 py-2 min-h-[40px]"
+        "text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border rounded-lg font-semibold placeholder:font-normal group border-gray-300 dark:border-gray-600 hover:border-primary-blue-default dark:hover:border-primary-blue-400 px-3 py-2 min-h-[40px]"
     )
     static selectStyleDisabled = classnames(
         this.selectStyle,

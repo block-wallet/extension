@@ -19,64 +19,69 @@ const ToggleButton: FunctionComponent<{
     onToggle,
     id = "toggleInput",
 }) => {
-    const [isChecked, setIsCheked] = useState(defaultChecked)
+        const [isChecked, setIsCheked] = useState(defaultChecked)
 
-    useEffect(() => {
-        if (onToggle) {
-            onToggle(isChecked)
+        useEffect(() => {
+            if (onToggle) {
+                onToggle(isChecked)
+            }
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [isChecked])
+
+        useEffect(() => {
+            setIsCheked(defaultChecked)
+        }, [defaultChecked])
+
+        const backgroundStyle = disabled
+            ? "bg-gray-200 dark:bg-gray-700"
+            : isChecked
+                ? "bg-primary-blue-default dark:bg-primary-blue-default"
+                : "bg-gray-300 dark:bg-gray-600"
+
+        const onClick = () => {
+            if (!disabled && !readOnly) {
+                setIsCheked(!isChecked)
+            }
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isChecked])
-
-    useEffect(() => {
-        setIsCheked(defaultChecked)
-    }, [defaultChecked])
-
-    const backgroundStyle = disabled
-        ? "bg-gray-200"
-        : isChecked
-        ? "bg-primary-blue-default"
-        : "bg-primary-grey-hover"
-
-    const onClick = () => {
-        if (!disabled && !readOnly) {
-            setIsCheked(!isChecked)
-        }
+        return (
+            <label
+                htmlFor={id}
+                className={classnames(
+                    "flex items-center justify-between w-full",
+                    !disabled && !readOnly && "cursor-pointer"
+                )}
+            >
+                {label && (
+                    <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">
+                        {label}
+                    </div>
+                )}
+                <div className="group relative">
+                    <div
+                        className={classnames(
+                            "block w-11 h-6 rounded-full transition-colors duration-200",
+                            backgroundStyle
+                        )}
+                    ></div>
+                    <div
+                        className={classnames(
+                            "dot absolute left-0.5 top-0.5 bg-white dark:bg-white w-5 h-5 rounded-full transition transform shadow-sm",
+                            isChecked && "translate-x-full",
+                            disabled && "opacity-50"
+                        )}
+                    ></div>
+                    <input
+                        type="checkbox"
+                        id={id}
+                        name={inputName ?? "toggleInput"}
+                        className="sr-only"
+                        disabled={disabled}
+                        readOnly={readOnly}
+                        onClick={onClick}
+                    />
+                </div>
+            </label>
+        )
     }
-    return (
-        <label
-            htmlFor={id}
-            className={classnames(
-                "flex items-center justify-between w-full",
-                !disabled && !readOnly && "cursor-pointer"
-            )}
-        >
-            {label && <div className="font-semibold text-sm">{label}</div>}
-            <div className="group relative">
-                <div
-                    className={classnames(
-                        "block w-11 h-6 rounded-full",
-                        backgroundStyle
-                    )}
-                ></div>
-                <div
-                    className={classnames(
-                        "dot absolute left-0.5 top-0.5 bg-white w-5 h-5 rounded-full transition transform",
-                        isChecked && "translate-x-full"
-                    )}
-                ></div>
-                <input
-                    type="checkbox"
-                    id={id}
-                    name={inputName ?? "toggleInput"}
-                    className="sr-only"
-                    disabled={disabled}
-                    readOnly={readOnly}
-                    onClick={onClick}
-                />
-            </div>
-        </label>
-    )
-}
 
 export default ToggleButton

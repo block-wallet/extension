@@ -9,6 +9,7 @@ import PopupLayout from "../../components/popup/PopupLayout"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { toggleDefaultBrowserWallet } from "../../context/commActions"
 import useAsyncInvoke from "../../util/hooks/useAsyncInvoke"
+import { BsGlobe2, BsInfoCircle, BsShield } from "react-icons/bs"
 
 interface DefaultWalletPreferencesProps {
     isWelcome?: boolean
@@ -69,63 +70,132 @@ const DefaultWalletPreferencesPage: FC<DefaultWalletPreferencesProps> = ({
             submitOnEnter={{ onSubmit: isWelcome ? onNext : onSave }}
         >
             <div className="flex flex-col p-6 space-y-6 w-full">
-                <div className="text-sm text-primary-grey-dark">
-                    {wasDefaultBrowserWallet ? (
-                        <span>
-                            BlockWallet is set as your default browser wallet.
+                {/* Information Panel */}
+                <div className="bg-blue-50 dark:bg-gray-800 p-4 rounded-lg border border-blue-200 dark:border-gray-700">
+                    <div className="flex items-start space-x-3">
+                        <BsGlobe2 className="text-blue-600 dark:text-blue-400 text-lg mt-0.5 flex-shrink-0" />
+                        <div>
+                            <h3 className="text-base font-semibold text-blue-800 dark:text-blue-200 mb-2">
+                                Browser Wallet Integration
+                            </h3>
+                            <p className="text-sm text-blue-700 dark:text-blue-300">
+                                Control how BlockWallet interacts with decentralized applications (DApps)
+                                when multiple browser wallets are installed.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Current Status */}
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center space-x-2 mb-2">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Current Status:
                         </span>
-                    ) : (
-                        <span>
-                            BlockWallet is not set as your default browser
-                            wallet.
+                        <span className={`text-sm font-semibold ${wasDefaultBrowserWallet
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-orange-600 dark:text-orange-400"
+                            }`}>
+                            {wasDefaultBrowserWallet ? "Enabled" : "Disabled"}
                         </span>
-                    )}
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {wasDefaultBrowserWallet ? (
+                            "BlockWallet is set as your default browser wallet."
+                        ) : (
+                            "BlockWallet is not set as your default browser wallet."
+                        )}
+                    </p>
+                </div>
+
+                {/* Toggle Section */}
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="space-y-4">
+                        <div>
+                            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                                Default Browser Wallet
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                Enable this to make BlockWallet your primary wallet for DApp connections
+                            </p>
+                        </div>
+                        <ToggleButton
+                            label="Set as Default Browser Wallet"
+                            defaultChecked={defaultBrowserWallet}
+                            onToggle={setDefaultBrowserWallet}
+                        />
+                    </div>
+                </div>
+
+                {/* Explanation Section */}
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="space-y-4">
+                        <div className="flex items-start space-x-3">
+                            <BsInfoCircle className="text-blue-500 dark:text-blue-400 text-lg mt-0.5 flex-shrink-0" />
+                            <div>
+                                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                                    How This Works
+                                </h4>
+                                <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
+                                    {defaultBrowserWallet ? (
+                                        <div className="space-y-2">
+                                            <p>
+                                                <span className="font-medium text-green-600 dark:text-green-400">When enabled:</span>
+                                                {" "}BlockWallet will automatically connect to DApps by default,
+                                                giving you seamless access to decentralized applications.
+                                            </p>
+                                            <p>
+                                                If you have multiple wallets installed, BlockWallet will take
+                                                priority for new DApp connections.
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            <p>
+                                                <span className="font-medium text-orange-600 dark:text-orange-400">When disabled:</span>
+                                                {" "}BlockWallet will not automatically connect to DApps if you have
+                                                other browser wallets installed.
+                                            </p>
+                                            <p>
+                                                Choose this option if you prefer to use a different wallet
+                                                as your primary DApp connector.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Important Notice */}
+                <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
+                    <div className="flex items-start space-x-3">
+                        <BsShield className="text-amber-600 dark:text-amber-400 text-lg mt-0.5 flex-shrink-0" />
+                        <div>
+                            <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-2">
+                                Important Notes
+                            </h4>
+                            <div className="text-sm text-amber-700 dark:text-amber-300 space-y-1">
+                                <p>• You can change this setting at any time</p>
+                                <p>• DApp pages need to be refreshed for changes to take effect</p>
+                                <p>• This setting only affects new DApp connections</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <SuccessDialog
                     open={isSuccess}
                     title="Default Browser Wallet"
                     timeout={800}
-                    message="Your changes have been succesfully saved!"
+                    message="Your changes have been successfully saved!"
                     onDone={
                         isWelcome
                             ? dismissDefaultWalletPreferences
                             : history.goBack
                     }
                 />
-
-                <ToggleButton
-                    label="Default Browser Wallet"
-                    defaultChecked={defaultBrowserWallet}
-                    onToggle={setDefaultBrowserWallet}
-                />
-
-                <div className="text-sm text-primary-grey-dark">
-                    {wasDefaultBrowserWallet ? (
-                        <span>
-                            Turning this off will make BlockWallet unable to
-                            connect to DApps in case you have more than one
-                            wallet installed in your browser. Turn it off if you
-                            want a different browser wallet to connect to the
-                            DApps you are visiting.
-                        </span>
-                    ) : (
-                        <span>
-                            Turning this on will make BlockWallet connect to
-                            DApps by default. Turn it on if you want to use
-                            BlockWallet to connect to DApps, instead of other
-                            browser wallets.
-                        </span>
-                    )}
-                    <br />
-                    <br />
-
-                    <span>
-                        You can change this setting at any time. Be aware that
-                        you need to refresh any DApp pages you might be on, for
-                        these changes to take affect.
-                    </span>
-                </div>
             </div>
         </PopupLayout>
     )

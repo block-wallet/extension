@@ -115,7 +115,7 @@ export class Classes {
     )
 
     static greySection = classnames(
-        "p-4 border-opacity-0 border-transparent flex justify-between items-center flex-row w-full rounded-lg bg-primary-grey-default border cursor-pointer hover:bg-primary-grey-hover"
+        "p-4 border-opacity-0 border-transparent flex justify-between items-center flex-row w-full rounded-lg bg-gray-100 dark:bg-gray-700 border cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white"
     )
 
     static blueSelectionDisabled = classnames(
@@ -126,7 +126,7 @@ export class Classes {
         "cursor-not-allowed hover:bg-primary-grey-disabled"
     )
 
-    static blueSectionActive = classnames("bg-primary-grey-hover")
+    static blueSectionActive = classnames("bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-white")
     static blueSectionInput = classnames(
         "bg-transparent p-0 border-none font-semibold"
     )

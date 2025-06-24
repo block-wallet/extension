@@ -2,11 +2,11 @@ const AppVersion = () => {
     const { VERSION, VERSION_NAME } = process.env
 
     return VERSION ? (
-        <span className="text-gray-500">
+        <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">
             Version: v{[VERSION, VERSION_NAME].filter(Boolean).join(" - ")}
         </span>
     ) : (
-        <span className="text-gray-500">DEVELOPMENT</span>
+        <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">DEVELOPMENT</span>
     )
 }
 export default AppVersion

@@ -9,7 +9,11 @@ const AccountsList: FC<PropsWithChildren<AccountsListProps>> = ({
 }) => {
     return (
         <div className="flex flex-col space-y-3">
-            <span className="text-xs text-primary-grey-dark">{title}</span>
+            {title && (
+                <span className="text-xs text-gray-600 dark:text-gray-400 font-medium uppercase tracking-wider">
+                    {title}
+                </span>
+            )}
             {children}
         </div>
     )

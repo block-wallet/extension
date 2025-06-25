@@ -19,9 +19,11 @@ html body.popup {
     /*max-height: 600px;*/
     overflow-y: scroll;
 }
+
 .popup-layout {
     max-width: 357px;
 }
+
 /* Storybook classes */
 
 body.popup.sb-show-main {
@@ -46,10 +48,20 @@ body {
 
 body {
     font-size: 75%;
+    background-color: #ffffff;
+    /* Light mode background */
+    transition: background-color 0.2s ease-in-out;
+}
+
+/* Dark mode background for body */
+.dark body {
+    background-color: #111827;
+    /* Dark mode background - gray-900 */
 }
 
 html {
-    scrollbar-width: none; /* Firefox */
+    scrollbar-width: none;
+    /* Firefox */
 }
 
 html::-webkit-scrollbar,
@@ -57,18 +69,30 @@ body::-webkit-scrollbar,
 /* Class to implement in those views where we want to be able to scroll but without showing the scrollbar */
 .hide-scroll::-webkit-scrollbar {
     display: none;
-    -ms-overflow-style: none; /* Internet Explorer 10+ */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    /* Internet Explorer 10+ */
+    scrollbar-width: none;
+    /* Firefox */
 }
 
 #root {
     width: 100%;
     height: 100%;
     overflow-x: hidden;
+    background-color: #ffffff;
+    /* Light mode background */
+    transition: background-color 0.2s ease-in-out;
+}
+
+/* Dark mode background for root */
+.dark #root {
+    background-color: #111827;
+    /* Dark mode background - gray-900 */
 }
 
 .main-content::-webkit-scrollbar {
-    display: none; /* Safari and Chrome */
+    display: none;
+    /* Safari and Chrome */
 }
 
 .main-content {
@@ -121,6 +145,7 @@ textarea:focus {
     0% {
         left: -100%;
     }
+
     100% {
         left: 150%;
     }
@@ -136,11 +161,12 @@ textarea:focus {
     width: 1px;
 }
 
-.dropdown-menu > li:first-child {
+.dropdown-menu>li:first-child {
     border-top-right-radius: 6px;
     border-top-left-radius: 6px;
 }
-.dropdown-menu > li:last-child {
+
+.dropdown-menu>li:last-child {
     border-bottom-right-radius: 6px;
     border-bottom-left-radius: 6px;
 }

@@ -25,12 +25,12 @@ const FullScreenDialog: FunctionComponent<
             <div
                 ref={nodeRef}
                 className={classnames(
-                    "bg-gray-100 bg-opacity-60 fixed inset-0 w-full h-screen z-50 overflow-hidden flex flex-col items-center justify-center px-6 "
+                    "bg-gray-100 dark:bg-gray-900 bg-opacity-60 dark:bg-opacity-70 fixed inset-0 w-full h-screen z-50 overflow-hidden flex flex-col items-center justify-center px-6"
                 )}
             >
                 <div
                     ref={ref}
-                    className="relative py-6 opacity-100 max-w-md w-3/6 bg-white shadow-md rounded-md flex-col flex"
+                    className="relative py-6 opacity-100 max-w-md w-3/6 bg-white dark:bg-gray-800 shadow-md rounded-md flex-col flex"
                 >
                     {children}
                 </div>

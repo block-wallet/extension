@@ -6,6 +6,17 @@
 .slide-up-exit-active,
 .slide-up-exit-done {
     will-change: transform;
+    background-color: #ffffff;
+    /* Light mode background */
+}
+
+.dark .slide-up-enter,
+.dark .slide-up-enter-active,
+.dark .slide-up-enter-done .slide-exit,
+.dark .slide-up-exit-active,
+.dark .slide-up-exit-done {
+    background-color: #111827;
+    /* Dark mode background - gray-900 */
 }
 
 .slide-up-enter {
@@ -55,6 +66,17 @@
 .slide-exit-active,
 .slide-exit-done {
     will-change: transform;
+    background-color: #ffffff;
+    /* Light mode background */
+}
+
+.dark .slide-enter,
+.dark .slide-enter-active,
+.dark .slide-enter-done .slide-exit,
+.dark .slide-exit-active,
+.dark .slide-exit-done {
+    background-color: #111827;
+    /* Dark mode background - gray-900 */
 }
 
 .slide-enter {
@@ -102,6 +124,17 @@
 .slide-left-exit-active,
 .slide-left-exit-done {
     will-change: transform;
+    background-color: #ffffff;
+    /* Light mode background */
+}
+
+.dark .slide-left-enter,
+.dark .slide-left-enter-active,
+.dark .slide-left-enter-done .slide-left-exit,
+.dark .slide-left-exit-active,
+.dark .slide-left-exit-done {
+    background-color: #111827;
+    /* Dark mode background - gray-900 */
 }
 
 .slide-left-enter {
@@ -145,6 +178,17 @@
 .slide-right-exit-active,
 .slide-right-exit-done {
     will-change: transform;
+    background-color: #ffffff;
+    /* Light mode background */
+}
+
+.dark .slide-right-enter,
+.dark .slide-right-enter-active,
+.dark .slide-right-enter-done .slide-right-exit,
+.dark .slide-right-exit-active,
+.dark .slide-right-exit-done {
+    background-color: #111827;
+    /* Dark mode background - gray-900 */
 }
 
 .slide-right-enter {
@@ -182,15 +226,46 @@
 
 .appear-enter {
     opacity: 0;
+    background-color: #ffffff;
+    /* Light mode background */
 }
+
+.dark .appear-enter {
+    background-color: #111827;
+    /* Dark mode background - gray-900 */
+}
+
 .appear-enter-active {
     opacity: 1;
     transition: opacity 200ms;
+    background-color: #ffffff;
+    /* Light mode background */
 }
+
+.dark .appear-enter-active {
+    background-color: #111827;
+    /* Dark mode background - gray-900 */
+}
+
 .appear-exit {
     opacity: 1;
+    background-color: #ffffff;
+    /* Light mode background */
 }
+
+.dark .appear-exit {
+    background-color: #111827;
+    /* Dark mode background - gray-900 */
+}
+
 .appear-exit-active {
     opacity: 0;
     transition: opacity 200ms;
+    background-color: #ffffff;
+    /* Light mode background */
+}
+
+.dark .appear-exit-active {
+    background-color: #111827;
+    /* Dark mode background - gray-900 */
 }

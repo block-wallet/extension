@@ -76,18 +76,18 @@ export const TransitionRoute: FunctionComponent<TransitionRouteProps> = ({
         <Route {...rest} component={transition ? undefined : Component}>
             {transition
                 ? ({ match }) => (
-                      <CSSTransition
-                          in={match != null}
-                          timeout={400}
-                          classNames={transition}
-                          unmountOnExit
-                          nodeRef={nodeRef}
-                      >
-                          <div className="w-full h-full" ref={nodeRef}>
-                              <Component />
-                          </div>
-                      </CSSTransition>
-                  )
+                    <CSSTransition
+                        in={match != null}
+                        timeout={400}
+                        classNames={transition}
+                        unmountOnExit
+                        nodeRef={nodeRef}
+                    >
+                        <div className="w-full h-full bg-white dark:bg-gray-900" ref={nodeRef}>
+                            <Component />
+                        </div>
+                    </CSSTransition>
+                )
                 : undefined}
         </Route>
     )

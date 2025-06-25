@@ -152,9 +152,7 @@ const ConnectSteps = ({
                                 className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                             />
                             <Tooltip
-                                content={`${requestCount - 1} more ${
-                                    requestCount > 2 ? "requests" : "request"
-                                }`}
+                                content={`${requestCount - 1} more ${requestCount > 2 ? "requests" : "request"}`}
                             />
                         </div>
                     )}
@@ -236,7 +234,8 @@ const ConnectSteps = ({
             <div className="overflow-auto hide-scroll">
                 <div className="flex flex-col items-center w-full p-6 space-y-3">
                     <AppIcon
-                        iconURL={site.siteMetadata.iconURL || connectIcon}
+                        iconURL={site.siteMetadata.iconURL || `${site.origin}/favicon.ico`}
+                        fallbackURL={connectIcon}
                         size={14}
                         background={false}
                     />

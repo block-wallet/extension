@@ -271,79 +271,6 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
     }
 });
 
-// Register content script installation more robustly with retry logic
-const registerBlankProviderContentScript = async () => {
-    const MAX_RETRIES = 3;
-    let retries = 0;
-
-    const attemptRegistration = async (): Promise<boolean> => {
-        try {
-            // Check if the content script API is available
-            if (
-                !chrome.scripting ||
-                typeof chrome.scripting.registerContentScripts !== 'function'
-            ) {
-                console.warn(
-                    'Chrome scripting API is not available in this browser/environment'
-                );
-                return false;
-            }
-
-            // Safe check for getRegisteredContentScripts
-            if (
-                typeof chrome.scripting.getRegisteredContentScripts ===
-                'function'
-            ) {
-                try {
-                    const existingScripts =
-                        await chrome.scripting.getRegisteredContentScripts({
-                            ids: ['blankProvider'],
-                        });
-
-                    // If already registered, no need to register again
-                    if (existingScripts && existingScripts.length > 0) {
-                        return true;
-                    }
-                } catch (checkErr) {
-                    console.warn(
-                        'Error checking for registered scripts:',
-                        checkErr
-                    );
-                }
-            }
-
-            // Register the content script if not already registered or if we couldn't check
-            await chrome.scripting.registerContentScripts([
-                {
-                    id: 'blankProvider',
-                    matches: ['file://*/*', 'http://*/*', 'https://*/*'],
-                    js: ['blankProvider.js'],
-                    runAt: 'document_start',
-                    world: 'MAIN',
-                    persistAcrossSessions: true, // Ensure script registration persists
-                },
-            ]);
-            return true;
-        } catch (err) {
-            retries++;
-            if (retries >= MAX_RETRIES) {
-                console.warn(
-                    `Failed to register blankProvider content script after ${MAX_RETRIES} attempts. ${err}`
-                );
-                return false;
-            }
-
-            // Exponential backoff for retries
-            await new Promise((resolve) =>
-                setTimeout(resolve, 500 * Math.pow(2, retries - 1))
-            );
-            return attemptRegistration();
-        }
-    };
-
-    return attemptRegistration();
-};
-
 /**
  * Helper function to persist critical state data
  */
@@ -388,8 +315,6 @@ if (isManifestV3()) {
     chrome.storage.session.onChanged.addListener((changes) => {
         // Respond to storage changes to restore state when the service worker restarts
     });
-
-    registerBlankProviderContentScript();
 }
 
 /**

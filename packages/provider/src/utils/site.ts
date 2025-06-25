@@ -66,15 +66,21 @@ export const checkScriptLoad = (): boolean => {
  */
 export const getIconData = async (): Promise<string | null> => {
     return new Promise((resolve) => {
+        const tryGetIcon = async () => {
+            const iconUrl = await getIconFromDom();
+            resolve(iconUrl);
+        };
+
+        // Try immediately if DOM is ready
         if (
             document.readyState === 'complete' ||
             document.readyState === 'interactive'
         ) {
-            resolve(getIconFromDom());
+            tryGetIcon();
         } else {
+            // Wait for DOM to be ready
             const domContentLoadedHandler = async () => {
-                resolve(getIconFromDom());
-
+                await tryGetIcon();
                 window.removeEventListener(
                     'DOMContentLoaded',
                     domContentLoadedHandler
@@ -85,6 +91,9 @@ export const getIconData = async (): Promise<string | null> => {
                 'DOMContentLoaded',
                 domContentLoadedHandler
             );
+
+            // Also try after a short delay to catch late-loading favicons
+            setTimeout(tryGetIcon, 1000);
         }
     });
 };
@@ -97,13 +106,39 @@ export const getIconData = async (): Promise<string | null> => {
 const getIconFromDom = async (): Promise<string | null> => {
     const { document } = window;
 
-    const icons: NodeListOf<HTMLLinkElement> = document.querySelectorAll(
-        'head > link[rel~="icon"]'
-    );
+    // Try multiple favicon selectors in order of preference
+    const selectors = [
+        'link[rel="icon"]',
+        'link[rel="shortcut icon"]',
+        'link[rel~="icon"]',
+        'link[rel="apple-touch-icon"]',
+        'link[rel="apple-touch-icon-precomposed"]',
+        'link[rel="mask-icon"]'
+    ];
 
-    for (const icon of icons) {
-        if (icon && (await isValidImage(icon.href))) {
-            return icon.href;
+    for (const selector of selectors) {
+        const icons: NodeListOf<HTMLLinkElement> = document.querySelectorAll(selector);
+
+        for (const icon of icons) {
+            if (icon && icon.href) {
+                if (await isValidImage(icon.href)) {
+                    return icon.href;
+                }
+            }
+        }
+    }
+
+    // Fallback: try the standard favicon paths
+    const origin = window.location.origin;
+    const fallbackPaths = [
+        `${origin}/favicon.png`,
+        `${origin}/favicon.ico`,
+        `${origin}/favicon.svg`
+    ];
+
+    for (const path of fallbackPaths) {
+        if (await isValidImage(path)) {
+            return path;
         }
     }
 
@@ -120,9 +155,29 @@ const isValidImage = async (url: string): Promise<boolean> => {
 
     const isValid = await new Promise<boolean>((resolve) => {
         try {
-            img.onload = () => resolve(true);
-            img.onerror = () => resolve(false);
-            img.src = url;
+            // Set timeout to avoid hanging on slow images
+            const timeout = setTimeout(() => {
+                resolve(false);
+            }, 2000); // 2 second timeout
+
+            img.onload = () => {
+                clearTimeout(timeout);
+                resolve(true);
+            };
+
+            img.onerror = () => {
+                clearTimeout(timeout);
+                resolve(false);
+            };
+
+            // Try without crossOrigin first (for same-origin images)
+            if (url.startsWith(window.location.origin)) {
+                img.src = url;
+            } else {
+                // For cross-origin images, try with crossOrigin
+                img.crossOrigin = 'anonymous';
+                img.src = url;
+            }
         } catch (error) {
             resolve(false);
         }

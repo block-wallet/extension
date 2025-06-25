@@ -15,7 +15,23 @@
                 "https://connect.trezor.io/*"
             ],
             "run_at": "document_start",
-            "all_frames": true
+            "all_frames": true,
+            "world": "ISOLATED"
+        },
+        {
+            "js": [
+                "blankProvider.js"
+            ],
+            "matches": [
+                "https://*/*"
+            ],
+            "exclude_matches": [
+                "https://block-wallet.github.io/eth-ledger-bridge-keyring/*",
+                "https://connect.trezor.io/*"
+            ],
+            "run_at": "document_start",
+            "all_frames": true,
+            "world": "MAIN"
         },
         {
             "js": [
@@ -23,7 +39,8 @@
             ],
             "matches": [
                 "https://connect.trezor.io/*/popup.html"
-            ]
+            ],
+            "world": "ISOLATED"
         }
     ],
     "permissions": [
@@ -35,6 +52,7 @@
     "web_accessible_resources": [
         {
             "resources": [
+                "blankProvider.js",
                 "offscreen.html",
                 "hardware-wallet-bridge.html",
                 "offscreen.js",
@@ -44,7 +62,8 @@
             ],
             "matches": [
                 "https://*/*"
-            ]
+            ],
+            "use_dynamic_url": false
         }
     ]
 }

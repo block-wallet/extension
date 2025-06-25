@@ -162,7 +162,7 @@ import TransactionController, {
     FeeMarketEIP1559Values,
 } from './transactions/TransactionController';
 import { GasPriceData } from './GasPricesController';
-import { PreferencesController, ReleaseNote } from './PreferencesController';
+import { PreferencesController, PreferencesControllerEvents, ReleaseNote } from './PreferencesController';
 import { ExchangeRatesController } from './ExchangeRatesController';
 import {
     AccountInfo,
@@ -523,6 +523,16 @@ export default class BlankController extends EventEmitter {
             this.ensController
         );
 
+        // Listen for account changes and emit to connected dApps
+        this.preferencesController.on(
+            PreferencesControllerEvents.SELECTED_ACCOUNT_CHANGED,
+            () => {
+                // Emit accountsChanged event to all connected dApps
+                this.blankProviderController.emitAccountsChanged();
+            }
+        );
+
+        // Initialize store composition
         this.store = new ComposedStore<BlankAppState>({
             NetworkController: this.networkController.store,
             AppStateController: this.appStateController.store,

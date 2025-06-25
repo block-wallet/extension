@@ -480,6 +480,7 @@ export enum JSONRPCMethod {
     wallet_getPermissions = 'wallet_getPermissions',
     wallet_requestPermissions = 'wallet_requestPermissions',
     wallet_watchAsset = 'wallet_watchAsset',
+    wallet_getCapabilities = 'wallet_getCapabilities',
     web3_clientVersion = 'web3_clientVersion',
     web3_sha3 = 'web3_sha3',
     // pub/sub

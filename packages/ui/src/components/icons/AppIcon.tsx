@@ -1,4 +1,5 @@
 import classnames from "classnames"
+import { useState, useEffect } from "react"
 
 interface AppIconProps {
     size: number
@@ -6,6 +7,7 @@ interface AppIconProps {
     iconSize?: number
     title?: string
     background?: boolean
+    fallbackURL?: string
 }
 
 const AppIcon = ({
@@ -14,7 +16,27 @@ const AppIcon = ({
     iconSize,
     background = true,
     title,
+    fallbackURL,
 }: AppIconProps) => {
+    const [currentIconURL, setCurrentIconURL] = useState(iconURL)
+    const [fallbackAttempted, setFallbackAttempted] = useState(false)
+
+    // Reset state when iconURL prop changes
+    useEffect(() => {
+        setCurrentIconURL(iconURL)
+        setFallbackAttempted(false)
+    }, [iconURL])
+
+    const handleImageError = () => {
+        if (!fallbackAttempted && fallbackURL && currentIconURL !== fallbackURL) {
+            setCurrentIconURL(fallbackURL)
+            setFallbackAttempted(true)
+        } else {
+            // If fallback also fails, hide the image
+            setCurrentIconURL("")
+        }
+    }
+
     return (
         <div
             className={classnames(
@@ -23,16 +45,17 @@ const AppIcon = ({
                 background && "bg-primary-grey-default"
             )}
         >
-            {iconURL ? (
+            {currentIconURL ? (
                 <img
                     alt="icon"
-                    src={iconURL}
+                    src={currentIconURL}
                     draggable={false}
                     className={classnames(
                         "h-full",
                         background ? "max-h-6" : "max-h-11"
                     )}
                     title={title}
+                    onError={handleImageError}
                 />
             ) : null}
         </div>

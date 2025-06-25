@@ -427,6 +427,8 @@ export default class BlankProviderController extends BaseController<BlankProvide
                     params as unknown as WatchAssetParameters,
                     portId
                 );
+            case JSONRPCMethod.wallet_getCapabilities:
+                return this._handleGetCapabilities(portId);
             case JSONRPCMethod.web3_sha3:
                 return this._sha3(params);
             case JSONRPCMethod.eth_estimateGas:
@@ -747,7 +749,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
         }
 
         // Update accounts on provider
-        this._emitAccountsChanged();
+        this.emitAccountsChanged();
 
         // Return active account
         return permissions;
@@ -766,7 +768,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
         }
 
         if (emitUpdate) {
-            this._emitAccountsChanged();
+            this.emitAccountsChanged();
         }
 
         return this._permissionsController.getAccounts(
@@ -1463,12 +1465,12 @@ export default class BlankProviderController extends BaseController<BlankProvide
     };
 
     /**
-     * Internal method to emit accountsChanged event
+     * Method to emit accountsChanged event to all connected dApps
      */
-    private _emitAccountsChanged = () => {
+    public emitAccountsChanged = () => {
         this._updateEventSubscriptions({
             eventName: ProviderEvents.accountsChanged,
-            payload: [],
+            payload: [], // This will be populated per-port in handleAccountUpdates
         });
     };
 
@@ -1567,7 +1569,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 }
 
                 // Update accounts on provider
-                this._emitAccountsChanged();
+                this.emitAccountsChanged();
             },
             PERMISSIONS: ({ permissionRequests }: PermissionsControllerState) => {
                 if (!isEmpty(permissionRequests)) {
@@ -1579,7 +1581,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 }
 
                 // Update accounts on provider
-                this._emitAccountsChanged();
+                this.emitAccountsChanged();
             },
             TRANSACTIONS: (
                 transactionsState: TransactionVolatileControllerState
@@ -1746,5 +1748,44 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 };
             }
         }
+    };
+
+    /**
+     * Handles wallet_getCapabilities EIP-5792 method
+     * Returns the capabilities supported by this wallet
+     *
+     * @param portId - The port ID of the requesting dApp
+     * @returns Object containing wallet capabilities per chain
+     * @throws Error if the dApp doesn't have account access permission
+     */
+    private _handleGetCapabilities = (portId: string) => {
+        // Validate port and get origin
+        const providerInstance = providerInstances[portId];
+        if (!providerInstance) {
+            throw new Error('Invalid port ID or disconnected dApp');
+        }
+
+        const origin = providerInstance.origin;
+        const accounts = this._permissionsController.getAccounts(origin);
+
+        if (accounts.length === 0) {
+            throw new Error('Unauthorized: No account access permission');
+        }
+
+        const currentChainId = this._networkController.network.chainId;
+        const chainIdHex = `0x${currentChainId.toString(16)}`;
+
+        // Define capabilities - currently we don't support batch/atomic transactions
+        // but this can be extended in the future
+        const capabilities = {
+            [chainIdHex]: {
+                // Atomic capability indicates if we support batch/atomic transactions
+                atomic: {
+                    status: 'unsupported' as const
+                }
+            }
+        };
+
+        return capabilities;
     };
 }

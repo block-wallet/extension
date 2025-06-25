@@ -18,6 +18,8 @@ import ChainFiltersButton, {
 } from "../../components/chain/ChainFiltersButton"
 import EmptyState from "../../components/ui/EmptyState"
 import { parseChainId } from "../../util/networkUtils"
+import { HiSearch, HiInformationCircle, HiPlus, HiGlobeAlt } from "react-icons/hi"
+import { BsFilter, BsLightningCharge } from "react-icons/bs"
 
 interface ChainData {
     chain: ChainListItem
@@ -135,108 +137,204 @@ const SearchNetworkPage = () => {
                 isEnabled: !!pickedChain,
             }}
         >
-            <div className="w-76 w-full p-6 pb-4 bg-white fixed z-20 flex flex-col">
-                <div className="flex flex-row space-x-2">
-                    <div className="flex-1">
-                        <SearchInput
-                            placeholder="Input Chain ID or Name..."
-                            disabled={false}
-                            autoFocus={true}
-                            onChange={onChange}
-                            debounced
-                        />
+            <div className="flex flex-col h-full w-full">
+                {/* Search Header - Fixed */}
+                <div className="w-full p-6 pb-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                    {/* Search Instructions */}
+                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-3 mb-4">
+                        <div className="flex items-start space-x-2">
+                            <HiSearch className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                            <div className="space-y-1">
+                                <p className="text-xs font-medium text-blue-800 dark:text-blue-200">
+                                    Find Networks by Name or Chain ID
+                                </p>
+                                <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                                    Search our network database or add custom networks manually. Use filters to narrow down results.
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                    <ChainFiltersButton
-                        filters={filters}
-                        onChangeFilters={setFilters}
-                    />
-                </div>
-                {isSuccess && (
-                    <span className="text-xs mt-2">
-                        Network not found?{" "}
-                        <ClickableText onClick={manuallyAddNetwork}>
-                            Add it manually.
-                        </ClickableText>
-                    </span>
-                )}
-            </div>
-            <div className="flex flex-col h-full w-full p-6">
-                <div className="w-full mt-20 h-full">
-                    {isIdle && (
-                        <div className="flex flex-col items-center justify-start flex-1 h-full p-6">
-                            <div className="flex justify-center items-center relative mb-6">
-                                <img
-                                    src={searchIcon}
-                                    alt="search"
-                                    className="w-7 h-7 absolute z-10"
-                                />
-                                <div className="w-20 h-20 bg-primary-grey-default rounded-full relative z-0"></div>
-                            </div>
-                            <span className="text-sm text-primary-grey-dark text-center">
-                                Search the networks you want to add by name or
-                                chain identification. Or add{" "}
-                                <ClickableText onClick={manuallyAddNetwork}>
-                                    add it manually.
-                                </ClickableText>
-                            </span>
+
+                    {/* Search Input and Filters */}
+                    <div className="flex flex-row space-x-3">
+                        <div className="flex-1">
+                            <SearchInput
+                                placeholder="Input Chain ID or Name..."
+                                disabled={false}
+                                autoFocus={true}
+                                onChange={onChange}
+                                debounced
+                            />
                         </div>
-                    )}
-                    {isLoading && (
-                        <div className="w-full h-full flex justify-center items-center">
-                            <Spinner size="24px" />
+                        <div className="flex items-center">
+                            <ChainFiltersButton
+                                filters={filters}
+                                onChangeFilters={setFilters}
+                            />
                         </div>
-                    )}
+                    </div>
+
+                    {/* Manual Add Suggestion */}
                     {isSuccess && (
-                        <div className="flex flex-col space-y-1 pb-4 h-full">
-                            <div className="text-xs text-primary-grey-dark pt-2 pb-1">
-                                SEARCH NETWORKS
+                        <div className="flex items-center justify-between mt-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center space-x-2">
+                                <HiInformationCircle className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                <span className="text-xs text-gray-600 dark:text-gray-400">
+                                    Network not found?
+                                </span>
                             </div>
-                            <div className="flex flex-col overflow-y-auto h-50">
-                                {filteredChains && filteredChains.length ? (
-                                    filteredChains.map(
-                                        ({ chain, isEnabled }) => {
-                                            return (
-                                                <ChainDisplay
-                                                    key={chain.chainId}
-                                                    chainId={chain.chainId}
-                                                    name={chain.name}
-                                                    logoUrl={chain.logo}
-                                                    selected={
-                                                        pickedChain?.chain
-                                                            ?.chainId ===
-                                                        chain.chainId
-                                                    }
-                                                    isTestnet={chain.isTestnet!}
-                                                    isEnabled={isEnabled}
-                                                    onClick={() =>
-                                                        setPickedChain({
-                                                            chain,
-                                                            isEnabled,
-                                                        })
-                                                    }
-                                                />
-                                            )
-                                        }
-                                    )
-                                ) : (
-                                    <EmptyState
-                                        title="No results"
-                                        className="p-6"
+                            <ClickableText
+                                onClick={manuallyAddNetwork}
+                                className="text-xs font-medium flex items-center space-x-1"
+                            >
+                                <HiPlus className="w-3 h-3" />
+                                <span>Add manually</span>
+                            </ClickableText>
+                        </div>
+                    )}
+                </div>
+
+                {/* Search Results Content */}
+                <div className="flex-1 flex flex-col p-6 overflow-hidden">
+                    {/* Initial State */}
+                    {isIdle && (
+                        <div className="flex flex-col items-center justify-center flex-1 h-full">
+                            <div className="flex justify-center items-center relative mb-8">
+                                <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full relative flex items-center justify-center border border-gray-200 dark:border-gray-700">
+                                    <HiGlobeAlt className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+                                </div>
+                            </div>
+                            <div className="text-center space-y-4 max-w-md">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                    Search Networks
+                                </h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                                    Search for blockchain networks by name or chain ID. You can also use filters to find specific types of networks.
+                                </p>
+                                <div className="pt-2">
+                                    <ClickableText
+                                        onClick={manuallyAddNetwork}
+                                        className="text-sm font-medium flex items-center justify-center space-x-2"
                                     >
-                                        <span>
-                                            The network you are searching for is
-                                            unknown to BlockWallet. Try to
-                                            adjusting your search term or
-                                            filters, or{" "}
-                                            <ClickableText
-                                                onClick={manuallyAddNetwork}
-                                            >
-                                                add it manually.
-                                            </ClickableText>
+                                        <HiPlus className="w-4 h-4" />
+                                        <span>Add custom network manually</span>
+                                    </ClickableText>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Loading State */}
+                    {isLoading && (
+                        <div className="flex flex-col justify-center items-center space-y-4 flex-1">
+                            <Spinner size="32px" />
+                            <div className="text-center">
+                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                    Searching Networks...
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    Finding matching blockchain networks
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Search Results */}
+                    {isSuccess && (
+                        <div className="flex flex-col space-y-4 flex-1 overflow-hidden">
+                            {/* Results Header */}
+                            <div className="flex items-center justify-between flex-shrink-0">
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                        Search Results
+                                    </span>
+                                    <div className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                                        <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                                            {filteredChains.length}
                                         </span>
-                                    </EmptyState>
+                                    </div>
+                                </div>
+                                {filters.length > 0 && (
+                                    <div className="flex items-center space-x-1">
+                                        <BsFilter className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                                            {filters.length} filter{filters.length !== 1 ? 's' : ''} active
+                                        </span>
+                                    </div>
                                 )}
                             </div>
+
+                            {/* Results List */}
+                            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden flex-1 flex flex-col">
+                                {filteredChains && filteredChains.length ? (
+                                    <div className="divide-y divide-gray-200 dark:divide-gray-700 overflow-y-auto flex-1">
+                                        {filteredChains.map(({ chain, isEnabled }, index) => (
+                                            <ChainDisplay
+                                                key={chain.chainId}
+                                                chainId={chain.chainId}
+                                                name={chain.name}
+                                                logoUrl={chain.logo}
+                                                selected={
+                                                    pickedChain?.chain?.chainId === chain.chainId
+                                                }
+                                                isTestnet={chain.isTestnet!}
+                                                isEnabled={isEnabled}
+                                                onClick={() =>
+                                                    setPickedChain({
+                                                        chain,
+                                                        isEnabled,
+                                                    })
+                                                }
+                                            />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="p-8 text-center flex-1 flex flex-col justify-center">
+                                        <div className="space-y-4">
+                                            <div className="flex justify-center">
+                                                <HiSearch className="w-12 h-12 text-gray-400 dark:text-gray-500" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                                    No Networks Found
+                                                </h3>
+                                                <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+                                                    The network you're searching for isn't in our database. Try adjusting your search term or filters.
+                                                </p>
+                                            </div>
+                                            <div className="pt-2">
+                                                <ClickableText
+                                                    onClick={manuallyAddNetwork}
+                                                    className="text-sm font-medium flex items-center justify-center space-x-2"
+                                                >
+                                                    <HiPlus className="w-4 h-4" />
+                                                    <span>Add custom network manually</span>
+                                                </ClickableText>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Selection Info */}
+                            {pickedChain && (
+                                <div className="bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 p-3 flex-shrink-0">
+                                    <div className="flex items-start space-x-2">
+                                        <BsLightningCharge className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                                        <div className="flex-grow">
+                                            <p className="text-xs font-medium text-green-800 dark:text-green-200">
+                                                Network Selected: {pickedChain.chain.name}
+                                            </p>
+                                            <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                                                {pickedChain.isEnabled
+                                                    ? "This network is already configured. You can edit its settings."
+                                                    : "Click the button below to add this network to your wallet."
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

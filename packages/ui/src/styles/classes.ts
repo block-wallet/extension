@@ -15,7 +15,7 @@ export class Classes {
         Classes.start,
         Classes.animated,
         Classes.transform,
-        "h-12 space-x-2 p-4 rounded-lg text-sm font-semibold text-primary-black-default cursor-pointer disabled:pointer-events-none"
+        "h-12 space-x-2 p-4 rounded-lg text-sm font-semibold cursor-pointer disabled:pointer-events-none"
     )
 
     static baseButton = classnames(
@@ -47,7 +47,7 @@ export class Classes {
 
     static actionButton = classnames(
         Classes.iconButton,
-        "border border-primary-grey-hover hover:border-black"
+        "border border-gray-300 dark:border-gray-600 hover:border-gray-900 dark:hover:border-gray-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
     )
 
     static logoutButton = classnames(

@@ -26,8 +26,8 @@ const ChainDisplay: FC<Props> = ({
         <div
             className={classnames(
                 "flex justify-between items-center flex-row relative px-3 rounded-md transition-all duration-300 active:scale-95",
-                onClick && "cursor-pointer hover:bg-primary-grey-default",
-                selected && "bg-primary-grey-hover"
+                onClick && "cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700",
+                selected && "bg-gray-200 dark:bg-gray-600"
             )}
             onClick={onClick}
         >
@@ -43,22 +43,22 @@ const ChainDisplay: FC<Props> = ({
                 className="flex justify-start items-center flex-row py-3"
                 title={name}
             >
-                <div className="flex flex-row items-center justify-center w-9 h-9 p-1.5 bg-white border border-primary-grey-hover rounded-full">
+                <div className="flex flex-row items-center justify-center w-9 h-9 p-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full">
                     <img
                         src={logoUrl || unkownLogoUrl}
                         onError={(e) => {
-                            ;(e.target as any).onerror = null
-                            ;(e.target as any).src = unkownLogoUrl
+                            ; (e.target as any).onerror = null
+                                ; (e.target as any).src = unkownLogoUrl
                         }}
                         alt={name}
                         className="rounded-full"
                     />
                 </div>
                 <div className="flex flex-col space-y-1 justify-start h-full box-border ml-4">
-                    <span className="text-sm text-primary-black-default font-semibold mr-1 truncate w-48">
+                    <span className="text-sm text-gray-900 dark:text-gray-100 font-semibold mr-1 truncate w-48">
                         {name}
                     </span>
-                    <span className="text-gray-400 text-xs font-small text-overflow flex flex-row space-x-2 items-center">
+                    <span className="text-gray-500 dark:text-gray-400 text-xs font-small text-overflow flex flex-row space-x-2 items-center">
                         <span>Chain: {chainId}</span>
                         {isEnabled && (
                             <Tag size="sm" profile="success">

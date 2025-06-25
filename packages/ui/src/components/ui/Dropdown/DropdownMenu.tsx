@@ -19,31 +19,31 @@ export interface DropdownMenuItemProps {
 
 export const DropdownMenu: React.FC<PropsWithChildren<DropdownMenuProps>> &
     DropdownCompoundMember = ({
-    children,
-    id = "dropdownMenu",
-    onClick,
-    className,
-}) => {
-    const { isShowingMenu } = useDropdownContext()
-    return (
-        <ul
-            className={classnames(
-                "dropdown-menu", //defines styles for the first and last children
-                "absolute shadow-md bg-white mt-2 right-0 select-none rounded-md z-50 font-semibold list-none",
-                !isShowingMenu && "hidden",
-                className
-            )}
-            role="menu"
-            id={id}
-            onClick={(e) => {
-                e.stopPropagation()
-                onClick && onClick()
-            }}
-        >
-            {children}
-        </ul>
-    )
-}
+        children,
+        id = "dropdownMenu",
+        onClick,
+        className,
+    }) => {
+        const { isShowingMenu } = useDropdownContext()
+        return (
+            <ul
+                className={classnames(
+                    "dropdown-menu", //defines styles for the first and last children
+                    "absolute shadow-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 mt-2 right-0 select-none rounded-md z-50 font-semibold list-none",
+                    !isShowingMenu && "hidden",
+                    className
+                )}
+                role="menu"
+                id={id}
+                onClick={(e) => {
+                    e.stopPropagation()
+                    onClick && onClick()
+                }}
+            >
+                {children}
+            </ul>
+        )
+    }
 
 export const DropdownMenuItem: React.FC<
     PropsWithChildren<DropdownMenuItemProps>
@@ -63,9 +63,9 @@ export const DropdownMenuItem: React.FC<
                 toggleMenu(e.nativeEvent) // Close the menu after an item is clicked
             }}
             className={classnames(
-                "flex flex-row justify-between items-center w-full cursor-pointer hover:bg-gray-100",
+                "flex flex-row justify-between items-center w-full cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100",
                 className || "",
-                selected && "text-primary-blue-default"
+                selected && "text-primary-blue-default dark:text-primary-blue-400"
             )}
         >
             {children}

@@ -16,9 +16,11 @@ const OutlinedButton: FC<PropsWithChildren<OutlinedButtonProps>> = ({
     return (
         <button
             className={classnames(
-                "flex flex-row items-center bg-white border border-[#D7D9D7] hover:border-primary-black-default justify-between",
-                "h-10 rounded-lg text-sm font-semibold text-black w-10 p-2.5",
+                "flex flex-row items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:border-gray-900 dark:hover:border-gray-300 justify-between",
+                "h-10 rounded-lg text-sm font-semibold text-gray-900 dark:text-gray-100 w-10 p-2.5",
+                "transition-colors duration-200",
                 onClick && "cursor-pointer",
+                disabled && "opacity-50 cursor-not-allowed",
                 className
             )}
             onClick={onClick}

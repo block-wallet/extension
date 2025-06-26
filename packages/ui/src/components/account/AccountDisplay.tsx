@@ -99,7 +99,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                 aria-label={accountName}
             >
                 <div
-                    className="flex flex-row items-center space-x-3 text-gray-900 p-2"
+                    className="flex flex-row items-center space-x-3 text-gray-900 dark:text-gray-100 p-2"
                     role="link"
                     data-testid="account-icon"
                 >
@@ -118,7 +118,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                             <div className="flex flex-row space-x-1">
                                 <label
                                     className={classnames(
-                                        "font-semibold",
+                                        "font-semibold text-gray-900 dark:text-gray-100",
                                         truncateName &&
                                         "truncate max-w-[140px]",
                                         hoverStyle && "cursor-pointer"
@@ -130,7 +130,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                                 </label>
                                 {!showAddress && (
                                     <span
-                                        className="font-semibold"
+                                        className="font-semibold text-gray-600 dark:text-gray-400"
                                         title={checksumAddress}
                                     >
                                         {formatHashLastChars(checksumAddress)}
@@ -139,7 +139,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                             </div>
                             {!showAddress ? (
                                 <span
-                                    className="text-xs text-primary-grey-dark"
+                                    className="text-xs text-gray-600 dark:text-gray-400"
                                     title={
                                         displayNetWorth
                                             ? netWorth
@@ -151,7 +151,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                                         : nativeTokenBalanceRounded}
                                 </span>
                             ) : (
-                                <span className="text-xs text-primary-grey-dark">
+                                <span className="text-xs text-gray-600 dark:text-gray-400">
                                     {formatHash(checksumAddress)}
                                 </span>
                             )}

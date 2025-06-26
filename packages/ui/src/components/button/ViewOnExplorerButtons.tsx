@@ -1,8 +1,10 @@
 import { FunctionComponent } from "react"
-import openIcon from "../../assets/images/icons/open_external.svg"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { generateExplorerLink, getExplorerTitle } from "../../util/getExplorer"
 import OpenExplorerIcon from "../icons/OpenExplorerIcon"
+
+// Icons
+import { HiExternalLink } from "react-icons/hi"
 
 export const ViewOnExplorerButton: FunctionComponent<{
     type?: "tx" | "address"
@@ -20,17 +22,17 @@ export const ViewOnExplorerButton: FunctionComponent<{
 
     return mode === "button" ? (
         <a
-            className="flex flex-row items-center justify-start py-4 px-4 mt-4 w-full space-x-2 bg-primary-grey-default rounded-lg text-primary-black-default text-sm font-semibold hover:bg-primary-grey-hover"
+            className="group flex flex-row items-center justify-center py-3 px-4 w-full space-x-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200"
             href={explorerLink}
             target="_blank"
             rel="noopener noreferrer"
         >
-            <img src={openIcon} alt="visit" className="w-5 h-5 mr-1" />
+            <HiExternalLink className="w-4 h-4 text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
             <span>View on {explorerName}</span>
         </a>
     ) : (
         <a
-            className="text-primary-black-default hover:text-primary-blue-default cursor-pointer"
+            className="text-gray-600 dark:text-gray-400 hover:text-primary-blue-default dark:hover:text-primary-blue-400 cursor-pointer transition-colors"
             href={explorerLink}
             target="_blank"
             rel="noopener noreferrer"

@@ -1,7 +1,6 @@
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
 import { formatUnits } from "@ethersproject/units"
 import { FunctionComponent, useMemo, useState } from "react"
-import { BiRadioCircleMarked } from "react-icons/bi"
 import { Redirect } from "react-router-dom"
 import AccountIcon from "../../components/icons/AccountIcon"
 import PopupHeader from "../../components/popup/PopupHeader"
@@ -23,8 +22,11 @@ import { getAccountColor } from "../../util/getAccountColor"
 import WarningTip from "../../components/label/WarningTip"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { formatHashLastChars, formatName } from "../../util/formatAccount"
-import Icon, { IconName } from "../../components/ui/Icon"
 import Dropdown from "../../components/ui/Dropdown/Dropdown"
+
+// Icons
+import { HiCheck, HiExclamation, HiTrash, HiPlus, HiSwitchHorizontal } from "react-icons/hi"
+import { BsCircle, BsCheckCircleFill } from "react-icons/bs"
 
 export type ConnectedSiteAccountsLocationState = {
     origin: string
@@ -53,32 +55,37 @@ const ConnectedSiteAccount: FunctionComponent<{
 
         return (
             <>
-                <div className="flex flex-col items-start">
+                <div className="p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
                     <div className="flex flex-row items-center justify-between w-full">
-                        <div className="flex flex-row items-center space-x-4">
-                            <div className="flex flex-row items-center justify-center w-10 h-10 rounded-full">
+                        <div className="flex flex-row items-center space-x-4 flex-1">
+                            <div className="relative flex flex-row items-center justify-center w-12 h-12 rounded-full">
                                 <AccountIcon
-                                    className="w-10 h-10"
+                                    className="w-12 h-12"
                                     fill={getAccountColor(account.address)}
                                 />
+                                {connected && (
+                                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 dark:bg-green-400 rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center">
+                                        <HiCheck className="w-3 h-3 text-white" />
+                                    </div>
+                                )}
                             </div>
-                            <div className="flex flex-col space-y-1 cursor-default">
-                                <div className="flex flex-row space-x-1">
+                            <div className="flex flex-col space-y-1 cursor-default flex-1">
+                                <div className="flex flex-row items-center space-x-2">
                                     <span
-                                        className="text-sm font-semibold text-gray-800 cursor-text"
+                                        className="text-sm font-semibold text-gray-900 dark:text-gray-100 cursor-text"
                                         title={account.name}
                                     >
-                                        {formatName(account.name, 18)}{" "}
+                                        {formatName(account.name, 18)}
                                     </span>
                                     <span
-                                        className="font-semibold text-primary-black-default cursor-text"
+                                        className="text-sm font-medium text-gray-600 dark:text-gray-400 cursor-text"
                                         title={account.address}
                                     >
                                         {formatHashLastChars(account.address)}
                                     </span>
                                 </div>
                                 <span
-                                    className="text-xs text-gray-400"
+                                    className="text-xs text-gray-500 dark:text-gray-400"
                                     title={`${formatUnits(
                                         account.balances[chainId]
                                             .nativeTokenBalance || "0"
@@ -103,12 +110,9 @@ const ConnectedSiteAccount: FunctionComponent<{
                                         onClick={() => {
                                             setHasDialog(true)
                                         }}
-                                        className="text-red-500 space-x-2 cursor-pointer flex flex-row p-2 justify-center items-center hover:bg-gray-100 hover:rounded-t-md"
+                                        className="text-red-600 dark:text-red-400 space-x-2 cursor-pointer flex flex-row p-2 justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700 hover:rounded-t-md"
                                     >
-                                        <Icon
-                                            name={IconName.TRASH_BIN}
-                                            profile="danger"
-                                        />
+                                        <HiTrash className="w-4 h-4" />
                                         <span>Disconnect</span>
                                     </Dropdown.MenuItem>
                                 ) : (
@@ -116,53 +120,62 @@ const ConnectedSiteAccount: FunctionComponent<{
                                         onClick={() => {
                                             handleConnectSite(account.address)
                                         }}
-                                        className="text-green-400 space-x-2 cursor-pointer flex flex-row p-2 justify-start items-center hover:bg-gray-100 hover:rounded-t-md"
+                                        className="text-green-600 dark:text-green-400 space-x-2 cursor-pointer flex flex-row p-2 justify-start items-center hover:bg-gray-100 dark:hover:bg-gray-700 hover:rounded-t-md"
                                     >
-                                        <BiRadioCircleMarked size={24} />
+                                        <HiPlus className="w-4 h-4" />
                                         <span>Connect</span>
                                     </Dropdown.MenuItem>
                                 )}
                             </Dropdown.Menu>
                         </Dropdown>
                     </div>
-                    {connected ? (
-                        <div className="flex flex-row">
-                            {active && (
-                                <div className="mt-2 ml-14 px-1.5 py-0.5 font-semibold border rounded-sm text-xs border-gray-700 bg-gray-700 text-white pointer-events-none">
-                                    Active
+
+                    {/* Status and Actions */}
+                    <div className="flex flex-row items-center justify-between mt-4">
+                        <div className="flex flex-row items-center space-x-2">
+                            {connected ? (
+                                <>
+                                    {active && (
+                                        <div className="px-2 py-1 font-semibold border rounded-md text-xs bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200">
+                                            <div className="flex items-center space-x-1">
+                                                <BsCheckCircleFill className="w-3 h-3" />
+                                                <span>Active</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div className="px-2 py-1 font-semibold border rounded-md text-xs bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200">
+                                        Connected
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="px-2 py-1 border rounded-md text-xs bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200">
+                                    <div className="flex items-center space-x-1">
+                                        <BsCircle className="w-3 h-3" />
+                                        <span>Not connected</span>
+                                    </div>
                                 </div>
                             )}
-                            {account.address !== selectedAddress && (
-                                <button
-                                    className={classnames(
-                                        "mt-2 px-1.5 py-0.5 font-semibold border rounded-sm text-xs border-primary-blue-default text-primary-blue-default hover:bg-primary-grey-hover",
-                                        active ? "ml-2" : "ml-14"
-                                    )}
-                                    onClick={() =>
-                                        handleSwitchAccount(account.address)
-                                    }
-                                >
-                                    Switch
-                                </button>
-                            )}
                         </div>
-                    ) : (
-                        <span
-                            className={classnames(
-                                "mt-2 ml-14 px-1.5 py-0.5 border rounded-sm text-xs",
-                                "border-red-300  text-red-300 pointer-events-none"
-                            )}
-                        >
-                            Not connected
-                        </span>
-                    )}
+
+                        {connected && account.address !== selectedAddress && (
+                            <button
+                                className="px-3 py-1 font-semibold border rounded-md text-xs border-primary-blue-default dark:border-primary-blue-400 text-primary-blue-default dark:text-primary-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors flex items-center space-x-1"
+                                onClick={() =>
+                                    handleSwitchAccount(account.address)
+                                }
+                            >
+                                <HiSwitchHorizontal className="w-3 h-3" />
+                                <span>Switch</span>
+                            </button>
+                        )}
+                    </div>
                 </div>
                 <ConfirmDialog
-                    title="Remove site connection"
+                    title="Remove Site Connection"
                     message={`Do you want to remove ${formatName(
                         account.name,
                         18
-                    )} connection?`}
+                    )}'s connection to this site? The site will no longer be able to view this account's information.`}
                     open={hasDialog}
                     onClose={() => setHasDialog(false)}
                     onConfirm={() => {
@@ -217,6 +230,8 @@ const ConnectedSiteAccountsPage = () => {
         } catch { }
     }
 
+    const hostname = origin ? new URL(origin).hostname : ""
+
     return !permission ? (
         <Redirect to="/" />
     ) : (
@@ -224,7 +239,7 @@ const ConnectedSiteAccountsPage = () => {
             header={
                 <PopupHeader
                     icon={site.iconURL}
-                    title={new URL(origin).hostname}
+                    title={hostname}
                     onBack={() => {
                         if (fromRoot) {
                             history.push("/")
@@ -241,18 +256,31 @@ const ConnectedSiteAccountsPage = () => {
                 ></PopupHeader>
             }
         >
-            <div className="flex flex-col p-6 space-y-8 text-sm text-primary-grey-dark">
+            <div className="flex flex-col space-y-6 p-6 bg-white dark:bg-gray-900 min-h-full">
+                {/* Warning for unconnected current account */}
                 {!isSelectedAccountConnected && (
-                    <div>
-                        <WarningTip
-                            text={"Current account is not connected"}
-                            fontSize="text-xs"
-                            justify="justify-start"
-                        />
+                    <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800 p-4">
+                        <div className="flex items-start space-x-3">
+                            <HiExclamation className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                            <div>
+                                <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-1">
+                                    Current Account Not Connected
+                                </h3>
+                                <p className="text-xs text-amber-800 dark:text-amber-200">
+                                    Your currently selected account is not connected to this site. Connect it to enable transactions and interactions.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 )}
-                <div className="flex flex-col space-y-2">
-                    <span className="text-xs">CURRENT ACCOUNT</span>
+
+                {/* Current Account Section */}
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider">
+                            Current Account
+                        </h3>
+                    </div>
                     <ConnectedSiteAccount
                         account={accounts[selectedAddress.toLowerCase()]}
                         active={activeAcc === selectedAddress.toLowerCase()}
@@ -263,10 +291,15 @@ const ConnectedSiteAccountsPage = () => {
                     />
                 </div>
 
+                {/* Connected Accounts Section */}
                 {connectedAccounts?.length > 0 && (
-                    <div className="flex flex-col space-y-2">
-                        <span className="text-xs">CONNECTED ACCOUNTS</span>
-                        <div className="flex flex-col space-y-6">
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider">
+                                Connected Accounts ({connectedAccounts.length})
+                            </h3>
+                        </div>
+                        <div className="space-y-3">
                             {connectedAccounts.map(
                                 (address) =>
                                     address.toLowerCase() !== selectedAddress && (
@@ -283,6 +316,24 @@ const ConnectedSiteAccountsPage = () => {
                         </div>
                     </div>
                 )}
+
+                {/* Information Section */}
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-4">
+                    <div className="flex items-start space-x-3">
+                        <HiCheck className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                        <div>
+                            <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                                Account Management
+                            </h3>
+                            <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
+                                <li>• Only connected accounts can interact with this site</li>
+                                <li>• The active account is used for new transactions</li>
+                                <li>• Use "Switch" to make an account active in your wallet</li>
+                                <li>• Disconnect unused accounts to improve security</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
         </PopupLayout>
     )

@@ -17,10 +17,13 @@ import { TabLabels } from "../assets/ActivityAllowancesView"
 import DetailsDialog from "../dialog/DetailsDialog"
 
 import ChevronRightIcon from "../icons/ChevronRightIcon"
-import revokeIcon from "../../assets/images/icons/revoke.svg"
 import { ButtonWithLoading } from "../button/ButtonWithLoading"
 import { TokenAllowanceStatus } from "../../context/commTypes"
 import TokenLogo from "../token/TokenLogo"
+
+// Icons
+import { HiTrash, HiExternalLink, HiClock } from "react-icons/hi"
+import { BiInfinite } from "react-icons/bi"
 
 const AllowanceItem = ({
     allowance,
@@ -163,10 +166,10 @@ const AllowanceItem = ({
                 if (!isHoveringButton) setOpen(true)
             }}
             className={classnames(
-                "flex flex-row items-center justify-between py-4 mr-1 transition duration-300 -ml-6 px-6 w-[calc(100%+3rem)]",
+                "flex flex-row items-center justify-between p-4 transition duration-300 bg-white dark:bg-gray-800",
                 !isHoveringButton &&
-                    !open &&
-                    "hover:cursor-pointer hover:bg-primary-grey-default hover:bg-opacity-50 active:bg-primary-grey-hover active:bg-opacity-50"
+                !open &&
+                "hover:cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700"
             )}
         >
             <DetailsDialog
@@ -182,30 +185,62 @@ const AllowanceItem = ({
                 options={options}
                 expandedByDefault
             />
-            <div className="flex flex-row items-center">
+
+            <div className="flex flex-row items-center flex-1 min-w-0">
                 <TokenLogo
                     logo={logo}
                     name={(showToken ? token.symbol : spender.symbol) ?? ""}
                     logoSize="big"
                     filled={false}
                 />
-                <div className="flex flex-col ml-2">
-                    <span
-                        className="text-sm font-semibold truncate w-36"
-                        title={name}
-                    >
-                        {name}
-                    </span>
-                    <span
-                        className="text-[11px] text-primary-grey-dark w-32 truncate"
-                        title={allowanceValue}
-                    >
-                        {allowanceValue}
-                    </span>
+                <div className="flex flex-col ml-3 flex-1 min-w-0">
+                    <div className="flex items-center space-x-2">
+                        <span
+                            className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate"
+                            title={name}
+                        >
+                            {name}
+                        </span>
+                        {spender.websiteURL && (
+                            <HiExternalLink className="w-3 h-3 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                        )}
+                    </div>
+
+                    <div className="flex items-center space-x-2 mt-1">
+                        <span
+                            className={classnames(
+                                "text-xs font-medium flex items-center space-x-1",
+                                allowance.isUnlimited
+                                    ? "text-amber-600 dark:text-amber-400"
+                                    : "text-gray-600 dark:text-gray-400"
+                            )}
+                            title={allowanceValue}
+                        >
+                            {allowance.isUnlimited && (
+                                <BiInfinite className="w-3 h-3" />
+                            )}
+                            <span className="truncate max-w-32">
+                                {allowanceValue}
+                            </span>
+                        </span>
+
+                        {isPendingUpdate && (
+                            <div className="flex items-center space-x-1 text-xs text-blue-600 dark:text-blue-400">
+                                <HiClock className="w-3 h-3" />
+                                <span>Updating</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {allowance.txTime && (
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Last updated: {new Date(allowance.txTime).toLocaleDateString()}
+                        </div>
+                    )}
                 </div>
             </div>
 
-            <div className="flex flex-row items-center pr-2">
+            <div className="flex flex-row items-center ml-4 space-x-3">
                 {isPendingUpdate ? (
                     <ButtonWithLoading
                         isLoading={true}
@@ -213,9 +248,8 @@ const AllowanceItem = ({
                         spinnerSize="12"
                         buttonClass={classnames(
                             Classes.smallButton,
-                            "w-20",
-                            "mr-4",
-                            "text-white bg-blue-200 pointer-events-none border-blue-200"
+                            "px-3 py-1.5 text-xs",
+                            "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 pointer-events-none"
                         )}
                     />
                 ) : (
@@ -223,20 +257,17 @@ const AllowanceItem = ({
                         {...getIsHoveringProps()}
                         onClick={revoke}
                         className={classnames(
-                            Classes.smallButton,
-                            "flex space-x-2 font-semibold mr-4",
-                            "w-20"
+                            "flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+                            "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800",
+                            "hover:bg-red-100 dark:hover:bg-red-900/30 hover:border-red-300 dark:hover:border-red-700",
+                            "active:bg-red-200 dark:active:bg-red-900/40",
+                            "disabled:opacity-50 disabled:cursor-not-allowed"
                         )}
                         disabled={isPendingUpdate}
+                        title="Revoke this allowance"
                     >
-                        <img
-                            width="12"
-                            height="12"
-                            src={revokeIcon}
-                            alt="Revoke"
-                            className="mr-2"
-                        />
-                        Revoke
+                        <HiTrash className="w-3 h-3" />
+                        <span>Revoke</span>
                     </button>
                 )}
 

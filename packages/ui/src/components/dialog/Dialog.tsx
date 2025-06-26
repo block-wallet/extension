@@ -25,7 +25,7 @@ const Dialog: FunctionComponent<{
             <div
                 ref={nodeRef}
                 className={classnames(
-                    "bg-gray-100 bg-opacity-50 fixed inset-0 w-full h-screen z-50 overflow-hidden flex flex-col items-center justify-center px-6"
+                    "bg-black bg-opacity-50 dark:bg-black dark:bg-opacity-70 fixed inset-0 w-full h-screen z-50 overflow-hidden flex flex-col items-center justify-center px-6"
                 )}
                 style={{
                     maxWidth: "390px",
@@ -37,7 +37,7 @@ const Dialog: FunctionComponent<{
                 <div
                     ref={ref}
                     className={classnames(
-                        "relative py-6 opacity-100 w-full bg-white shadow-md rounded-md flex-col flex",
+                        "relative py-6 opacity-100 w-full bg-white dark:bg-gray-800 shadow-lg dark:shadow-2xl rounded-lg border border-gray-200 dark:border-gray-700 flex-col flex",
                         className
                     )}
                 >

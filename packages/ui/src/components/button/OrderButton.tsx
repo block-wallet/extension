@@ -9,10 +9,13 @@ const OrderButton: FC<{
 }> = ({ onClick, title, buttonClassName }) => {
     return (
         <div
-            className="relative text-sm text-primary-blue-default"
+            className="relative text-sm text-primary-blue-default dark:text-primary-blue-400"
             title={title}
         >
-            <OutlinedButton onClick={onClick}>
+            <OutlinedButton
+                onClick={onClick}
+                className={buttonClassName}
+            >
                 <Icon name={IconName.ORDER} profile="default" size="lg" />
             </OutlinedButton>
         </div>

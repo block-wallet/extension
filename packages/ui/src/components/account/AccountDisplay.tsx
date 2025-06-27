@@ -90,7 +90,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                 className={classnames(
                     "flex flex-row items-center justify-between w-full rounded-lg",
                     hoverStyle &&
-                    "hover:bg-primary-grey-default cursor-pointer",
+                    "hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer",
                     confirmationDialog.open && "!cursor-default",
                     className
                 )}

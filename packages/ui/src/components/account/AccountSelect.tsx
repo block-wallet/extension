@@ -24,6 +24,9 @@ import { AccountFilter } from "../../util/filterAccounts"
 import EmptyState from "../ui/EmptyState"
 import OrderButton from "../button/OrderButton"
 
+// Icons
+import { HiSearch, HiUser } from "react-icons/hi"
+
 interface AccountSelectProps {
     accounts: AccountInfo[]
     selectedAccount: AccountInfo
@@ -40,6 +43,7 @@ type AccountsData = {
     hiddenAccounts: AccountInfo[]
     currentAccount: AccountInfo | undefined
 }
+
 const AccountSelect: FunctionComponent<AccountSelectProps> = ({
     accounts,
     selectedAccount,
@@ -156,7 +160,8 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
     }
 
     return (
-        <div className="flex flex-col p-6 space-y-5 text-sm text-primary-grey-dark pb-3">
+        <div className="flex flex-col p-6 space-y-5 text-sm pb-3 bg-white dark:bg-gray-900">
+            {/* Search and Action Controls */}
             <div className="flex flex-row justify-between space-x-2 w-full">
                 <AccountSearchBar
                     onChange={onChangeSearch}
@@ -173,7 +178,7 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
                     onChangeFilters={async (newFilters: string[]) => {
                         const prevValue = [...filterValue]
                         try {
-                            //optimhistic update to avoid weird UI while awating for the background to persist the state
+                            //optimistic update to avoid weird UI while awaiting for the background to persist the state
                             setFilterValue(newFilters)
                             await updateAccountFilters(newFilters)
                         } catch (e) {
@@ -192,104 +197,135 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
                     title="Edit accounts order"
                 />
             </div>
+
+            {/* Empty State */}
             {showEmptyState && (
-                <EmptyState title="No results" className="p-6">
-                    The account you are searching for does not exist. Try
-                    adjusting your search term or filter.
-                </EmptyState>
+                <div className="flex flex-col items-center justify-center py-12 px-6 space-y-6">
+                    <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center border border-gray-200 dark:border-gray-700">
+                        {search ? (
+                            <HiSearch className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+                        ) : (
+                            <HiUser className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+                        )}
+                    </div>
+                    <div className="text-center space-y-3 max-w-sm">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            {search ? "No Results Found" : "No Accounts"}
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {search
+                                ? `No accounts match "${search}". Try adjusting your search or changing the filter.`
+                                : "No accounts available. This shouldn't normally happen - try refreshing the page."}
+                        </p>
+                        {search && (
+                            <button
+                                onClick={() => onChangeSearch("")}
+                                className="text-sm text-primary-blue-default dark:text-primary-blue-400 hover:underline"
+                            >
+                                Clear search
+                            </button>
+                        )}
+                    </div>
+                </div>
             )}
-            {search === "" ? (
+
+            {/* Account Lists */}
+            {!showEmptyState && (
                 <>
-                    {currentAccount && (
-                        <AccountsList
-                            title="CURRENT ACCOUNT"
-                            key={"current-account"}
-                        >
-                            <AccountDisplay
-                                key={`current-account-${currentAccount.index}`}
-                                onClickAccount={() => {
-                                    if (
-                                        selectedAccount.address !==
-                                        currentAccount.address &&
-                                        onAccountChange
-                                    )
-                                        onAccountChange(currentAccount)
-                                }}
-                                account={currentAccount}
-                                showSelectedCheckmark={showSelectedCheckmark}
-                                showConnected={isAccountConnected(
-                                    currentAccount.address
-                                )}
-                                menu={getAccountOptions(currentAccount!)}
-                                selected={
-                                    selectedAccount.address ===
-                                    currentAccount!.address
-                                }
-                            />
-                        </AccountsList>
-                    )}
-                    {otherAccounts.length > 0 && (
-                        <AccountsList title="OTHER ACCOUNTS">
-                            {otherAccounts.map((account) => (
-                                <AccountDisplay
-                                    key={`other-${account.address}`}
-                                    onClickAccount={onAccountChange}
-                                    account={account}
-                                    menu={getAccountOptions(account)}
-                                    selected={
-                                        selectedAccount.address ===
-                                        account.address
-                                    }
-                                    showConnected={isAccountConnected(
-                                        account.address
-                                    )}
-                                />
-                            ))}
-                        </AccountsList>
-                    )}
-                    {hiddenAccounts.length > 0 && (
-                        <AccountsList title="HIDDEN ACCOUNTS">
-                            {hiddenAccounts.map((account) => (
-                                <AccountDisplay
-                                    key={`hidden-${account.address}`}
-                                    account={account}
-                                    menu={getAccountOptions(account)}
-                                />
-                            ))}
-                        </AccountsList>
-                    )}
-                </>
-            ) : (
-                <>
-                    {searchedActiveAccounts.length > 0 && (
-                        <AccountsList title="SEARCH RESULTS">
-                            {searchedActiveAccounts.map((account) => (
-                                <AccountDisplay
-                                    key={`result-${account.address}`}
-                                    onClickAccount={onAccountChange}
-                                    account={account}
-                                    menu={getAccountOptions(account)}
-                                    selected={
-                                        selectedAccount.address ===
-                                        account!.address
-                                    }
-                                    showConnected={isAccountConnected(
-                                        account!.address
-                                    )}
-                                />
-                            ))}
-                        </AccountsList>
-                    )}
-                    {hiddenAccounts.length > 0 && (
-                        <AccountsList title="SEARCH RESULTS (HIDDEN ACCOUNTS)">
-                            {hiddenAccounts.map((account) => (
-                                <AccountDisplay
-                                    key={`hidden-result-${account.address}`}
-                                    account={account}
-                                    menu={getAccountOptions(account)}
-                                />
-                            ))}
-                        </AccountsList>
+                    {search === "" ? (
+                        <>
+                            {currentAccount && (
+                                <AccountsList
+                                    title="CURRENT ACCOUNT"
+                                    key={"current-account"}
+                                >
+                                    <AccountDisplay
+                                        key={`current-account-${currentAccount.index}`}
+                                        onClickAccount={() => {
+                                            if (
+                                                selectedAccount.address !==
+                                                currentAccount.address &&
+                                                onAccountChange
+                                            )
+                                                onAccountChange(currentAccount)
+                                        }}
+                                        account={currentAccount}
+                                        showSelectedCheckmark={showSelectedCheckmark}
+                                        showConnected={isAccountConnected(
+                                            currentAccount.address
+                                        )}
+                                        menu={getAccountOptions(currentAccount!)}
+                                        selected={
+                                            selectedAccount.address ===
+                                            currentAccount!.address
+                                        }
+                                    />
+                                </AccountsList>
+                            )}
+                            {otherAccounts.length > 0 && (
+                                <AccountsList title="OTHER ACCOUNTS">
+                                    {otherAccounts.map((account) => (
+                                        <AccountDisplay
+                                            key={`other-${account.address}`}
+                                            onClickAccount={onAccountChange}
+                                            account={account}
+                                            menu={getAccountOptions(account)}
+                                            selected={
+                                                selectedAccount.address ===
+                                                account.address
+                                            }
+                                            showConnected={isAccountConnected(
+                                                account.address
+                                            )}
+                                        />
+                                    ))}
+                                </AccountsList>
+                            )}
+                            {hiddenAccounts.length > 0 && (
+                                <AccountsList title="HIDDEN ACCOUNTS">
+                                    {hiddenAccounts.map((account) => (
+                                        <AccountDisplay
+                                            key={`hidden-${account.address}`}
+                                            account={account}
+                                            menu={getAccountOptions(account)}
+                                        />
+                                    ))}
+                                </AccountsList>
+                            )}
+                        </>
+                    ) : (
+                        <>
+                            {searchedActiveAccounts.length > 0 && (
+                                <AccountsList title="SEARCH RESULTS">
+                                    {searchedActiveAccounts.map((account) => (
+                                        <AccountDisplay
+                                            key={`result-${account.address}`}
+                                            onClickAccount={onAccountChange}
+                                            account={account}
+                                            menu={getAccountOptions(account)}
+                                            selected={
+                                                selectedAccount.address ===
+                                                account!.address
+                                            }
+                                            showConnected={isAccountConnected(
+                                                account!.address
+                                            )}
+                                        />
+                                    ))}
+                                </AccountsList>
+                            )}
+                            {hiddenAccounts.length > 0 && (
+                                <AccountsList title="SEARCH RESULTS (HIDDEN ACCOUNTS)">
+                                    {hiddenAccounts.map((account) => (
+                                        <AccountDisplay
+                                            key={`hidden-result-${account.address}`}
+                                            account={account}
+                                            menu={getAccountOptions(account)}
+                                        />
+                                    ))}
+                                </AccountsList>
+                            )}
+                        </>
                     )}
                 </>
             )}

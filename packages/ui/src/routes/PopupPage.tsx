@@ -243,7 +243,7 @@ const PopupPage = () => {
 
                                         history.push("/accounts/menu/receive")
                                     }}
-                                    className="p-2 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
+                                    className="p-2 transition duration-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-primary-blue-default"
                                 >
                                     <QRIcon />
                                 </Link>
@@ -268,7 +268,7 @@ const PopupPage = () => {
 
                                 history.push("/settings")
                             }}
-                            className="p-2 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
+                            className="p-2 transition duration-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-primary-blue-default"
                         >
                             <GearIcon />
                         </Link>

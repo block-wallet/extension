@@ -136,8 +136,8 @@ const AccountDisplayDragDrop: FunctionComponent<AccountDisplayType> = ({
             className={classnames(
                 "rounded-lg",
                 dropAnimation &&
-                    "bg-primary-grey-default transition-colors animate-[pulse_0.8s]",
-                cardHoverStyle && "hover:bg-primary-grey-default"
+                "bg-primary-grey-default transition-colors animate-[pulse_0.8s]",
+                cardHoverStyle && "hover:bg-gray-50 dark:hover:bg-gray-800"
             )}
             ref={dropRef}
             style={{ opacity }}
@@ -181,7 +181,7 @@ const AccountDisplayDragDrop: FunctionComponent<AccountDisplayType> = ({
                                     </span>
                                     {hiddenAccount &&
                                         account.status ===
-                                            AccountStatus.HIDDEN && (
+                                        AccountStatus.HIDDEN && (
                                             <span className="font-semibold text-xxs text-primary-grey-dark">
                                                 - HIDDEN
                                             </span>

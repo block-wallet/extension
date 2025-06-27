@@ -4,6 +4,7 @@ import { formatHashLastChars } from "../../util/formatAccount"
 import { DragSourceMonitor, useDrag, useDrop } from "react-dnd"
 import useIsHovering from "../../util/hooks/useIsHovering"
 import { HiDotsVertical } from "react-icons/hi"
+import { MdDragIndicator } from "react-icons/md"
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
 import AccountIcon from "../icons/AccountIcon"
 import { getAccountColor } from "../../util/getAccountColor"
@@ -126,7 +127,7 @@ const AccountDisplayDragDrop: FunctionComponent<AccountDisplayType> = ({
         }
     }, [dropAnimation])
 
-    const opacity = isDragging ? 0 : 1
+    const opacity = isDragging ? 0.5 : 1
 
     const cardHoverStyle = !dropAnimation && !isHoveringIcons && hoverable
 
@@ -134,47 +135,49 @@ const AccountDisplayDragDrop: FunctionComponent<AccountDisplayType> = ({
     return (
         <div
             className={classnames(
-                "rounded-lg",
+                "rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 transition-all duration-200",
                 dropAnimation &&
-                "bg-primary-grey-default transition-colors animate-[pulse_0.8s]",
-                cardHoverStyle && "hover:bg-gray-50 dark:hover:bg-gray-800"
+                "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700 animate-pulse",
+                cardHoverStyle && "hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-gray-300 dark:hover:border-gray-600",
+                isDragging && "shadow-lg ring-2 ring-green-500 dark:ring-green-400 ring-opacity-50"
             )}
             ref={dropRef}
             style={{ opacity }}
         >
             <div
-                className="flex flex-row justify-between items-center pr-2 pl-0 h-full cursor-move"
+                className="flex flex-row justify-between items-center p-4 h-full cursor-move group"
                 ref={dragRef}
-                title="Drag to sort"
+                title="Drag to reorder"
             >
-                <div className="flex flex-row group items-center py-2">
-                    <div className="flex flex-row items-center space-x-2 pl-1">
-                        <HiDotsVertical
-                            className="text-primary-grey-dark"
+                <div className="flex flex-row items-center space-x-3 flex-1">
+                    {/* Drag Handle */}
+                    <div className="flex items-center justify-center">
+                        <MdDragIndicator
+                            className="text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-400 transition-colors"
                             size={20}
                         />
-                        <AccountIcon
-                            className="w-10 h-10"
-                            fill={getAccountColor(checksumAddress)}
-                        />
-                        <div className="flex flex-col ml-3">
-                            <div
-                                className={classnames(
-                                    "relative flex flex-col items-start group"
-                                )}
-                            >
-                                <div className="flex flex-row space-x-1">
+                    </div>
+
+                    {/* Account Icon */}
+                    <AccountIcon
+                        className="w-10 h-10"
+                        fill={getAccountColor(checksumAddress)}
+                    />
+
+                    {/* Account Information */}
+                    <div className="flex flex-col flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                            <div className="flex flex-col min-w-0">
+                                <div className="flex flex-row space-x-1 items-center">
                                     <label
-                                        className={classnames(
-                                            "font-semibold truncate max-w-[140px]"
-                                        )}
+                                        className="font-semibold text-gray-900 dark:text-gray-100 truncate max-w-[120px] text-sm"
                                         title={account.name}
                                         htmlFor={`check-account-${checksumAddress}`}
                                     >
                                         {account.name}
                                     </label>
                                     <span
-                                        className="font-semibold"
+                                        className="font-medium text-gray-600 dark:text-gray-400 text-xs"
                                         title={checksumAddress}
                                     >
                                         {formatHashLastChars(checksumAddress)}
@@ -182,13 +185,13 @@ const AccountDisplayDragDrop: FunctionComponent<AccountDisplayType> = ({
                                     {hiddenAccount &&
                                         account.status ===
                                         AccountStatus.HIDDEN && (
-                                            <span className="font-semibold text-xxs text-primary-grey-dark">
-                                                - HIDDEN
+                                            <span className="text-xs text-orange-600 dark:text-orange-400 font-medium bg-orange-50 dark:bg-orange-900/20 px-1.5 py-0.5 rounded-full">
+                                                HIDDEN
                                             </span>
                                         )}
                                 </div>
                                 <span
-                                    className="text-xs text-primary-grey-dark"
+                                    className="text-xs text-gray-500 dark:text-gray-400 truncate"
                                     title={
                                         displayNetWorth
                                             ? netWorth
@@ -201,6 +204,13 @@ const AccountDisplayDragDrop: FunctionComponent<AccountDisplayType> = ({
                                 </span>
                             </div>
                         </div>
+                    </div>
+
+                    {/* Drag Visual Indicator */}
+                    <div className="flex flex-col space-y-1 opacity-30 group-hover:opacity-60 transition-opacity">
+                        <div className="w-3 h-0.5 bg-gray-400 dark:bg-gray-500 rounded"></div>
+                        <div className="w-3 h-0.5 bg-gray-400 dark:bg-gray-500 rounded"></div>
+                        <div className="w-3 h-0.5 bg-gray-400 dark:bg-gray-500 rounded"></div>
                     </div>
                 </div>
             </div>

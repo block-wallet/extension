@@ -33,7 +33,7 @@ import { HardwareWalletAccount } from "../../components/hardwareWallet/HardwareW
 import { mergeReducer } from "../../util/reducerUtils"
 import useAsyncInvoke, { Status } from "../../util/hooks/useAsyncInvoke"
 
-// Define HARDWARE_ROUTE constant 
+// Define HARDWARE_ROUTE constant
 const HARDWARE_ROUTE = "/hardware-wallet";
 
 // Add this constant near the top of the file, with other constants
@@ -1727,7 +1727,7 @@ const HardwareWalletAccountsPage = () => {
                                         20000 // 20 second timeout
                                     );
                                 } else {
-                                    // If connection verification failed but we have device permission, 
+                                    // If connection verification failed but we have device permission,
                                     // try the explicit reconnection path
                                     console.log("[LEDGER] Failed to verify connection, using explicit reconnection");
                                     await handleDeviceOpenError();
@@ -2232,9 +2232,9 @@ const HardwareWalletAccountsPage = () => {
         >
             {(isImportingAccounts || isLoadingHDPath) && <LoadingOverlay />}
             {state.deviceNotReady && state.errorMessage && (
-                <div className="bg-yellow-50 border border-yellow-100 rounded-md p-4 mb-4 mx-auto max-w-md">
-                    <p className="text-red-600 font-medium text-center">{state.errorMessage}</p>
-                    <p className="mt-2 text-sm text-center">
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-4 mx-auto max-w-md">
+                    <p className="text-red-600 dark:text-red-400 font-medium text-center">{state.errorMessage}</p>
+                    <p className="mt-2 text-sm text-gray-700 dark:text-gray-300 text-center">
                         {vendor === Devices.LEDGER ?
                             "Automatic connection was attempted but failed. Please follow the steps below to connect manually." :
                             "Please follow the steps below to connect your device."}
@@ -2267,7 +2267,7 @@ const HardwareWalletAccountsPage = () => {
                     <div>
                         {state.deviceAccounts.length > 0 &&
                             !state.gettingAccounts ? (
-                            <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+                            <div className="rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
                                 {state.deviceAccounts.map((account) => (
                                     <HardwareWalletAccount
                                         account={account}
@@ -2284,9 +2284,9 @@ const HardwareWalletAccountsPage = () => {
                             renderLoadingState()
                         ) : fetchError ? (
                             <div className="flex flex-col items-center justify-center h-64">
-                                <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4 max-w-md">
-                                    <p className="text-red-700 text-center font-medium">Error fetching accounts</p>
-                                    <p className="text-red-600 text-center mt-2">{fetchError}</p>
+                                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4 max-w-md">
+                                    <p className="text-red-700 dark:text-red-400 text-center font-medium">Error fetching accounts</p>
+                                    <p className="text-red-600 dark:text-red-300 text-center mt-2">{fetchError}</p>
                                 </div>
                                 <div className="flex space-x-4 mt-2">
                                     {vendor === Devices.LEDGER && (
@@ -2295,7 +2295,7 @@ const HardwareWalletAccountsPage = () => {
                                             onClick={handleDeviceOpenError}
                                             disabled={state.reconnecting}
                                             className={combineClasses(
-                                                "bg-primary-700 hover:bg-primary-800 text-white font-medium py-2 px-4 rounded flex items-center",
+                                                "bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg flex items-center transition-colors",
                                                 state.reconnecting ? "opacity-50 cursor-not-allowed" : ""
                                             )}
                                         >
@@ -2315,7 +2315,7 @@ const HardwareWalletAccountsPage = () => {
                                         type="button"
                                         onClick={handleRetryFetch}
                                         disabled={state.gettingAccounts}
-                                        className="border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded flex items-center"
+                                        className="border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 font-medium py-2 px-4 rounded-lg flex items-center transition-colors"
                                     >
                                         Retry
                                     </Button>
@@ -2329,24 +2329,30 @@ const HardwareWalletAccountsPage = () => {
 
                 {/* Pagination controls - only show if there are more than 5 total accounts */}
                 {!needsUserInteraction && enabledPagination && state.deviceAccounts.length === 5 && state.currentPage < MAX_ACCOUNTS / 5 && (
-                    <div className="flex items-center justify-center mt-4">
-                        <div className="inline-flex rounded-md shadow-sm" role="group">
+                    <div className="flex items-center justify-center mt-6">
+                        <div className="inline-flex rounded-lg shadow-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 overflow-hidden" role="group">
                             <button
                                 onClick={() => setState({ currentPage: Math.max(1, state.currentPage - 1) })}
                                 disabled={state.currentPage === 1 || isImportingAccounts}
-                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-50 focus:z-10 focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border-r border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:z-10 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                aria-label="Previous page"
                             >
-                                &lt;
+                                &#8249;
                             </button>
                             {Array.from({ length: Math.min(5, Math.ceil(MAX_ACCOUNTS / 5)) }, (_, i) => i + 1).map(page => (
                                 <button
                                     key={page}
                                     onClick={() => setState({ currentPage: page })}
                                     disabled={page === state.currentPage || isImportingAccounts}
-                                    className={`px-4 py-2 text-sm font-medium border ${page === state.currentPage
-                                        ? 'text-white bg-blue-600 border-blue-600 hover:bg-blue-700'
-                                        : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'
-                                        }`}
+                                    className={combineClasses(
+                                        "px-4 py-2 text-sm font-medium border-r border-gray-300 dark:border-gray-600 last:border-r-0 transition-colors focus:z-10 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400",
+                                        page === state.currentPage
+                                            ? 'text-white bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600'
+                                            : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700',
+                                        (page === state.currentPage || isImportingAccounts) ? 'cursor-not-allowed opacity-50' : ''
+                                    )}
+                                    aria-label={`Page ${page}`}
+                                    aria-current={page === state.currentPage ? 'page' : undefined}
                                 >
                                     {page}
                                 </button>
@@ -2354,9 +2360,10 @@ const HardwareWalletAccountsPage = () => {
                             <button
                                 onClick={() => setState({ currentPage: Math.min(Math.ceil(MAX_ACCOUNTS / 5), state.currentPage + 1) })}
                                 disabled={state.currentPage >= Math.ceil(MAX_ACCOUNTS / 5) || isImportingAccounts}
-                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-50 focus:z-10 focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:z-10 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                aria-label="Next page"
                             >
-                                &gt;
+                                &#8250;
                             </button>
                         </div>
                     </div>

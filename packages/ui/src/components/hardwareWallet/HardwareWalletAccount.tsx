@@ -83,9 +83,9 @@ export const HardwareWalletAccount = ({
             // Add a quick flash effect to show the balance was updated
             const balanceElement = document.getElementById(`balance-${account.address}`)
             if (balanceElement) {
-                balanceElement.classList.add('text-green-600')
+                balanceElement.classList.add('text-green-600', 'dark:text-green-400')
                 setTimeout(() => {
-                    balanceElement.classList.remove('text-green-600')
+                    balanceElement.classList.remove('text-green-600', 'dark:text-green-400')
                 }, 1000)
             }
         } catch (error) {
@@ -99,11 +99,13 @@ export const HardwareWalletAccount = ({
     return (
         <div
             className={classnames(
-                "flex items-center justify-between py-4 px-6 transition-colors duration-200 hover:bg-gray-50",
+                "flex items-center justify-between py-4 px-6 transition-all duration-200",
+                "bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700",
+                "border-b border-gray-200 dark:border-gray-600",
                 {
                     "cursor-pointer": !disabled,
                     "cursor-not-allowed opacity-60": disabled,
-                    "border-b border-gray-200": true
+                    "ring-2 ring-blue-500 dark:ring-blue-400 bg-blue-50 dark:bg-blue-900/20": selected,
                 }
             )}
             onClick={() => !disabled && onChange()}
@@ -115,48 +117,60 @@ export const HardwareWalletAccount = ({
                     onChange={() => onChange()}
                     label={<span className="sr-only">{`Select ${account.name}`}</span>}
                 />
-                <div className="flex flex-col">
+                <div className="flex flex-col space-y-1">
                     <div className="flex items-center space-x-2">
-                        <span className="font-medium text-gray-900">{account.name}</span>
+                        <span className="font-semibold text-gray-900 dark:text-gray-100">
+                            {account.name}
+                        </span>
                         {disabled && (
-                            <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                            <span className="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:text-blue-200">
                                 Imported
                             </span>
                         )}
                     </div>
-                    <span className="text-sm text-gray-600">{formatAddress(account.address)}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400 font-mono">
+                        {formatAddress(account.address)}
+                    </span>
                 </div>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center space-x-3">
                 <div className="text-right">
                     <span
                         id={`balance-${account.address}`}
-                        className="text-sm font-medium text-gray-900 transition-colors duration-300"
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors duration-300"
                     >
-                        Balance: {balance}
+                        Balance: <span className="font-mono">{balance}</span>
                     </span>
                 </div>
-                <div className="ml-5 flex space-x-2">
+                <div className="flex space-x-2">
                     <button
                         type="button"
-                        className="inline-flex items-center rounded-full p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className={classnames(
+                            "inline-flex items-center rounded-full p-2 transition-colors duration-200",
+                            "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300",
+                            "hover:bg-gray-100 dark:hover:bg-gray-600",
+                            "focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                        )}
                         onClick={(e) => {
                             e.stopPropagation();
                             fetchBalance();
                         }}
                         title="Fetch Balance"
+                        aria-label="Fetch account balance"
                     >
                         {isLoading ? (
-                            <Spinner color="black" size="16" />
+                            <Spinner color="currentColor" size="16" />
                         ) : (
                             <EyeRevealIcon />
                         )}
                     </button>
-                    <ViewOnExplorerButton
-                        mode="icon"
-                        hash={account.address}
-                        type="address"
-                    />
+                    <div className="opacity-70 hover:opacity-100 transition-opacity">
+                        <ViewOnExplorerButton
+                            mode="icon"
+                            hash={account.address}
+                            type="address"
+                        />
+                    </div>
                 </div>
             </div>
         </div>

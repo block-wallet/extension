@@ -36,30 +36,36 @@ const ConnectionErrorDialog: React.FC<ErrorDialogProps> = ({
             open={isOpen}
             title={getConnectionErrorMessage(errorType)}
             message={
-                <div>
-                    <p>
+                <div className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                    <p className="text-gray-700 dark:text-gray-300 mb-4">
                         We encountered an issue while trying to connect your {vendor} hardware wallet.
                     </p>
                     {recommendations.length > 0 && (
-                        <div className="mt-4">
-                            <p className="font-semibold mb-2">Try the following:</p>
-                            <ul className="list-disc pl-5">
+                        <div className="mt-4 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg p-4">
+                            <p className="font-semibold mb-3 text-amber-800 dark:text-amber-200">
+                                💡 Try the following steps:
+                            </p>
+                            <ul className="list-disc pl-5 space-y-2">
                                 {recommendations.map((rec, index) => (
-                                    <li key={index} className="mb-1">{rec}</li>
+                                    <li key={index} className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                                        {rec}
+                                    </li>
                                 ))}
                             </ul>
 
                             {vendor === Devices.LEDGER && (
-                                <p className="mt-3 text-xs italic">
-                                    Note: Ledger connections work best in Chrome-based browsers using WebHID.
-                                </p>
+                                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-md">
+                                    <p className="text-xs text-blue-700 dark:text-blue-300 italic">
+                                        💻 <strong>Browser Compatibility:</strong> Ledger connections work best in Chrome-based browsers using WebHID technology.
+                                    </p>
+                                </div>
                             )}
                         </div>
                     )}
                 </div>
             }
             onDone={onRetry || onClose}
-            buttonLabel={onRetry ? "Retry" : "Back"}
+            buttonLabel={onRetry ? "🔄 Retry Connection" : "← Back to Hardware Wallets"}
             useClickOutside={false}
             fullScreen={true}
             cancelButton={!!onRetry}
@@ -185,10 +191,10 @@ const HardwareWalletConnectionPage = () => {
                 setConnectionError({
                     type: INFO_ERROR_TYPE,
                     recommendations: [
-                        "Connect your Ledger device to your computer",
-                        "Unlock your Ledger using your PIN",
-                        "Open the Ethereum application on your device",
-                        "When prompted, allow BlockWallet to connect to your device"
+                        "Connect your Ledger device to your computer using USB cable",
+                        "Unlock your Ledger device using your PIN",
+                        "Navigate to and open the Ethereum application on your device",
+                        "When prompted by your browser, select your device and allow BlockWallet to connect"
                     ]
                 });
 
@@ -243,21 +249,22 @@ const HardwareWalletConnectionPage = () => {
             // Adding specific troubleshooting tips for Ledger devices
             if (vendor === Devices.LEDGER) {
                 recommendations.push(
-                    "Make sure the Ethereum application is open on your Ledger",
-                    "Try using the 'Connect to USB Device' prompt when it appears",
-                    "If connection fails repeatedly, try disconnecting and reconnecting your device"
+                    "Ensure the Ethereum application is open and ready on your Ledger",
+                    "Look for browser prompts asking to 'Connect to USB Device'",
+                    "If connection fails repeatedly, try disconnecting and reconnecting your device",
+                    "Make sure your Ledger firmware is up to date"
                 );
 
                 // Check if this is a timeout error and offer specific advice
                 if (error.message.includes('timeout')) {
                     recommendations.push(
-                        "Connection timeout usually means the Ethereum app is not open on your device",
-                        "Open the Ethereum app and try again"
+                        "Connection timeout usually indicates the Ethereum app is not open",
+                        "Open the Ethereum app on your device and try again"
                     );
                 } else if (error.message.includes('denied') || error.message.includes('permission')) {
                     recommendations.push(
                         "You must approve the connection request in your browser",
-                        "Check for a device selection dialog that may be hidden"
+                        "Look for a device selection dialog that may be hidden behind other windows"
                     );
                 }
             }
@@ -341,8 +348,8 @@ const HardwareWalletConnectionPage = () => {
             <ConnectDeviceStepsLayout
                 title={`Connect your ${vendor}`}
                 subtitle={vendor === Devices.LEDGER
-                    ? "Unlock your Ledger device and open the Ethereum app"
-                    : `Follow these steps to connect your ${vendor} wallet`}
+                    ? "🔐 Unlock your Ledger device and open the Ethereum app"
+                    : `📱 Follow these steps to connect your ${vendor} wallet`}
                 isLoading={isLoading}
                 onConnect={onConnect}
                 steps={deviceSteps}

@@ -4,70 +4,106 @@
 // Initialize status element
 const statusElement = document.getElementById('status');
 
-// Update status text with optional color
-function updateStatus(message, isError = false) {
+// Update status text with CSS classes for better theming
+function updateStatus(message, isError = false, isWarning = false) {
     if (statusElement) {
-        statusElement.textContent = message;
-        statusElement.style.background = isError ? '#ffebee' : '#e8f4fd';
-        statusElement.style.color = isError ? '#c62828' : '#0277bd';
+        // Remove all status classes
+        statusElement.classList.remove('loading', 'success', 'error', 'warning');
+
+        // Clear the loading spinner
+        const existingSpinner = statusElement.querySelector('.loading-spinner');
+        if (existingSpinner) {
+            existingSpinner.remove();
+        }
+
+        // Add appropriate status icon and class
+        let statusIcon = '';
+        if (isError) {
+            statusElement.classList.add('error');
+            statusIcon = '❌ ';
+        } else if (isWarning) {
+            statusElement.classList.add('warning');
+            statusIcon = '⚠️ ';
+        } else if (message && (message.includes('Successfully connected') || message.includes('Connection successful'))) {
+            statusElement.classList.add('success');
+            statusIcon = '✅ ';
+        } else {
+            statusElement.classList.add('loading');
+            statusIcon = '<span class="loading-spinner"></span>';
+        }
+
+        statusElement.innerHTML = statusIcon + message;
         console.log(message);
 
-        // If we detect a successful connection message, enhance it
-        if (message && message.includes('Successfully connected to LEDGER')) {
-            console.log('[LEDGER BRIDGE] Successfully connected to Ledger device');
+        // If we detect a successful connection message, show action buttons
+        if (message && (message.includes('Successfully connected to LEDGER') ||
+                       message.includes('Successfully connected to TREZOR') ||
+                       message.includes('Successfully connected to KEYSTONE'))) {
+            console.log('[HARDWARE BRIDGE] Successfully connected to hardware device');
+
+            // Show the action buttons
+            const actionButtons = document.getElementById('actionButtons');
+            const continueButton = document.getElementById('continueButton');
+
+            if (actionButtons && continueButton) {
+                actionButtons.style.display = 'block';
+
+                // Set up the continue button click handler
+                continueButton.onclick = () => {
+                    console.log('User clicked continue to account selection');
+                    window.location.href = `${window.location.origin}/tab.html#/hardware-wallet/accounts`;
+                };
+
+                // Update status to show success with instructions
+                updateSuccessStatus(message);
+
+                // Try automatic navigation after 5 seconds
+                setTimeout(() => {
+                    console.log('Attempting automatic navigation...');
+                    window.location.href = `${window.location.origin}/tab.html#/hardware-wallet/accounts`;
+                }, 5000);
+            }
+
             // Trigger a custom event that our page script can listen for
             try {
-                const event = new CustomEvent('ledgerConnected', {
+                const deviceType = message.includes('LEDGER') ? 'LEDGER' :
+                                 message.includes('TREZOR') ? 'TREZOR' : 'KEYSTONE';
+                const event = new CustomEvent('hardwareWalletConnected', {
                     detail: {
                         success: true,
-                        device: 'LEDGER',
+                        device: deviceType,
                         timestamp: Date.now()
                     }
                 });
                 window.dispatchEvent(event);
-                console.log('[LEDGER BRIDGE] Dispatched ledgerConnected event');
-
-                // Create a navigation button
-                setTimeout(() => {
-                    try {
-                        // Add navigation button if it doesn't exist yet
-                        if (!document.getElementById('continue-button')) {
-                            const container = document.querySelector('.container');
-                            const navDiv = document.createElement('div');
-                            navDiv.style = 'text-align: center; margin-top: 20px;';
-
-                            const btn = document.createElement('button');
-                            btn.id = 'continue-button';
-                            btn.innerText = 'Continue to Account Selection';
-                            btn.style = 'padding: 12px 24px; background: #1E88E5; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;';
-                            btn.onclick = () => {
-                                // Navigate to the accounts page directly
-                                window.location.href = `${window.location.origin}/tab.html#/hardware-wallet/accounts`;
-                            };
-
-                            navDiv.appendChild(btn);
-                            container.appendChild(navDiv);
-
-                            // Add a note about automatic navigation
-                            const note = document.createElement('p');
-                            note.innerText = 'If you are not automatically redirected, click the button above.';
-                            note.style = 'text-align: center; color: #666; margin-top: 8px; font-size: 12px;';
-                            container.appendChild(note);
-
-                            // Try automatic navigation after 3 seconds
-                            setTimeout(() => {
-                                console.log('Attempting automatic navigation...');
-                                window.location.href = `${window.location.origin}/tab.html#/hardware-wallet/accounts`;
-                            }, 3000);
-                        }
-                    } catch (buttonError) {
-                        console.error('Error creating navigation button:', buttonError);
-                    }
-                }, 500);
+                console.log('[HARDWARE BRIDGE] Dispatched hardwareWalletConnected event');
             } catch (eventError) {
                 console.error('Error dispatching custom event:', eventError);
             }
         }
+    }
+}
+
+// Special success status update
+function updateSuccessStatus(message) {
+    if (statusElement) {
+        statusElement.classList.remove('loading', 'error', 'warning');
+        statusElement.classList.add('success');
+        statusElement.innerHTML = `
+            <span class="status-icon">🎉</span>
+            <strong>Connection Successful!</strong>
+            <br>
+            <span style="font-size: 14px; opacity: 0.9;">Your hardware wallet is now connected securely.</span>
+        `;
+    }
+}
+
+// Show loading status with spinner
+function showLoadingStatus(message) {
+    if (statusElement) {
+        statusElement.classList.remove('success', 'error', 'warning');
+        statusElement.classList.add('loading');
+        statusElement.innerHTML = `<span class="loading-spinner"></span>${message}`;
     }
 }
 
@@ -84,7 +120,7 @@ function getUrlParams() {
 // Handle hardware wallet connections
 async function connectHardwareWallet(deviceType) {
     try {
-        updateStatus(`Attempting to connect to ${deviceType}...`);
+        showLoadingStatus(`🔌 Connecting to ${deviceType}...`);
 
         // Different connection logic based on device type
         let connected = false;
@@ -109,7 +145,7 @@ async function connectHardwareWallet(deviceType) {
         }
     } catch (error) {
         console.error('Hardware wallet connection error:', error);
-        updateStatus(`Error: ${error.message}`, true);
+        updateStatus(`Connection Error: ${error.message}`, true);
         notifyExtension({ success: false, device: deviceType, error: error.message });
     }
 }
@@ -121,10 +157,10 @@ async function connectLedger() {
         // Check for WebHID support
         if (!navigator.hid) {
             console.error('[LEDGER BRIDGE] WebHID API not available in browser');
-            throw new Error('WebHID API not available in your browser');
+            throw new Error('WebHID API not available in your browser. Please use Chrome, Edge, or Brave.');
         }
 
-        updateStatus('Initializing connection to LEDGER...');
+        showLoadingStatus('🔍 Initializing Ledger connection...');
 
         // First check if we already have permission to any HID devices
         const existingDevices = await navigator.hid.getDevices();
@@ -135,18 +171,20 @@ async function connectLedger() {
         let device;
 
         if (ledgerDevices.length > 0) {
-            updateStatus('Using previously authorized Ledger device...');
+            showLoadingStatus('🔗 Using previously authorized Ledger device...');
             console.log('[LEDGER BRIDGE] Using previously authorized Ledger device');
             device = ledgerDevices[0];
         } else {
             // Request device access with improved error handling
             try {
                 // Add a more explicit user-friendly message
-                updateStatus('Please connect your Ledger device and unlock it...');
+                showLoadingStatus('🔐 Please connect and unlock your Ledger device...');
                 console.log('[LEDGER BRIDGE] Requesting user to connect and unlock Ledger device');
 
                 // Wait briefly to ensure the UI updates
-                await new Promise(resolve => setTimeout(resolve, 300));
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                showLoadingStatus('📱 Waiting for device selection...');
 
                 // Request device with explicit Ledger vendor ID
                 console.log('[LEDGER BRIDGE] Requesting WebHID device access');
@@ -158,7 +196,7 @@ async function connectLedger() {
 
                 if (devices.length === 0) {
                     console.error('[LEDGER BRIDGE] No Ledger device selected by user');
-                    throw new Error('No Ledger device selected');
+                    throw new Error('No Ledger device selected. Please try again and select your device.');
                 }
 
                 device = devices[0];
@@ -168,7 +206,9 @@ async function connectLedger() {
                 if (e.name === 'SecurityError') {
                     throw new Error('Permission denied. Please allow access to your Ledger device.');
                 } else if (e.name === 'NotFoundError') {
-                    throw new Error('No Ledger device found. Please ensure your device is connected.');
+                    throw new Error('No Ledger device found. Please ensure your device is connected and unlocked.');
+                } else if (e.name === 'NotAllowedError') {
+                    throw new Error('Device access was denied. Please try again and allow access.');
                 } else {
                     throw e;
                 }
@@ -184,11 +224,14 @@ async function connectLedger() {
             try {
                 attempts++;
                 console.log(`[LEDGER BRIDGE] Connection attempt ${attempts}/${maxAttempts}`);
+                showLoadingStatus(`🔄 Opening connection (attempt ${attempts}/${maxAttempts})...`);
+
                 if (!device.opened) {
                     await device.open();
                     console.log('[LEDGER BRIDGE] Device connection opened successfully');
                 }
                 connected = true;
+                showLoadingStatus('✅ Verifying connection...');
             } catch (e) {
                 console.error(`[LEDGER BRIDGE] Failed to open device on attempt ${attempts}/${maxAttempts}:`, e);
 
@@ -197,6 +240,7 @@ async function connectLedger() {
                 }
 
                 // Wait longer between each retry
+                showLoadingStatus(`⏳ Retrying in ${attempts} second(s)...`);
                 await new Promise(resolve => setTimeout(resolve, 500 * attempts));
             }
         }
@@ -396,4 +440,4 @@ function init() {
 }
 
 // Start the application when the page is loaded
-document.addEventListener('DOMContentLoaded', init); 
+document.addEventListener('DOMContentLoaded', init);

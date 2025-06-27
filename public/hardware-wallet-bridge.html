@@ -6,47 +6,358 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BlockWallet Hardware Wallet Bridge</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             margin: 0;
-            padding: 20px;
-            color: #333;
-            background-color: #f5f5f5;
+            padding: 0;
+            min-height: 100vh;
+            height: 100vh;
+            width: 100vw;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Dark theme support using CSS custom properties and media query */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            --accent: #3b82f6;
+            --accent-light: #eff6ff;
+            --success: #10b981;
+            --success-light: #ecfdf5;
+            --error: #ef4444;
+            --error-light: #fef2f2;
+            --warning: #f59e0b;
+            --warning-light: #fffbeb;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: #1f2937;
+                --bg-secondary: #374151;
+                --text-primary: #f9fafb;
+                --text-secondary: #d1d5db;
+                --border-color: #4b5563;
+                --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                --accent: #60a5fa;
+                --accent-light: #1e3a8a;
+                --success: #34d399;
+                --success-light: #064e3b;
+                --error: #f87171;
+                --error-light: #7f1d1d;
+                --warning: #fbbf24;
+                --warning-light: #78350f;
+            }
+
+            body {
+                background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            }
         }
 
         .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 100vw;
+            height: 100vh;
+            max-width: none;
+            max-height: none;
+            margin: 0;
+            background: var(--bg-primary);
+            padding: 40px;
+            box-shadow: none;
+            border: none;
+            border-radius: 0;
+            position: relative;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
-        h1 {
-            color: #1E88E5;
-            text-align: center;
+        /* Keep some constraints only on very wide screens for readability */
+        @media (min-width: 1400px) {
+            .container {
+                padding: 60px 200px;
+            }
         }
 
-        #status {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
-            background: #e8f4fd;
+        @media (min-width: 1800px) {
+            .container {
+                padding: 80px 300px;
+            }
         }
 
-        .instructions {
-            margin: 20px 0;
-            line-height: 1.5;
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent) 0%, var(--success) 100%);
         }
 
         .logo {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .logo img {
             max-width: 100px;
+            height: auto;
+        }
+
+        h1 {
+            color: var(--text-primary);
+            text-align: center;
+            margin: 0 0 24px 0;
+            font-size: 28px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        #status {
+            padding: 16px;
+            margin: 20px 0;
+            border-radius: 12px;
+            background: var(--accent-light);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            font-weight: 500;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #status.loading::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                left: -100%;
+            }
+
+            100% {
+                left: 100%;
+            }
+        }
+
+        #status.success {
+            background: var(--success-light);
+            color: var(--success);
+            border-color: var(--success);
+        }
+
+        #status.error {
+            background: var(--error-light);
+            color: var(--error);
+            border-color: var(--error);
+        }
+
+        #status.warning {
+            background: var(--warning-light);
+            color: var(--warning);
+            border-color: var(--warning);
+        }
+
+        .instructions {
+            margin: 24px 0;
+            line-height: 1.6;
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .instructions h3 {
+            color: var(--text-primary);
+            margin: 0 0 16px 0;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .instructions p {
+            color: var(--text-secondary);
+            margin: 0 0 16px 0;
+        }
+
+        .instructions ol {
+            padding-left: 0;
+            list-style: none;
+            counter-reset: step;
+        }
+
+        .instructions li {
+            counter-increment: step;
+            margin: 12px 0;
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .instructions li::before {
+            content: counter(step);
+            position: absolute;
+            left: -12px;
+            top: 12px;
+            background: var(--accent);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .security-info {
+            background: var(--success-light);
+            border: 1px solid var(--success);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+
+        .security-info h4 {
+            color: var(--success);
+            margin: 0 0 8px 0;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .security-info p {
+            color: var(--text-secondary);
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .action-buttons {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 0 8px;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        .footer-note {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-top: 16px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .status-icon {
+            display: inline-block;
+            margin-right: 8px;
+            font-size: 18px;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .instructions li {
+                padding: 8px 12px;
+            }
         }
     </style>
 </head>
@@ -54,22 +365,59 @@
 <body>
     <div class="container">
         <div class="logo">
-            <!-- You can add your logo here -->
-            <!-- <img src="icons/icon-128.png" alt="BlockWallet Logo"> -->
+            <div class="logo-text">
+                🔐 BlockWallet Hardware Bridge
+            </div>
         </div>
-        <h1>Hardware Wallet Connection</h1>
-        <div id="status">Waiting for device connection...</div>
+
+        <h1>
+            🔗 Hardware Wallet Connection
+        </h1>
+
+        <div id="status" class="loading">
+            <span class="loading-spinner"></span>
+            Initializing secure connection...
+        </div>
+
+        <div class="security-info">
+            <h4>
+                🛡️ Secure Connection
+            </h4>
+            <p>
+                This bridge page facilitates a secure connection between your hardware wallet and BlockWallet.
+                Your private keys remain safely on your hardware device at all times.
+            </p>
+        </div>
+
         <div class="instructions">
-            <p>This page helps facilitate the connection between your hardware wallet and BlockWallet.</p>
-            <p>Please follow these steps:</p>
+            <h3>
+                📋 Connection Steps
+            </h3>
+            <p>Please follow these steps to establish a secure connection:</p>
             <ol>
-                <li>Make sure your hardware wallet is connected to your computer</li>
-                <li>Unlock your hardware wallet</li>
-                <li>Open the Ethereum application on your device</li>
-                <li>Wait for BlockWallet to detect your device</li>
+                <li>Connect your hardware wallet to your computer using the USB cable</li>
+                <li>Unlock your hardware wallet using your PIN or password</li>
+                <li>Navigate to and open the <strong>Ethereum application</strong> on your device</li>
+                <li>When prompted by your browser, select your device and allow the connection</li>
             </ol>
         </div>
+
+        <div class="action-buttons" id="actionButtons" style="display: none;">
+            <button class="btn btn-primary" id="continueButton">
+                Continue to Account Selection
+            </button>
+            <button class="btn btn-secondary" onclick="window.location.reload()">
+                Restart Connection
+            </button>
+        </div>
+
+        <div class="footer-note">
+            This page will automatically navigate to account selection once your device is connected.
+            <br>
+            If you experience issues, ensure your hardware wallet firmware is up to date.
+        </div>
     </div>
+
     <!-- Load scripts separately to comply with CSP -->
     <script src="hardware-wallet-bridge.js"></script>
     <script src="hardware-wallet-bridge-navigation.js"></script>

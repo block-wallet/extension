@@ -78,7 +78,7 @@ const AssetList: FC<{
                 )}
                 {searchValue && assets.length === 0 && (
                     <div className="px-3 py-4" style={{ width: dropdownWidth }}>
-                        <p className="text-xs text-primary-black-default text-center mb-3">
+                        <p className="text-xs text-gray-700 dark:text-gray-300 text-center mb-3">
                             The asset couldn&#8217;t be found, try adding it
                             manually.
                         </p>

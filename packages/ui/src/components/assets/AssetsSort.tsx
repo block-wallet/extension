@@ -43,8 +43,8 @@ const AssetsSort: FC<AssetsSortProps> = ({ selectedValue, onClick }) => {
                         buttonClassName="h-10"
                     />
                 </Dropdown.Button>
-                <Dropdown.Menu id="filter-menu" className="w-40 py-2 mt-0">
-                    <div className="p-2 px-3 text-xs text-primary-grey-dark font-normal">
+                <Dropdown.Menu id="filter-menu" className="w-40 py-2 mt-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg">
+                    <div className="p-2 px-3 text-xs text-gray-500 dark:text-gray-400 font-normal">
                         SORT BY
                     </div>
 
@@ -54,7 +54,7 @@ const AssetsSort: FC<AssetsSortProps> = ({ selectedValue, onClick }) => {
                                 <Dropdown.MenuItem
                                     value={value}
                                     selected={selectedValue === value}
-                                    className="p-1 px-3 font-semibold text-primary-black-default"
+                                    className="p-1 px-3 font-semibold text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
                                 >
                                     {label}
                                 </Dropdown.MenuItem>
@@ -62,22 +62,22 @@ const AssetsSort: FC<AssetsSortProps> = ({ selectedValue, onClick }) => {
                         )
                     })}
 
-                    <hr className="border-0.5 border-primary-grey-hover w-full my-1" />
+                    <hr className="border-0.5 border-gray-200 dark:border-gray-700 w-full my-1" />
                     <label
-                        className="p-2 pl-3 pr-1 text-xs text-primary-grey-dark font-normal cursor-pointer"
+                        className="p-2 pl-3 pr-1 text-xs text-gray-500 dark:text-gray-400 font-normal cursor-pointer flex items-center justify-between"
                         htmlFor="hideSmallBalances"
                     >
                         Hide Small Balances
+                        <input
+                            id="hideSmallBalances"
+                            type="checkbox"
+                            className="border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-md focus:ring-0 cursor-pointer ml-2"
+                            checked={hideSmallBalancesChk}
+                            onChange={() =>
+                                setHideSmallBalancesChk(!hideSmallBalancesChk)
+                            }
+                        />
                     </label>
-                    <input
-                        id="hideSmallBalances"
-                        type="checkbox"
-                        className="border-2 border-primary-grey-hover rounded-md focus:ring-0 cursor-pointer ml-2"
-                        checked={hideSmallBalancesChk}
-                        onChange={() =>
-                            setHideSmallBalancesChk(!hideSmallBalancesChk)
-                        }
-                    />
                 </Dropdown.Menu>
             </Dropdown>
         </div>

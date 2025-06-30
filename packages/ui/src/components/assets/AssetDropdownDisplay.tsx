@@ -35,14 +35,14 @@ const AssetDropdownDisplay: FC<AssetDropdownDisplayProps> = ({
             )}
             <div className="flex flex-grow justify-between space-x-1">
                 <div className="flex flex-col justify-center">
-                    <span className="text-base font-semibold">
+                    <span className="text-base font-semibold text-gray-900 dark:text-gray-100">
                         {selectedAsset.token.symbol}
                     </span>
                     {!customAmount && (
                         <span
                             title={assetBalance}
                             className={classnames(
-                                "text-xs text-primary-grey-dark truncate",
+                                "text-xs text-gray-600 dark:text-gray-400 truncate",
                                 assetBalanceClassName
                             )}
                         >

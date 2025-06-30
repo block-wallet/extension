@@ -52,16 +52,16 @@ const ActivityList = () => {
 
     return (
         <div
-            className="flex flex-col flex-1 w-full space-y-0 h-full max-h-[470px] min-h-[266px]"
+            className="flex flex-col flex-1 w-full space-y-0 h-full max-h-[470px] min-h-[266px] bg-white dark:bg-gray-900"
             data-testid="activity-list"
         >
-            <div className="px-6 pb-2 pt-3">
+            <div className="px-6 pb-2 pt-3 bg-white dark:bg-gray-900">
                 <div className="flex items-center justify-end mb-2 space-x-2">
                     {(filterText || selectedLabel) && (
                         <div className="flex items-center">
-                            <span className="text-xs text-primary-grey-dark mr-1">Filters active</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400 mr-1">Filters active</span>
                             <button
-                                className="text-xs text-primary-blue-default hover:underline"
+                                className="text-xs text-primary-blue-default dark:text-primary-blue-400 hover:underline transition-colors duration-200"
                                 onClick={clearFilters}
                             >
                                 Clear
@@ -69,7 +69,7 @@ const ActivityList = () => {
                         </div>
                     )}
                     <button
-                        className="flex items-center text-xs text-primary-blue-default px-2 py-1 rounded-md border border-primary-grey-hover hover:bg-primary-grey-default"
+                        className="flex items-center text-xs text-primary-blue-default dark:text-primary-blue-400 px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
                         onClick={() => setShowFilters(!showFilters)}
                     >
                         <FiFilter size={14} className="mr-1" />
@@ -84,10 +84,10 @@ const ActivityList = () => {
                 {showFilters && (
                     <div className="mb-3 space-y-2">
                         <div className="relative">
-                            <FiSearch className="absolute left-2 top-2 text-gray-400" size={16} />
+                            <FiSearch className="absolute left-2 top-2 text-gray-400 dark:text-gray-500" size={16} />
                             <input
                                 type="text"
-                                className="w-full pl-8 pr-3 py-1 text-sm border border-primary-grey-hover rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue-default"
+                                className="w-full pl-8 pr-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue-default dark:focus:ring-primary-blue-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-200"
                                 placeholder="Search in notes..."
                                 value={filterText}
                                 onChange={(e) => setFilterText(e.target.value)}
@@ -96,16 +96,16 @@ const ActivityList = () => {
 
                         {allLabels.length > 0 && (
                             <div className="flex flex-wrap items-center gap-2">
-                                <div className="flex items-center text-xs text-gray-500">
+                                <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
                                     <MdOutlineLabel className="mr-1" />
                                     Filter by label:
                                 </div>
                                 {allLabels.map(label => (
                                     <button
                                         key={label}
-                                        className={`px-2 py-0.5 text-xs rounded-full ${selectedLabel === label
-                                            ? "bg-primary-blue-default text-white"
-                                            : "bg-primary-grey-default text-gray-700 hover:bg-primary-grey-hover"
+                                        className={`px-2 py-0.5 text-xs rounded-full transition-all duration-200 ${selectedLabel === label
+                                            ? "bg-primary-blue-default dark:bg-primary-blue-500 text-white"
+                                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                                             }`}
                                         onClick={(e) => {
                                             e.stopPropagation();

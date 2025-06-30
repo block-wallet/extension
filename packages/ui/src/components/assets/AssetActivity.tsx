@@ -13,7 +13,7 @@ const AssetActivity = () => {
 
     return (
         <div
-            className="flex flex-col flex-1 w-full space-y-0 h-full max-h-[470px] min-h-[266px]"
+            className="flex flex-col flex-1 w-full space-y-0 h-full max-h-[470px] min-h-[266px] bg-white dark:bg-gray-900"
             data-testid="activity-list"
         >
             {tokenTransactions.length > 0 ? (
@@ -22,7 +22,7 @@ const AssetActivity = () => {
                     isNetworkChanging={isNetworkChanging}
                 />
             ) : (
-                <span className="text-sm text-primary-grey-dark pt-4 mx-auto">
+                <span className="text-sm text-gray-500 dark:text-gray-400 pt-4 mx-auto">
                     You have no transactions.
                 </span>
             )}

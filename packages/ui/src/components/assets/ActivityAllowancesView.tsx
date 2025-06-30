@@ -57,10 +57,10 @@ const ActivityAllowancesView = () => {
                 disableStyles
                 optionClassName={(value) =>
                     classnames(
-                        "flex-1 flex flex-row items-center justify-center p-3 text-sm hover:text-primary-primary-blue-default",
+                        "flex-1 flex flex-row items-center justify-center p-3 text-sm hover:text-primary-blue-default dark:hover:text-primary-blue-400 transition-colors duration-200",
                         tab === value
-                            ? "border-primary-blue-default border-b-2 text-primary-blue-default font-semibold"
-                            : "border-primary-grey-hover text-primary-grey-dark border-b hover:text-primary-blue-default font-medium"
+                            ? "border-primary-blue-default dark:border-primary-blue-400 border-b-2 text-primary-blue-default dark:text-primary-blue-400 font-semibold"
+                            : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 border-b hover:text-primary-blue-default dark:hover:text-primary-blue-400 font-medium"
                     )
                 }
                 containerClassName="flex flex-row -ml-6 !mt-0 w-[calc(100%+3rem)]"

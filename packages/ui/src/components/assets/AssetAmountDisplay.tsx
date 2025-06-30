@@ -21,7 +21,7 @@ const AssetAmountDisplay: FC<AssetAmountComponentProps> = ({
     )
 
     return (
-        <div className="flex flex-row items-center w-full p-4 rounded-lg bg-primary-grey-default">
+        <div className="flex flex-row items-center w-full p-4 rounded-lg bg-gray-50 dark:bg-gray-800 transition-colors duration-200">
             <span className="flex items-center justify-center !w-6 !h-6 rounded-full">
                 <img
                     src={asset.logo || unknownTokenIcon}
@@ -30,14 +30,14 @@ const AssetAmountDisplay: FC<AssetAmountComponentProps> = ({
                 />
             </span>
             <span
-                className="text-base truncate font-semibold ml-2"
+                className="text-base truncate font-semibold ml-2 text-gray-900 dark:text-gray-100"
                 title={asset.symbol}
             >
                 {asset.symbol}
             </span>
             {amount && (
                 <div
-                    className="text-base truncate font-semibold !ml-auto"
+                    className="text-base truncate font-semibold !ml-auto text-gray-900 dark:text-gray-100"
                     title={amountString}
                 >
                     {formatNumberLength(amountString, 12)}

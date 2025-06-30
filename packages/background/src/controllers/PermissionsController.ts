@@ -408,17 +408,27 @@ export default class PermissionsController extends BaseController<PermissionsCon
         selectedAddress,
     }: PreferencesControllerState) => {
         const permissions = this.store.getState().permissions;
+        let hasChanges = false;
 
-        // Check if the selected address has permissions on each site
+        // Update all connected sites to use the new selected account
         for (const site in permissions) {
-            // If it does, then update active account
-            if (this.accountHasPermissions(site, selectedAddress)) {
-                permissions[site].activeAccount = selectedAddress;
+            const sitePermissions = permissions[site];
 
-                this.store.updateState({
-                    permissions,
-                });
+            // Only update if there's actually a change needed
+            if (sitePermissions.activeAccount !== selectedAddress) {
+                sitePermissions.activeAccount = selectedAddress;
+
+                // Ensure the new account is in the accounts array
+                if (!sitePermissions.accounts.includes(selectedAddress)) {
+                    sitePermissions.accounts = [selectedAddress];
+                }
+                hasChanges = true;
             }
+        }
+
+        // Only update state if there were actual changes
+        if (hasChanges) {
+            this.store.updateState({ permissions });
         }
     };
 

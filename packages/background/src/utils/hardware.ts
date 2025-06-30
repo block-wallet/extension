@@ -1,4 +1,5 @@
 import { toError } from './toError';
+import { ErrorCategory, logError } from './errors';
 
 export enum HardwareWalletOpTypes {
     SIGN_TRANSACTION = 'SIGN_TRANSACTION',
@@ -63,31 +64,21 @@ class RejectedByUserError extends Error {
         switch (opType) {
             case HardwareWalletOpTypes.SIGN_TRANSACTION:
                 this.message = 'The transaction was rejected in the device.';
-                console.error('[LEDGER ERROR] Transaction rejected by user');
                 break;
             case HardwareWalletOpTypes.SIGN_MESSAGE:
-                this.message =
-                    'The signing request was rejected in the device.';
-                console.error('[LEDGER ERROR] Message signing rejected by user');
+                this.message = 'The signing request was rejected in the device.';
                 break;
             case HardwareWalletOpTypes.APPROVE_ALLOWANCE:
-                this.message =
-                    'The allowance approval transaction was rejected in the device.';
-                console.error('[LEDGER ERROR] Allowance approval rejected by user');
+                this.message = 'The allowance approval transaction was rejected in the device.';
                 break;
             case HardwareWalletOpTypes.SIGN_SPEEDUP:
-                this.message =
-                    'The speedup transaction was rejected in the device.';
-                console.error('[LEDGER ERROR] Speedup transaction rejected by user');
+                this.message = 'The speedup transaction was rejected in the device.';
                 break;
             case HardwareWalletOpTypes.SIGN_CANCEL:
-                this.message =
-                    'The cancel transaction was rejected in the device.';
-                console.error('[LEDGER ERROR] Cancel transaction rejected by user');
+                this.message = 'The cancel transaction was rejected in the device.';
                 break;
             default:
                 this.message = 'The operation was rejected in the device.';
-                console.error('[LEDGER ERROR] Operation rejected by user');
                 break;
         }
         this.name = 'RejectedByUserError';
@@ -101,41 +92,33 @@ const parseLedgerError = (
     opType: HardwareWalletOpTypes
 ): LedgerError => {
     const safeError = toError(error);
-    console.log('[LEDGER ERROR] Parsing Ledger error:', safeError.message);
+
+    // Use centralized error logging
+    logError(safeError, 'Ledger operation', ErrorCategory.HARDWARE_WALLET);
 
     // Check for transport-specific errors
     if (safeError.message.includes('TRANSACTION_REJECTED')) {
-        console.log('[LEDGER ERROR] Transaction rejected by user');
         return new RejectedByUserError(opType);
     } else if (safeError.message.includes('APP_NOT_OPEN')) {
-        console.log('[LEDGER ERROR] Ethereum app not open');
         return new EthAppNotOpenError();
     } else if (safeError.message.includes('TRANSPORT_ERROR')) {
-        console.log('[LEDGER ERROR] Transport error - device likely disconnected');
         return new DeviceNotPluggedError();
     } else if (safeError.message.includes('USER_CANCELED')) {
-        console.log('[LEDGER ERROR] User canceled the operation');
         return new RejectedByUserError(opType);
     } else if (safeError.message.includes('DEVICE_MEMORY_LIMIT')) {
-        console.log('[LEDGER ERROR] Device memory limit reached');
         return new Error('Transaction too complex for your Ledger device');
     }
 
     // Original error parsing
     if (safeError.message.includes("Failed to execute 'requestDevice'")) {
-        console.log('[LEDGER ERROR] Failed to request device - device not plugged');
         return new DeviceNotPluggedError();
     } else if (safeError.message.includes('UNKNOWN_ERROR')) {
-        console.log('[LEDGER ERROR] Unknown error - device likely not ready');
         return new DeviceNotReadyError();
     } else if (safeError.message.includes('Condition of use not satisfied')) {
-        console.log('[LEDGER ERROR] Condition of use not satisfied - user rejected operation');
         return new RejectedByUserError(opType);
     } else if (safeError.message.includes('enable Blind')) {
-        console.log('[LEDGER ERROR] Contract data not enabled in Ethereum app');
         return new EnableBlindSigningOrContractDataError();
     } else {
-        console.log('[LEDGER ERROR] Unhandled error:', safeError.message);
         return safeError;
     }
 };

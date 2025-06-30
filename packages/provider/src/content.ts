@@ -13,6 +13,13 @@ import { checkScriptLoad } from './utils/site';
 import blankProvider from '../../../dist/blankProvider.js?raw';
 import { isManifestV3 } from '@block-wallet/background/utils/manifest';
 
+// Extend Window interface to include ethereum
+declare global {
+    interface Window {
+        ethereum?: any;
+    }
+}
+
 const EXTENSION_CONTEXT_INVALIDATED_CHROMIUM_ERROR =
     'Extension context invalidated.';
 
@@ -37,6 +44,7 @@ const browserAPISupport = {
 function injectProvider() {
     try {
         if (!isManifestV3()) {
+            // Manifest v2 injection - inject script directly
             const injectableScript = blankProvider;
             const injectableScriptSourceMapURL = `//# sourceURL=${chrome.runtime.getURL(
                 'blankProvider.js'
@@ -50,6 +58,27 @@ function injectProvider() {
             script.setAttribute('async', 'false');
             container.insertBefore(script, container.children[0]);
             container.removeChild(script);
+        } else {
+            // Manifest v3 - provider should already be injected via MAIN world content script
+            // Just ensure the provider is available
+            const checkProvider = () => {
+                return window.ethereum && window.ethereum.isBlockWallet;
+            };
+
+            // If provider isn't immediately available, wait for it to load
+            if (!checkProvider()) {
+                let attempts = 0;
+                const maxAttempts = 50; // 5 seconds max wait
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    if (checkProvider() || attempts >= maxAttempts) {
+                        clearInterval(checkInterval);
+                        if (attempts >= maxAttempts) {
+                            console.warn('BlockWallet: Provider not found after waiting, may indicate injection failure');
+                        }
+                    }
+                }, 100);
+            }
         }
     } catch (error) {
         // Log provider injection errors for troubleshooting

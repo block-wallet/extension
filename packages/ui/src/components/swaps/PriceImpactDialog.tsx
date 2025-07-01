@@ -27,9 +27,8 @@ const HighPriceImpactExplained: FC<
 > = ({ fromToken, toToken, priceImpactPercentage }) => {
     const { format } = useCurrencyFromatter()
     const formatToken = (t: BasicToken, amount: BigNumber): string => {
-        return `${formatRounded(formatUnits(amount || "0", t.decimals), 5)} ${
-            t.symbol
-        }`
+        return `${formatRounded(formatUnits(amount || "0", t.decimals), 5)} ${t.symbol
+            }`
     }
     return (
         <div className="flex flex-col space-y-3">
@@ -37,7 +36,7 @@ const HighPriceImpactExplained: FC<
             difference in the values you are about to swap.
             <div className="flex flex-col space-y-2 text-left mt-2">
                 <div>
-                    <span className="font-semibold text-primary-black-default">
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">
                         You pay
                     </span>
                     <br />
@@ -49,7 +48,7 @@ const HighPriceImpactExplained: FC<
                     )}`}
                 </div>
                 <div className="mt-2">
-                    <span className="font-semibold text-primary-black-default">
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">
                         You get
                     </span>
                     <br />

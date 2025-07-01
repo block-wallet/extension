@@ -21,31 +21,35 @@ const NetworkDropdownDisplay: FC<NetworkDropdownDisplayProps> = ({
 }) => {
     if (isLoading) {
         return (
-            <div
-                className={classnames(
-                    "flex items-center w-full text-base font-semibold space-x-2",
-                    !loadingText && "justify-center"
-                )}
-            >
-                <Spinner size="24" />
-                <span>{loadingText}</span>
+            <div className="flex items-center w-full text-sm font-semibold space-x-3 text-gray-900 dark:text-white">
+                <Spinner size="20" />
+                <span className="text-gray-600 dark:text-gray-400">{loadingText}</span>
             </div>
         )
     }
 
     if (isEmpty) {
-        return <div className="text-base font-semibold">{emptyText}</div>
+        return (
+            <div className="flex items-center w-full text-sm font-semibold text-gray-500 dark:text-gray-400">
+                {emptyText}
+            </div>
+        )
     }
 
     return selectedNetwork ? (
-        <NetworkDisplay
-            network={selectedNetwork}
-            padding={false}
-            transparent={true}
-            bigLogo={false}
-        />
+        <div className="flex items-center w-full">
+            <NetworkDisplay
+                network={selectedNetwork}
+                padding={false}
+                transparent={true}
+                bigLogo={false}
+                compact={true}
+            />
+        </div>
     ) : (
-        <div className="text-base font-semibold">Select network</div>
+        <div className="flex items-center w-full text-sm font-semibold text-gray-500 dark:text-gray-400">
+            Select network
+        </div>
     )
 }
 

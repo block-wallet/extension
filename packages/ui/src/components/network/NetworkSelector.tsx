@@ -34,8 +34,8 @@ export const NetworkSelector: FunctionComponent<NetworkSelectorProps> = ({
     bottomMargin = 0,
     popupMargin = 16,
     isLoading = false,
-    loadingText = "",
-    emptyText = "",
+    loadingText = "Loading networks...",
+    emptyText = "No networks available",
 }) => {
     const [searchResult, setSearchResult] = useState<IChain[]>([])
     const [search, setSearch] = useState<string | null>(null)
@@ -109,30 +109,36 @@ export const NetworkSelector: FunctionComponent<NetworkSelectorProps> = ({
             bottomMargin={bottomMargin}
             popupMargin={popupMargin}
             disabled={!networkList.length}
+            className="transition-all duration-200"
         >
-            <div className="w-full p-3">
-                <SearchInput
-                    name="networkName"
-                    placeholder="Search networks by name or id"
-                    disabled={false}
-                    autoFocus={true}
-                    onChange={onSearchInputChange}
-                    defaultValue={search || ""}
-                />
-            </div>
-            {search && searchResult.length === 0 ? (
-                <div className="p-3">
-                    <p className="text-xs text-primary-black-default text-center">
-                        No available networks match with the search.
-                    </p>
+            <div className="bg-white dark:bg-gray-800">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <SearchInput
+                        name="networkName"
+                        placeholder="Search by network name or chain ID"
+                        disabled={false}
+                        autoFocus={true}
+                        onChange={onSearchInputChange}
+                        defaultValue={search || ""}
+                    />
                 </div>
-            ) : (
-                <NetworkSelectorList
-                    networks={searchResult}
-                    onSelectNetwork={onSelectNetwork}
-                    selectedNetwork={selectedNetwork?.id}
-                />
-            )}
+                {search && searchResult.length === 0 ? (
+                    <div className="p-6 text-center">
+                        <div className="text-gray-500 dark:text-gray-400 text-sm">
+                            No networks found matching "{search}"
+                        </div>
+                        <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            Try searching by network name or chain ID
+                        </div>
+                    </div>
+                ) : (
+                    <NetworkSelectorList
+                        networks={searchResult}
+                        onSelectNetwork={onSelectNetwork}
+                        selectedNetwork={selectedNetwork?.id}
+                    />
+                )}
+            </div>
         </DropDownSelector>
     )
 }

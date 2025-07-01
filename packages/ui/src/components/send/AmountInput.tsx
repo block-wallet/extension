@@ -305,12 +305,12 @@ export const AmountInput: React.FC<AmountInputProps> = React.memo(({
             <div className="flex flex-row justify-between items-center">
                 <label
                     htmlFor="amount"
-                    className="ml-1 mb-2 text-[13px] font-medium text-primary-grey-dark"
+                    className="ml-1 mb-2 text-[13px] font-medium text-gray-700 dark:text-gray-300"
                 >
                     Amount
                 </label>
                 {/* Optional: Display token balance here */}
-                <span className="text-xs text-primary-grey-dark">
+                <span className="text-xs text-gray-600 dark:text-gray-400">
                     Balance: {selectedToken ? formatUnits(selectedToken.balance || 0, decimals) : '0'} {symbol}
                 </span>
             </div>
@@ -386,7 +386,7 @@ export const AmountInput: React.FC<AmountInputProps> = React.memo(({
                             />
                         )}
                     />
-                    <span className="text-xs text-primary-grey-dark mt-1 h-4">
+                    <span className="text-xs text-gray-600 dark:text-gray-400 mt-1 h-4">
                         {!disabled && formatCurrency(nativeCurrencyAmt, {
                             currency: blankState.nativeCurrency,
                             locale_info: blankState.localeInfo,
@@ -398,12 +398,12 @@ export const AmountInput: React.FC<AmountInputProps> = React.memo(({
                     <button
                         type="button"
                         className={classnames(
-                            "float-right rounded-md cursor-pointer border p-2 text-xs font-medium",
+                            "float-right rounded-md cursor-pointer border p-2 text-xs font-medium transition-colors duration-200",
                             usingMax
-                                ? "bg-blue-100 border-blue-300 text-blue-700 hover:bg-blue-200"
-                                : "bg-gray-200 border-gray-300 text-gray-700 hover:bg-gray-300",
+                                ? "bg-blue-100 dark:bg-blue-900 border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800"
+                                : "bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600",
                             (!hasBalance || disabled) &&
-                            "pointer-events-none opacity-50 text-primary-grey-dark",
+                            "pointer-events-none opacity-50 text-gray-400 dark:text-gray-500",
 
                         )}
                         title={disabled ? "Amount locked" : "Use all available funds"}
@@ -458,4 +458,4 @@ export const AmountInput: React.FC<AmountInputProps> = React.memo(({
         JSON.stringify(prevProps.blankState.exchangeRates) === JSON.stringify(nextProps.blankState.exchangeRates)
         // Note: We intentionally don't check selectedGas here as we want to prevent re-renders from gas changes
     );
-}); 
+});

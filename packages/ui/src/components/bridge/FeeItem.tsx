@@ -30,14 +30,14 @@ const FeeItem = ({
             <ExpandableItem
                 expandable={expandable}
                 expanded={
-                    <i className="ml-1 text-primary-grey-dark">
+                    <i className="ml-1 text-primary-grey-dark dark:text-gray-400">
                         {detail.description ?? detail.name}
                     </i>
                 }
             >
                 <div>
-                    <span className="font-semibold">{detail.name}:</span>
-                    <span className="ml-1">{amountStr}</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{detail.name}:</span>
+                    <span className="ml-1 text-gray-700 dark:text-gray-300">{amountStr}</span>
                 </div>
             </ExpandableItem>
         </li>

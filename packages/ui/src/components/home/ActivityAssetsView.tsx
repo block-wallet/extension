@@ -73,9 +73,9 @@ const ActivityAssetsView: FunctionComponent<{ initialTab: PopupTabs }> = ({
                 display={(t) => t.label}
                 disableStyles
                 optionClassName={(value) =>
-                    `flex-1 flex flex-row items-center justify-center p-3 text-sm hover:text-primary-blue-default ${tab === value
-                        ? "border-primary-blue-default border-b-2 text-primary-blue-default font-semibold"
-                        : "border-primary-grey-hover text-primary-grey-dark border-b hover:text-primary-blue-default font-medium"
+                    `flex-1 flex flex-row items-center justify-center p-3 text-sm hover:text-primary-blue-default dark:hover:text-primary-blue-400 transition-colors duration-200 ${tab === value
+                        ? "border-primary-blue-default dark:border-primary-blue-400 border-b-2 text-primary-blue-default dark:text-primary-blue-400 font-semibold"
+                        : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 border-b hover:text-primary-blue-default dark:hover:text-primary-blue-400 font-medium"
                     }`
                 }
                 containerClassName="flex flex-row -ml-6"

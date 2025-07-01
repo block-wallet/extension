@@ -8,6 +8,7 @@ interface NetworkDisplayProps {
     padding?: boolean
     transparent?: boolean
     bigLogo?: boolean
+    compact?: boolean
 }
 
 const NetworkDisplay: FunctionComponent<NetworkDisplayProps> = ({
@@ -15,13 +16,14 @@ const NetworkDisplay: FunctionComponent<NetworkDisplayProps> = ({
     padding = true,
     transparent = false,
     bigLogo,
+    compact = false,
 }) => {
     return (
         <div
             className={classnames(
-                "flex flex-row items-center w-full rounded-lg",
-                padding && "p-4",
-                !transparent && "bg-primary-grey-default"
+                "flex flex-row items-center w-full rounded-lg transition-all duration-200",
+                padding && (compact ? "p-2" : "p-4"),
+                !transparent && "bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
             )}
         >
             <NetworkLogo
@@ -30,7 +32,10 @@ const NetworkDisplay: FunctionComponent<NetworkDisplayProps> = ({
                 bigLogo={bigLogo}
             />
             <div
-                className="text-base truncate font-semibold ml-2"
+                className={classnames(
+                    "truncate font-semibold ml-3 text-gray-900 dark:text-white",
+                    compact ? "text-sm" : "text-base"
+                )}
                 title={network.name}
             >
                 {network.name}

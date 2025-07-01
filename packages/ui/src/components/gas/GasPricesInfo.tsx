@@ -166,11 +166,10 @@ const GasPricesInfo: FC = () => {
         <>
             {/* Label */}
             <div
-                className={`flex flex-row items-center space-x-1 ${
-                    showGasLevels
-                        ? "transition duration-300 hover:text-primary-blue-default  cursor-pointer"
+                className={`flex flex-row items-center space-x-1 ${showGasLevels
+                        ? "transition duration-300 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
                         : ""
-                }`}
+                    }`}
                 onClick={() => {
                     if (showGasLevels) setActive(!active)
                 }}
@@ -182,11 +181,13 @@ const GasPricesInfo: FC = () => {
                         svgClassName="rounded-md"
                     />
                 ) : (
-                    <span className="text-sm font-semibold">
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                         {displayGasPrices.average.totalGwei}
                     </span>
                 )}
-                <GasIcon />
+                <div className="text-gray-600 dark:text-gray-400">
+                    <GasIcon />
+                </div>
             </div>
 
             {/* Modal */}
@@ -243,7 +244,7 @@ const GasPricesInfo: FC = () => {
                                         ([level, gasPriceData]) => {
                                             const info =
                                                 INFO_BY_LEVEL[
-                                                    level as keyof DisplayGasPricesLevels
+                                                level as keyof DisplayGasPricesLevels
                                                 ]
                                             return (
                                                 <div
@@ -254,7 +255,7 @@ const GasPricesInfo: FC = () => {
                                                         className={classnames(
                                                             "flex flex-row  items-center space-x-1 p-3",
                                                             isEIP1559Compatible &&
-                                                                "border-b border-primary-grey-hover"
+                                                            "border-b border-primary-grey-hover"
                                                         )}
                                                     >
                                                         <img
@@ -282,19 +283,19 @@ const GasPricesInfo: FC = () => {
                                                                 {
                                                                     exchangeRates,
                                                                     localeInfo:
-                                                                        {
-                                                                            currency:
-                                                                                nativeCurrency,
-                                                                            language:
-                                                                                localeInfo,
-                                                                        },
+                                                                    {
+                                                                        currency:
+                                                                            nativeCurrency,
+                                                                        language:
+                                                                            localeInfo,
+                                                                    },
                                                                     minValue: 0.01,
                                                                     networkNativeCurrency:
-                                                                        {
-                                                                            symbol: networkNativeCurrency.symbol,
-                                                                            decimals:
-                                                                                nativeCurrencyDecimals,
-                                                                        },
+                                                                    {
+                                                                        symbol: networkNativeCurrency.symbol,
+                                                                        decimals:
+                                                                            nativeCurrencyDecimals,
+                                                                    },
                                                                 }
                                                             )}
                                                         </span>

@@ -45,8 +45,8 @@ export const AssetIcon: FunctionComponent<{
             <img
                 src={asset.logo || unknownTokenIcon}
                 onError={(e) => {
-                    ;(e.target as any).onerror = null
-                    ;(e.target as any).src = unknownTokenIcon
+                    ; (e.target as any).onerror = null
+                        ; (e.target as any).src = unknownTokenIcon
                 }}
                 alt={asset.symbol || ""}
                 className="rounded-full"
@@ -74,7 +74,7 @@ const Asset: FunctionComponent<{
             }
             className={classnames(
                 "flex flex-row items-center justify-between px-6 py-4 transition duration-300",
-                "hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50",
+                "hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-700",
                 "cursor-pointer"
             )}
             style={{ width: "calc(88% + 3rem)" }}
@@ -85,26 +85,26 @@ const Asset: FunctionComponent<{
                 <AssetIcon asset={asset.token} />
                 <div className="flex flex-col ml-2">
                     <span
-                        className="text-sm font-bold"
+                        className="text-sm font-bold text-gray-900 dark:text-gray-100"
                         title={`
                                     ${formatUnits(
-                                        asset.balance || "0",
-                                        asset.token.decimals
-                                    )} ${asset.token.symbol}
+                            asset.balance || "0",
+                            asset.token.decimals
+                        )} ${asset.token.symbol}
                                 `}
                     >
                         {`
                                     ${formatRounded(
-                                        formatUnits(
-                                            asset.balance || "0",
-                                            asset.token.decimals
-                                        ),
-                                        4
-                                    )}
+                            formatUnits(
+                                asset.balance || "0",
+                                asset.token.decimals
+                            ),
+                            4
+                        )}
                                     ${asset.token.symbol}
                                 `}
                     </span>
-                    <span className="text-xs text-gray-600">
+                    <span className="text-xs text-gray-600 dark:text-gray-400">
                         {formatter.format(
                             asset.balance || BigNumber.from(0),
                             asset.token.symbol,
@@ -193,7 +193,7 @@ const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
                                 <div style={style} key={key}>
                                     {index > 0 ? (
                                         <div className="px-6">
-                                            <hr />
+                                            <hr className="border-gray-200 dark:border-gray-700" />
                                         </div>
                                     ) : null}
                                     <Asset
@@ -236,7 +236,7 @@ const AssetsList = () => {
 
     return (
         <>
-            <div className="pt-3 bg-white z-[9] flex flex-col">
+            <div className="pt-3 bg-white dark:bg-gray-900 z-[9] flex flex-col">
                 <div className="flex flex-row space-x-2">
                     <div className="flex-1">
                         <SearchInput
@@ -278,7 +278,7 @@ const AssetsList = () => {
                 </div>
             </div>
             <div
-                className="flex flex-col flex-1 w-full space-y-0 h-full min-h-[430px]"
+                className="flex flex-col flex-1 w-full space-y-0 h-full min-h-[430px] bg-white dark:bg-gray-900"
                 data-testid="activity-list"
             >
                 <SubAssetList assets={tokensResult} />

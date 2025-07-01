@@ -37,7 +37,7 @@ const Dialog: FunctionComponent<{
                 <div
                     ref={ref}
                     className={classnames(
-                        "relative py-6 opacity-100 w-full bg-white dark:bg-gray-800 shadow-lg dark:shadow-2xl rounded-lg border border-gray-200 dark:border-gray-700 flex-col flex",
+                        "relative py-6 opacity-100 w-full bg-white dark:bg-gray-900 shadow-lg dark:shadow-2xl rounded-lg border border-gray-200 dark:border-gray-700 flex-col flex",
                         className
                     )}
                 >

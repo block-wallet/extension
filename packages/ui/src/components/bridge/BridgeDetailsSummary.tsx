@@ -36,13 +36,13 @@ const Explorer = ({
                 href={explorerLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex flex-row items-center space-x-1"
+                className="flex flex-row items-center space-x-1 hover:opacity-75 transition-opacity duration-200"
                 title={explorerName}
             >
-                <span className="text-sm font-semibold text-primary-blue-default whitespace-nowrap text-ellipsis overflow-hidden">
+                <span className="text-sm font-semibold text-primary-blue-default dark:text-blue-400 whitespace-nowrap text-ellipsis overflow-hidden">
                     {explorerName}
                 </span>
-                <img src={openIcon} alt="Open icon" className="w-3 h-3" />
+                <img src={openIcon} alt="Open icon" className="w-3 h-3 opacity-70" />
             </a>
         </div>
     )
@@ -65,9 +65,9 @@ const BridgeDetailsSummary: FC<BridgeDetailsSummaryProps> = ({
     const details = useMemo(() => {
         return transaction.bridgeParams
             ? buildBridgeDetailedItems(
-                  transaction as TransactionMeta,
-                  bridgeTransactionsData
-              )
+                transaction as TransactionMeta,
+                bridgeTransactionsData
+            )
             : undefined
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [transaction])
@@ -158,12 +158,12 @@ const BridgeDetailsSummary: FC<BridgeDetailsSummaryProps> = ({
         <div>
             {transaction.transactionCategory ===
                 TransactionCategories.INCOMING_BRIDGE_REFUND && (
-                <>
-                    <i className="text-primary-grey-dark text-center py-2">
-                        This is a refund transaction of a failed bridge.
-                    </i>
-                </>
-            )}
+                    <>
+                        <i className="text-primary-grey-dark dark:text-gray-400 text-center py-2">
+                            This is a refund transaction of a failed bridge.
+                        </i>
+                    </>
+                )}
             <TransactionDetailsList
                 details={[
                     statusDetail,

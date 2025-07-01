@@ -84,7 +84,7 @@ const BridgeDetilsFees: FC<{
                                             </div>
                                         }
                                     >
-                                        <span className="text-sm font-semibold">
+                                        <span className="text-sm font-semibold text-gray-900 dark:text-white">
                                             {getChainName(Number(chainId))}
                                         </span>
                                     </ExpandableItem>
@@ -93,7 +93,7 @@ const BridgeDetilsFees: FC<{
                         ))}
                     </div>
                 ) : (
-                    <span className="text-primary-grey-dark">
+                    <span className="text-primary-grey-dark dark:text-gray-400">
                         There are no fees for this operation!
                     </span>
                 )}

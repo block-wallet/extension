@@ -24,13 +24,15 @@ const ExpandableItem: FC<ExpandableItemProps> = ({
                     setIsExpanded((prev) => !prev)
                 }}
                 className={classnames(
-                    "flex items-center flex-row space-x-2",
-                    expandable ? "cursor-pointer" : "cursor-default",
+                    "flex items-center flex-row space-x-2 transition-colors duration-200",
+                    expandable
+                        ? "cursor-pointer hover:opacity-75"
+                        : "cursor-default",
                     className
                 )}
             >
                 {expandable && <ArrowUpDown active={isExpanded} />}
-                <span className="ml-1">{children}</span>
+                <span className="ml-1 text-gray-900 dark:text-white">{children}</span>
             </div>
             {expandable && isExpanded && (
                 <span className={classnames("p-0.5")}>{expanded}</span>

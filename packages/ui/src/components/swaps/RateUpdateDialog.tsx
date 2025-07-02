@@ -60,13 +60,13 @@ const RateUpdateDialog: FC<RateUpdateDialogProps> = ({
     return (
         <Dialog open={isOpen}>
             <div className="flex flex-col w-full space-y-2 px-3">
-                <p className="text-lg font-semibold">Rate has changed!</p>
-                <p className="text-sm py-2">
+                <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">Rate has changed!</p>
+                <p className="text-sm py-2 text-gray-700 dark:text-gray-300">
                     Rate expired. Please acknowledge the receiving amount
                     update.
                 </p>
-                <p className="text-xs text-primary-grey-dark">OLD AMOUNT</p>
-                <p className="text-sm font-semibold">
+                <p className="text-xs text-gray-600 dark:text-gray-400">OLD AMOUNT</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                     {`${formatNumberLength(
                         formatUnits(
                             lastRateRef.current || BigNumber.from(0),
@@ -75,10 +75,10 @@ const RateUpdateDialog: FC<RateUpdateDialogProps> = ({
                         10
                     )} ${assetName}`}
                 </p>
-                <p className="text-xs text-primary-grey-dark pt-2">
+                <p className="text-xs text-gray-600 dark:text-gray-400 pt-2">
                     NEW AMOUNT
                 </p>
-                <p className="text-sm font-semibold">
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                     {`${formatNumberLength(
                         formatUnits(rate || BigNumber.from(0), assetDecimals),
                         10

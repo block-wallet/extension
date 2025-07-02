@@ -98,9 +98,8 @@ const AddTokenListView = ({
                 >
                     <div>
                         <div
-                            className={`text-xs text-primary-grey-dark pt-4 pb-0 ${
-                                selected.length <= 0 ? "hidden" : "visible"
-                            }`}
+                            className={`text-xs text-gray-600 dark:text-gray-400 pt-4 pb-0 ${selected.length <= 0 ? "hidden" : "visible"
+                                }`}
                         >
                             SELECTED TOKENS
                         </div>
@@ -124,15 +123,14 @@ const AddTokenListView = ({
                             })}
                         </div>
                         <div
-                            className={`text-xs text-primary-grey-dark pt-4 pb-1 ${
-                                searchedValue === "" ? "hidden" : "visible"
-                            }`}
+                            className={`text-xs text-gray-600 dark:text-gray-400 pt-4 pb-1 ${searchedValue === "" ? "hidden" : "visible"
+                                }`}
                         >
                             SEARCH TOKENS
                         </div>
                         <div className="flex flex-col">
                             {results.length < 1 && selected.length <= 0 ? (
-                                <div className="text-base font-semibold text-primary-black-default w-full text-center mt-4">
+                                <div className="text-base font-semibold text-gray-900 dark:text-gray-100 w-full text-center mt-4">
                                     No match
                                 </div>
                             ) : (

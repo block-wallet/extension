@@ -36,21 +36,21 @@ export const GasSettings: React.FC<GasSettingsProps> = ({
     className, // Destructure className
 }) => {
     return (
-        <div className={classnames("flex flex-col w-full", className)}> {/* Apply className */}
-            {/* Speed Label */}
-            <label className="ml-1 mb-2 text-[13px] font-medium text-primary-grey-dark">
-                Gas Price
-            </label>
+        <div className={classnames("flex flex-col", className)}>
+            <div className="flex flex-row justify-between items-center">
+                <label className="ml-1 mb-2 text-[13px] font-medium text-gray-700 dark:text-gray-300">
+                    Gas Price
+                </label>
+            </div>
 
-            {/* Gas Price Selection Component */}
+            {/* Gas Price Selection */}
             {!isEIP1559Compatible ? (
                 <GasPriceSelector
                     defaultLevel={blankState.defaultGasOption || "medium"}
-                    defaultGasLimit={defaultGas.gasLimit!} // Use defaultGas from props
-                    defaultGasPrice={defaultGas.gasPrice!} // Use defaultGas from props
+                    defaultGasLimit={defaultGas.gasLimit!}
+                    defaultGasPrice={defaultGas.gasPrice!}
                     setGasPriceAndLimit={(gasPrice, gasLimit) => {
-                        // Update parent state
-                        setSelectedGas({ gasPrice, gasLimit });
+                        setSelectedGas({ gasPrice, gasLimit } as TransactionFeeData);
                     }}
                     isParentLoading={isGasLoading}
                     showEstimationError={gasEstimationFailed}
@@ -59,15 +59,11 @@ export const GasSettings: React.FC<GasSettingsProps> = ({
                 <GasPriceComponent
                     defaultGas={{
                         defaultLevel: blankState.defaultGasOption || "medium",
-                        feeData: {
-                            gasLimit: defaultGas.gasLimit!, // Use defaultGas from props
-                            // Potentially pass other fee data from defaultGas if needed by GasPriceComponent
-                        },
+                        feeData: defaultGas,
                     }}
                     isParentLoading={isGasLoading}
-                    setGas={(gasFees) => {
-                        // Update parent state
-                        setSelectedGas({ ...gasFees });
+                    setGas={(gasFees: TransactionFeeData) => {
+                        setSelectedGas(gasFees);
                     }}
                     showEstimationError={gasEstimationFailed}
                     displayOnlyMaxValue
@@ -85,10 +81,8 @@ export const GasSettings: React.FC<GasSettingsProps> = ({
                         slippage: false,
                     }}
                     setAdvancedSettings={(newSettings: TransactionAdvancedData) => {
-                        // Update parent state
                         setTransactionAdvancedData({
                             customNonce: newSettings.customNonce,
-                            // Preserve other advanced settings if they exist
                             ...(transactionAdvancedData ?? {}),
                         });
                     }}
@@ -97,4 +91,4 @@ export const GasSettings: React.FC<GasSettingsProps> = ({
             </div>
         </div>
     );
-}; 
+};

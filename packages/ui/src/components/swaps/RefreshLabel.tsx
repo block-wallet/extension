@@ -15,7 +15,7 @@ const RefreshLabel: React.FC<Props> = ({ value, className }) => {
             )}
         >
             <Icon name={IconName.CLOCK} />
-            <span className="text-xs text-primary-grey-dark">
+            <span className="text-xs text-gray-600 dark:text-gray-400">
                 Refreshes in {value}
             </span>
         </div>

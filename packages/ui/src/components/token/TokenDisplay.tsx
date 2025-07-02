@@ -48,8 +48,8 @@ const TokenDisplay: FunctionComponent<TokenDisplayType> = ({
             className={classnames(
                 "relative flex items-center p-3 my-0.5 rounded-md transition-all duration-300 active:scale-95",
                 clickable && "cursor-pointer",
-                selected && "bg-primary-grey-hover",
-                hoverable && "hover:bg-primary-grey-default"
+                selected && "bg-gray-100 dark:bg-gray-700",
+                hoverable && "hover:bg-gray-50 dark:hover:bg-gray-800"
             )}
             onClick={() => (clickable ? setSelected(!selected) : null)}
         >
@@ -61,22 +61,20 @@ const TokenDisplay: FunctionComponent<TokenDisplayType> = ({
             />
             <div className="flex flex-col ml-4 truncate">
                 <span
-                    className={
-                        "text-sm text-primary-black-default font-semibold"
-                    }
+                    className="text-sm text-gray-900 dark:text-gray-100 font-semibold"
                 >
                     {formatName(data.name, 22)}
                 </span>
                 {balance && (
                     <span
-                        className={"text-xs text-primary-grey-dark"}
+                        className="text-xs text-gray-600 dark:text-gray-400"
                         title={formatUnits(balance, data.decimals)}
                     >
                         {formatRounded(formatUnits(balance, data.decimals), 6)}
                     </span>
                 )}
             </div>
-            <p className={"text-sm text-gray-400 ml-auto pl-1 pr-6"}>
+            <p className="text-sm text-gray-500 dark:text-gray-400 ml-auto pl-1 pr-6">
                 {data.symbol.toUpperCase()}
             </p>
             <img

@@ -21,17 +21,17 @@ const TokenDropdownDisplay: FC<TokenDropdownDisplayProps> = ({
         return (
             <div
                 className={classnames(
-                    "flex items-center w-full text-base font-semibold space-x-2"
+                    "flex items-center w-full text-base font-semibold space-x-2 text-gray-900 dark:text-gray-100"
                 )}
             >
                 <Spinner size="24" />
-                <span className="text-sm">{loadingText}</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">{loadingText}</span>
             </div>
         )
     }
 
     return selectedToken ? (
-        <div className="flex">
+        <div className="flex text-base font-semibold text-gray-900 dark:text-gray-100">
             {displayIcon && (
                 <TokenLogo
                     logo={selectedToken.logo}
@@ -41,13 +41,13 @@ const TokenDropdownDisplay: FC<TokenDropdownDisplayProps> = ({
                     className="mr-2 p-0.5"
                 />
             )}
-            <span className="flex items-center text-base font-semibold">
+            <span className="flex items-center text-base font-semibold text-gray-900 dark:text-gray-100">
                 {selectedToken.symbol}
             </span>
         </div>
     ) : (
         <div className="flex flex-col justify-center w-full">
-            <div className="text-base font-semibold">Select token</div>
+            <div className="text-base font-semibold text-gray-900 dark:text-gray-100">Select token</div>
         </div>
     )
 }

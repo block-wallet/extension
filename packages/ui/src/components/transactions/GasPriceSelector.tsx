@@ -209,8 +209,8 @@ const GasSelectorAdvanced = (props: GasTabProps) => {
                                     errors.gasPrice
                                         ? "border-red-400 focus:border-red-600"
                                         : gasPriceWarning
-                                        ? "border-yellow-400 focus:border-yellow-600"
-                                        : ""
+                                            ? "border-yellow-400 focus:border-yellow-600"
+                                            : ""
                                 )}
                                 type="text"
                                 onKeyDown={handleKeyDown}
@@ -241,8 +241,8 @@ const GasSelectorAdvanced = (props: GasTabProps) => {
                                 errors.gasPrice
                                     ? "text-red-500"
                                     : gasPriceWarning
-                                    ? "text-yellow-500"
-                                    : "m-0 h-0"
+                                        ? "text-yellow-500"
+                                        : "m-0 h-0"
                             )}
                         >
                             {errors.gasPrice?.message || gasPriceWarning || ""}
@@ -269,8 +269,8 @@ const GasSelectorAdvanced = (props: GasTabProps) => {
                                     errors.gasLimit
                                         ? "border-red-400 focus:border-red-600"
                                         : gasLimitWarning
-                                        ? "border-yellow-400 focus:border-yellow-600"
-                                        : ""
+                                            ? "border-yellow-400 focus:border-yellow-600"
+                                            : ""
                                 )}
                                 type="text"
                                 onKeyDown={handleKeyDown}
@@ -301,8 +301,8 @@ const GasSelectorAdvanced = (props: GasTabProps) => {
                                 errors.gasLimit
                                     ? "text-red-500"
                                     : gasLimitWarning
-                                    ? "text-yellow-500"
-                                    : "m-0 h-0"
+                                        ? "text-yellow-500"
+                                        : "m-0 h-0"
                             )}
                         >
                             {errors.gasLimit?.message || gasLimitWarning || ""}
@@ -351,7 +351,7 @@ const GasSelectorBasic = (props: GasTabProps) => {
                                 className={classnames(
                                     "text-base font-semibold mb-2 cursor-pointer capitalize",
                                     selectedGasPrice.label === price.label &&
-                                        "text-primary-blue-default"
+                                    "text-primary-blue-default"
                                 )}
                             >
                                 {price.label}
@@ -362,8 +362,8 @@ const GasSelectorBasic = (props: GasTabProps) => {
                                         className={classnames(
                                             "text-sm",
                                             selectedGasPrice.label ===
-                                                price.label &&
-                                                "text-primary-blue-default"
+                                            price.label &&
+                                            "text-primary-blue-default"
                                         )}
                                     >
                                         {price.nativeCurrencyAmount}
@@ -383,8 +383,8 @@ const GasSelectorBasic = (props: GasTabProps) => {
                                             className={classnames(
                                                 "text-sm",
                                                 selectedGasPrice.label ===
-                                                    price.label &&
-                                                    "text-primary-blue-default"
+                                                price.label &&
+                                                "text-primary-blue-default"
                                             )}
                                         >
                                             {price.ethTotalCost}
@@ -618,7 +618,7 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
                             : capitalize(selectedGasPrice!.label)}
                     </div>
                     <div className="flex flex-row w-full items-center justify-start space-x-3 text-xs">
-                        <span className="text-xs text-primary-grey-dark">
+                        <span className="text-xs text-gray-600 dark:text-gray-400">
                             {!isParentLoading && isLoaded
                                 ? selectedGasPrice!.nativeCurrencyAmount
                                 : ""}
@@ -717,11 +717,10 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
                                 disableStyles
                                 optionClassName={(value) =>
                                     `flex-1 flex flex-row items-center justify-center p-3 text-sm
-                                            ${
-                                                tab === value
-                                                    ? "border-primary-blue-default border-b-2 text-primary-blue-default font-semibold"
-                                                    : "border-primary-grey-hover text-primary-grey-dark border-b"
-                                            }`
+                                            ${tab === value
+                                        ? "border-primary-blue-default dark:border-primary-blue-400 border-b-2 text-primary-blue-default dark:text-primary-blue-400 font-semibold"
+                                        : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 border-b hover:text-primary-blue-default dark:hover:text-primary-blue-400 font-medium"
+                                    }`
                                 }
                                 containerClassName="flex flex-row -ml-3"
                                 containerStyle={{

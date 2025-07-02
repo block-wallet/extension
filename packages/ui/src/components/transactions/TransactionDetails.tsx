@@ -47,14 +47,14 @@ export const TransactionDetails: FunctionComponent<TransactionDetailsProps> = ({
             <span className="absolute top-0 right-0 p-4 z-50">
                 <div
                     onClick={onClose}
-                    className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
+                    className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 dark:text-gray-100 transition duration-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary-blue-default dark:hover:text-primary-blue-400"
                 >
                     <CloseIcon size="10" />
                 </div>
             </span>
 
             <div className="flex flex-col w-full h-full">
-                <h2 className="px-2 pr-0 pb-2 text-lg font-semibold">
+                <h2 className="px-2 pr-0 pb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
                     Transaction details
                 </h2>
                 <HorizontalSelect
@@ -80,14 +80,13 @@ export const TransactionDetails: FunctionComponent<TransactionDetailsProps> = ({
                     }}
                     disableStyles
                     optionClassName={(value) =>
-                        `flex-1 flex flex-row items-center justify-center p-3 text-sm group
-                                    ${
-                                        tab.label === value.label
-                                            ? "border-primary-blue-default border-b-2 text-primary-blue-default font-semibold"
-                                            : value.disabled
-                                            ? "border-primary-grey-hover text-primary-grey-dark border-b font-medium"
-                                            : "border-primary-grey-hover text-primary-grey-dark border-b hover:text-primary-blue-default font-medium"
-                                    }`
+                        `flex-1 flex flex-row items-center justify-center p-3 text-sm group transition-colors duration-200
+                                    ${tab.label === value.label
+                            ? "border-primary-blue-default dark:border-primary-blue-400 border-b-2 text-primary-blue-default dark:text-primary-blue-400 font-semibold"
+                            : value.disabled
+                                ? "border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 border-b font-medium"
+                                : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 border-b hover:text-primary-blue-default dark:hover:text-primary-blue-400 font-medium"
+                        }`
                     }
                     containerClassName="flex flex-row -ml-3"
                     containerStyle={{
@@ -106,7 +105,7 @@ export const TransactionDetails: FunctionComponent<TransactionDetailsProps> = ({
             </div>
             <button
                 onClick={onClose}
-                className={classnames(Classes.liteButton, "mt-4 -mb-2")}
+                className={classnames(Classes.liteButton, "mt-4 -mb-2 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800")}
                 type="button"
             >
                 Close

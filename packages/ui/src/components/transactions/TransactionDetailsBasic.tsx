@@ -411,7 +411,7 @@ export const TransactionDetailsBasic: FunctionComponent<
                     </div>
                     <span
                         title={from}
-                        className="pl-2 font-semibold text-sm truncate"
+                        className="pl-2 font-semibold text-sm truncate text-gray-900 dark:text-gray-100"
                     >
                         {fromName
                             ? formatName(fromName, 12)
@@ -419,18 +419,14 @@ export const TransactionDetailsBasic: FunctionComponent<
                     </span>
                     <CopyTooltip copied={copied === 0} text="Copy address" />
                 </div>
-                <div className="w-8 border rounded-full bg-white z-10 absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2">
+                <div className="w-8 h-8 border border-gray-300 dark:border-gray-600 rounded-full z-10 absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 bg-white dark:bg-gray-800 flex items-center justify-center">
                     <img
                         src={arrowRight}
-                        className="p-2"
+                        className="w-3 h-3 dark:invert"
                         alt=""
                         draggable={false}
                     />
                 </div>
-                <div
-                    className="absolute border-t transform rotate-90 z-0 left-1/2 -translate-x-1/2"
-                    style={{ width: "58px" }}
-                ></div>
                 <div
                     className="relative flex flex-row items-center cursor-pointer group w-1/2 pl-6"
                     onClick={() => onCopy(transactionTo, 1)}
@@ -443,12 +439,12 @@ export const TransactionDetailsBasic: FunctionComponent<
                                 fill={getAccountColor(transactionTo!)}
                             />
                         ) : (
-                            <BsFileEarmarkText size={24} />
+                            <BsFileEarmarkText size={24} className="text-gray-900 dark:text-gray-100" />
                         )}
                     </div>
                     <span
                         title={transactionTo}
-                        className="pl-2 font-semibold text-sm truncate"
+                        className="pl-2 font-semibold text-sm truncate text-gray-900 dark:text-gray-100"
                     >
                         {transaction.transactionCategory !==
                             TransactionCategories.CONTRACT_DEPLOYMENT
@@ -483,7 +479,7 @@ export const TransactionDetailsBasic: FunctionComponent<
                             )}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex flex-row items-center space-x-2 text-sm font-semibold text-primary-blue-default"
+                            className="flex flex-row items-center space-x-2 text-sm font-semibold text-primary-blue-default dark:text-primary-blue-400 hover:underline transition-colors duration-200"
                         >
                             <span>View on {explorerName}</span>
                             <img
@@ -499,14 +495,14 @@ export const TransactionDetailsBasic: FunctionComponent<
             {/* Transaction Notes & Labels */}
             {(transaction.note || (transaction.labels && transaction.labels.length > 0)) && (
                 <div className="flex flex-col mt-4">
-                    <div className="w-full border-t my-2"></div>
+                    <div className="w-full border-t border-gray-200 dark:border-gray-700 my-2"></div>
 
                     {transaction.note && (
                         <div className="flex flex-col mb-3">
-                            <span className="text-sm font-semibold text-primary-grey-dark mb-1">
+                            <span className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">
                                 Note
                             </span>
-                            <div className="bg-primary-grey-default p-2 rounded-md text-sm break-words">
+                            <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded-md text-sm break-words text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
                                 {transaction.note}
                             </div>
                         </div>
@@ -514,14 +510,14 @@ export const TransactionDetailsBasic: FunctionComponent<
 
                     {transaction.labels && transaction.labels.length > 0 && (
                         <div className="flex flex-col">
-                            <span className="text-sm font-semibold text-primary-grey-dark mb-1">
+                            <span className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">
                                 Labels
                             </span>
                             <div className="flex flex-wrap gap-2">
                                 {transaction.labels.map((label, index) => (
                                     <div
                                         key={index}
-                                        className="bg-primary-blue-default text-white px-3 py-1 text-xs rounded-full"
+                                        className="bg-primary-blue-default dark:bg-primary-blue-500 text-white px-3 py-1 text-xs rounded-full"
                                     >
                                         {label}
                                     </div>

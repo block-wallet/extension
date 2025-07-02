@@ -25,17 +25,17 @@ const TokenSummary: FC<{
     className?: string | undefined
 }> &
     TokenSummaryMembers = ({ children, minHeight, className }) => {
-    return (
-        <div
-            className={
-                "flex flex-col items-center w-full space-y-5 justify-between rounded-md h-fit " +
-                className
-            }
-        >
-            {children}
-        </div>
-    )
-}
+        return (
+            <div
+                className={
+                    "flex flex-col items-center w-full space-y-5 justify-between rounded-md h-fit " +
+                    className
+                }
+            >
+                {children}
+            </div>
+        )
+    }
 
 const Balances = ({
     children,
@@ -100,7 +100,7 @@ const TokenName: FC<{
     children: React.ReactNode
 }> = ({ children, title }) => {
     return (
-        <span className="text-xs text-primary-grey-dark" title={title}>
+        <span className="text-xs text-gray-600 dark:text-gray-400" title={title}>
             {children}
         </span>
     )

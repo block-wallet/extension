@@ -17,40 +17,40 @@ const TokenList: FC<{
     searchValue,
     register,
 }) => {
-    return (
-        <div className="pb-6">
-            <input
-                readOnly
-                name="token"
-                ref={register ? register.ref : null}
-                className="hidden"
-                value={selectedAddress}
-            />
-            {tokens.map((token) => {
-                return (
-                    <div
-                        className="cursor-pointer"
-                        key={token.symbol}
-                        onClick={() => onTokenClick(token, setActive)}
-                    >
-                        <TokenDisplay
-                            data={token}
-                            clickable={false}
-                            active={selectedAddress === token.address}
-                            hoverable={true}
-                        />
+        return (
+            <div className="pb-6">
+                <input
+                    readOnly
+                    name="token"
+                    ref={register ? register.ref : null}
+                    className="hidden"
+                    value={selectedAddress}
+                />
+                {tokens.map((token) => {
+                    return (
+                        <div
+                            className="cursor-pointer"
+                            key={token.symbol}
+                            onClick={() => onTokenClick(token, setActive)}
+                        >
+                            <TokenDisplay
+                                data={token}
+                                clickable={false}
+                                active={selectedAddress === token.address}
+                                hoverable={true}
+                            />
+                        </div>
+                    )
+                })}
+                {searchValue && tokens.length === 0 && (
+                    <div className="px-3">
+                        <p className="text-xs text-gray-600 dark:text-gray-400 text-center p-4">
+                            The token couldn&#8217;t be found.
+                        </p>
                     </div>
-                )
-            })}
-            {searchValue && tokens.length === 0 && (
-                <div className="px-3">
-                    <p className="text-xs text-primary-black-default text-center p-4">
-                        The token couldn&#8217;t be found.
-                    </p>
-                </div>
-            )}
-        </div>
-    )
-}
+                )}
+            </div>
+        )
+    }
 
 export default TokenList

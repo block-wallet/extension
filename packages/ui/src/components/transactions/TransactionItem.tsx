@@ -573,7 +573,7 @@ const TransactionItem: React.FC<{
                             <span
                                 key={idx}
                                 title={label}
-                                className="text-[10px] text-white bg-primary-blue-default px-2 py-0.5 rounded-full truncate"
+                                className="text-[10px] text-white bg-primary-blue-default dark:bg-primary-blue-500 px-2 py-0.5 rounded-full truncate"
                             >
                                 {label}
                             </span>
@@ -581,7 +581,7 @@ const TransactionItem: React.FC<{
                     ) : (
                         <div className="group relative flex items-center">
                             <div className="relative">
-                                <MdOutlineLabel size={16} className="text-primary-blue-default cursor-pointer" />
+                                <MdOutlineLabel size={16} className="text-primary-blue-default dark:text-primary-blue-400 cursor-pointer" />
                                 <span
                                     className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-semibold w-3.5 h-3.5 rounded-full flex items-center justify-center p-0.5"
                                     style={{ lineHeight: '1' }}
@@ -601,8 +601,8 @@ const TransactionItem: React.FC<{
         <>
             <div
                 className={classNames(
-                    "flex flex-col px-6 py-5 transition duration-300 hover:bg-primary-grey-default",
-                    "hover:bg-opacity-50 active:bg-primary-grey-hover active:bg-opacity-50 -ml-1 cursor-pointer",
+                    "flex flex-col px-6 py-5 transition duration-300 hover:bg-gray-50 dark:hover:bg-gray-800",
+                    "active:bg-gray-100 dark:active:bg-gray-700 -ml-1 cursor-pointer",
                     txHash &&
                     transaction.transactionParams.from &&
                     "cursor-default"
@@ -636,7 +636,7 @@ const TransactionItem: React.FC<{
                             style={typeCss}
                         >
                             <span
-                                className="text-sm font-semibold truncate"
+                                className="text-sm font-semibold truncate text-gray-900 dark:text-gray-100"
                                 title={itemLabel}
                             >
                                 {formattedLabel}
@@ -659,7 +659,7 @@ const TransactionItem: React.FC<{
                                         >
                                             <AiFillInfoCircle
                                                 size={24}
-                                                className="pl-2 pb-1 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
+                                                className="pl-2 pb-1 text-gray-500 dark:text-gray-400 cursor-pointer hover:text-primary-blue-default dark:hover:text-primary-blue-400"
                                             />
                                         </a>
                                         <Tooltip
@@ -691,7 +691,7 @@ const TransactionItem: React.FC<{
                                 <button
                                     type="button"
                                     className={classnames(
-                                        "rounded-md cursor-pointer text-primary-blue-default border-current border p-1 font-semibold hover:bg-primary-blue-default hover:text-white transition-colors",
+                                        "rounded-md cursor-pointer text-primary-blue-default dark:text-primary-blue-400 border-current border p-1 font-semibold hover:bg-primary-blue-default dark:hover:bg-primary-blue-500 hover:text-white transition-colors",
                                         isQueued
                                             ? "opacity-50 pointer-events-none"
                                             : ""
@@ -711,7 +711,7 @@ const TransactionItem: React.FC<{
                                 </button>
                                 <button
                                     type="button"
-                                    className="ml-1.5 border p-1 rounded-md cursor-pointer text-primary-grey-dark border-current font-semibold hover:bg-gray-500 hover:text-white transition-colors"
+                                    className="ml-1.5 border p-1 rounded-md cursor-pointer text-gray-600 dark:text-gray-400 border-current font-semibold hover:bg-gray-500 dark:hover:bg-gray-600 hover:text-white transition-colors"
                                     onClick={(e) => {
                                         e.stopPropagation()
                                         history.push({
@@ -755,7 +755,7 @@ const TransactionItem: React.FC<{
                                 >
                                     <span
                                         className={classNames(
-                                            "text-sm font-semibold text-right truncate max-w-[130px]"
+                                            "text-sm font-semibold text-right truncate max-w-[130px] text-gray-900 dark:text-gray-100"
                                         )}
                                     >
                                         {transaction.approveAllowanceParams
@@ -799,7 +799,7 @@ const TransactionItem: React.FC<{
                             </div>
                             <div className="w-full flex justify-end">
                                 <span
-                                    className="text-[11px] text-primary-grey-dark truncate"
+                                    className="text-[11px] text-gray-500 dark:text-gray-400 truncate"
                                     title={transferCurrencyAmount}
                                 >
                                     {transferCurrencyAmount}
@@ -813,7 +813,7 @@ const TransactionItem: React.FC<{
                     bridgeParams &&
                     BRIDGE_PENDING_STATUS.includes(bridgeParams!.status! || "") ? (
                     <div className="ml-11 mt-2">
-                        <i className="text-primary-grey-dark">
+                        <i className="text-gray-500 dark:text-gray-400">
                             <>
                                 {
                                     getBridgePendingMessage(

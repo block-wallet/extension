@@ -22,13 +22,13 @@ const TransactionDetailItem: FC<{ item: DetailedItem }> = ({ item }) => {
             )}
         >
             <span
-                className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap w-36"
+                className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap w-36 text-gray-900 dark:text-gray-100"
                 title={item.label}
             >
                 {capitalize(item.label)}
             </span>
             {item.expandable ? (
-                <ExpandableText className="text-primary-grey-dark mt-1 w-fulltext-sm allow-select">
+                <ExpandableText className="text-gray-600 dark:text-gray-400 mt-1 w-fulltext-sm allow-select">
                     {item.value ?? "N/A"}
                 </ExpandableText>
             ) : (
@@ -41,14 +41,13 @@ const TransactionDetailItem: FC<{ item: DetailedItem }> = ({ item }) => {
                         className={classnames(
                             "text-sm",
                             isNativeValue &&
-                                "whitespace-nowrap text-ellipsis overflow-hidden text-primary-grey-dark allow-select",
+                            "whitespace-nowrap text-ellipsis overflow-hidden text-gray-600 dark:text-gray-400 allow-select",
                             item.expandable ? "w-11/12 mt-1" : ""
                         )}
                         title={
                             isNativeValue && !item.info
-                                ? `${item.value ?? "N/A"} ${
-                                      item.unitName ?? ""
-                                  }`
+                                ? `${item.value ?? "N/A"} ${item.unitName ?? ""
+                                }`
                                 : undefined
                         }
                     >
@@ -57,15 +56,15 @@ const TransactionDetailItem: FC<{ item: DetailedItem }> = ({ item }) => {
                                 href={item.link}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-primary-blue-default flex items-center"
+                                className="text-primary-blue-default dark:text-primary-blue-400 flex items-center hover:underline transition-colors duration-200"
                             >
                                 {item.value && isNativeValue
                                     ? item.decimals
                                         ? `${formatNumberLength(
-                                              item.value as string,
-                                              item.decimals,
-                                              false
-                                          )} ${item.unitName ?? ""}`
+                                            item.value as string,
+                                            item.decimals,
+                                            false
+                                        )} ${item.unitName ?? ""}`
                                         : `${item.value} ${item.unitName ?? ""}`
                                     : item.value}
                                 <img

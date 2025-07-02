@@ -791,7 +791,7 @@ const GasPriceComponent: FunctionComponent<{
                                 isLoaded &&
                                 (displayOnlyMaxValue ? (
                                     <div className="flex flex-row w-full items-center space-x-4">
-                                        <span className="text-xs text-primary-grey-dark">
+                                        <span className="text-xs text-gray-600 dark:text-gray-400">
                                             {selectedGas!.totalNativeCurrencyCost}
                                         </span>
                                         <div className="flex flex-row space-x-1 items-center">
@@ -811,7 +811,7 @@ const GasPriceComponent: FunctionComponent<{
                                     </div>
                                 ) : (
                                     <>
-                                        <span className="text-xs text-primary-grey-dark">
+                                        <span className="text-xs text-gray-600 dark:text-gray-400">
                                             {selectedGas!.totalNativeCurrencyCost}
                                         </span>
                                         <div className="flex flex-row space-x-1 items-center justify-self-end">
@@ -858,7 +858,7 @@ const GasPriceComponent: FunctionComponent<{
                     <span className="absolute top-0 right-0 p-4 z-50">
                         <div
                             onClick={() => setActive(false)}
-                            className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
+                            className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 dark:text-gray-100 transition duration-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary-blue-default dark:hover:text-primary-blue-400"
                         >
                             <CloseIcon size="10" />
                         </div>
@@ -877,7 +877,7 @@ const GasPriceComponent: FunctionComponent<{
                                     >
                                         <AiFillInfoCircle
                                             size={26}
-                                            className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
+                                            className="pl-2 text-gray-600 dark:text-gray-400 cursor-pointer hover:text-primary-blue-default dark:hover:text-primary-blue-400"
                                         />
                                     </a>
                                     <Tooltip
@@ -909,8 +909,8 @@ const GasPriceComponent: FunctionComponent<{
                                 optionClassName={(value) =>
                                     `flex-1 flex flex-row items-center justify-center p-3 text-sm
                                             ${tab === value
-                                        ? "border-primary-blue-default border-b-2 text-primary-blue-default font-semibold"
-                                        : "border-primary-grey-hover text-primary-grey-dark border-b"
+                                        ? "border-primary-blue-default dark:border-primary-blue-400 border-b-2 text-primary-blue-default dark:text-primary-blue-400 font-semibold"
+                                        : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 border-b hover:text-primary-blue-default dark:hover:text-primary-blue-400 font-medium"
                                     }`
                                 }
                                 containerClassName="flex flex-row -ml-3"

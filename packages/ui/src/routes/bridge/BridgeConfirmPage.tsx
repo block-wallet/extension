@@ -196,12 +196,12 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         useTransactionWaitingDialog(
             inProgressTransaction
                 ? {
-                      id: inProgressTransaction.id,
-                      status: inProgressTransaction.status,
-                      error: inProgressTransaction.error as Error,
-                      epochTime: inProgressTransaction?.approveTime,
-                      qrParams: inProgressTransaction?.qrParams,
-                  }
+                    id: inProgressTransaction.id,
+                    status: inProgressTransaction.status,
+                    error: inProgressTransaction.error as Error,
+                    epochTime: inProgressTransaction?.approveTime,
+                    qrParams: inProgressTransaction?.qrParams,
+                }
                 : undefined,
             HardwareWalletOpTypes.SIGN_TRANSACTION,
             selectedAccount.accountType,
@@ -284,8 +284,8 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const isBridgingNativeToken = isBridgeNativeTokenAddress(token.address)
     const total = isBridgingNativeToken
         ? BigNumber.from(
-              quote?.bridgeParams.params.fromAmount || fromAmount
-          ).add(fee)
+            quote?.bridgeParams.params.fromAmount || fromAmount
+        ).add(fee)
         : fee
 
     const hasNativeAssetBalance = useHasSufficientBalance(
@@ -342,12 +342,12 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         !isInProgressAllowanceTransaction && !inProgressTransaction?.id
     const bridgeWarningMessage =
         checkNativeTokensInDestinationNetwork &&
-        !isLoadingSelectedAccountHasEnoughNativeTokensToSend &&
-        !!selectedAccountNativeTokensInDestinationNetwork
+            !isLoadingSelectedAccountHasEnoughNativeTokensToSend &&
+            !!selectedAccountNativeTokensInDestinationNetwork
             ? getBridgeWarningMessages(
-                  selectedAccountNativeTokensInDestinationNetwork,
-                  destinationNetwork
-              )
+                selectedAccountNativeTokensInDestinationNetwork,
+                destinationNetwork
+            )
             : undefined
 
     const showBridgeWarningMessage = idleScreen && !!bridgeWarningMessage
@@ -374,9 +374,9 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 gasPrice: isEIP1559Compatible
                     ? undefined
                     : selectedGasPrice ||
-                      BigNumber.from(
-                          quote.bridgeParams.params.transactionRequest.gasLimit
-                      ),
+                    BigNumber.from(
+                        quote.bridgeParams.params.transactionRequest.gasLimit
+                    ),
                 maxPriorityFeePerGas: isEIP1559Compatible
                     ? selectedFees.maxPriorityFeePerGas
                     : undefined,
@@ -535,10 +535,10 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                             error || isInProgressAllowanceTransaction
                                 ? false
                                 : !quote ||
-                                  isGasLoading ||
-                                  isFetchingParams ||
-                                  isBridging ||
-                                  !!isLoadingSelectedAccountHasEnoughNativeTokensToSend
+                                isGasLoading ||
+                                isFetchingParams ||
+                                isBridging ||
+                                !!isLoadingSelectedAccountHasEnoughNativeTokensToSend
                         }
                         onClick={onSubmit}
                         disabled={!!error || !!bridgeQuoteError}
@@ -624,11 +624,11 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                     collapsedMessage={
                         <div
                             className={classnames(
-                                "text-center opacity-90 w-full p-2 bg-yellow-200 hover:bg-yellow-100 space-x-2 flex tems-center font-semibold justify-center"
+                                "text-center opacity-90 w-full p-2 bg-yellow-200 dark:bg-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-700 space-x-2 flex items-center font-semibold justify-center transition-colors duration-200"
                             )}
                         >
-                            <AiOutlineWarning className="w-4 h-4 yellow-300" />
-                            <span className="font-semibold">
+                            <AiOutlineWarning className="w-4 h-4 text-yellow-600 dark:text-yellow-300" />
+                            <span className="font-semibold text-yellow-800 dark:text-yellow-200">
                                 {bridgeWarningMessage.title}
                             </span>
                         </div>
@@ -652,8 +652,8 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
 
                 {/* Divider */}
                 <div className="pt-6">
-                    <hr className="-mx-5" />
-                    <div className="flex -translate-y-2/4 justify-center items-center mx-auto rounded-full w-8 h-8 border border-grey-200 bg-white z-10">
+                    <hr className="-mx-5 border-gray-200 dark:border-gray-700" />
+                    <div className="flex -translate-y-2/4 justify-center items-center mx-auto rounded-full w-8 h-8 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 z-10">
                         <img
                             src={arrowDown}
                             className="h-4 w-auto mx-auto"
@@ -678,7 +678,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 </div>
 
                 {/* Gas */}
-                <p className="text-[13px] font-medium pt-1 pb-2 text-primary-grey-dark">
+                <p className="text-[13px] font-medium pt-1 pb-2 text-primary-grey-dark dark:text-gray-300">
                     Gas Price
                 </p>
                 {isEIP1559Compatible ? (
@@ -757,8 +757,8 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                                 })
                         }}
                         className={classnames(
-                            "!w-full ml-2 h-12 space-x-2 p-4",
-                            !quote && "cursor-not-allowed hover:border-default"
+                            "!w-full ml-2 h-12 space-x-2 p-4 !border-gray-300 dark:!border-gray-600 !bg-white dark:!bg-gray-800 !text-gray-900 dark:!text-white hover:!bg-gray-50 dark:hover:!bg-gray-700 transition-colors duration-200",
+                            !quote && "cursor-not-allowed hover:!border-gray-300 dark:hover:!border-gray-600"
                         )}
                     >
                         <span className="font-semibold text-sm">Details</span>
@@ -790,12 +790,13 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                                 setShowBridgeNotFoundQuoteDetails(true)
                             }
                         }}
-                        className="mt-1"
+                        className="mt-3"
                     />
                 )}
-                {/** Only display custom errors if there isn't a quote error already. */}
-                {error && !bridgeQuoteError && (
-                    <ErrorMessage className="mt-2">{error}</ErrorMessage>
+                {error && (
+                    <ErrorMessage className="mt-3 !text-red-500 dark:!text-red-400">
+                        {error}
+                    </ErrorMessage>
                 )}
                 {remainingSuffix &&
                     !isFetchingParams &&

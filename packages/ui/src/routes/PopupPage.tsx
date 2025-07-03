@@ -64,13 +64,13 @@ const AccountDisplay = () => {
             onClick={copy}
         >
             <span
-                className="text-sm font-semibold truncate max-w-[96px] text-left"
+                className="text-sm font-semibold truncate max-w-[96px] text-left text-gray-900 dark:text-gray-100"
                 data-testid="account-name"
                 title={account.name}
             >
                 {formatName(account.name, 18)}
             </span>
-            <span className="text-[11px] text-primary-grey-dark truncate">
+            <span className="text-[11px] text-gray-600 dark:text-gray-400 truncate">
                 {formatHash(accountAddress)}
             </span>
             <CopyTooltip copied={copied} />
@@ -111,22 +111,23 @@ const DAppConnection = () => {
                     }
                 }}
                 className={classnames(
-                    "relative flex flex-row items-center py-1  text-primary-grey-dark rounded-md group border-primary-200  text-xs cursor-pointer",
+                    "relative flex flex-row items-center py-1 text-xs cursor-pointer rounded-md group transition-all duration-200",
                     dAppConnected === "connected" &&
-                    "pl-2 pr-1 bg-green-100 hover:border-green-300",
+                    "pl-2 pr-1 bg-green-100 dark:bg-green-900/20 hover:bg-green-200 dark:hover:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-300 dark:border-green-800",
                     dAppConnected === "connected-warning" &&
-                    "pl-2 pr-1 bg-yellow-100 hover:border-yellow-300",
-                    dAppConnected === "not-connected" && "pointer-events-none"
+                    "pl-2 pr-1 bg-yellow-100 dark:bg-yellow-900/20 hover:bg-yellow-200 dark:hover:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border border-yellow-300 dark:border-yellow-800",
+                    dAppConnected === "not-connected" &&
+                    "text-gray-500 dark:text-gray-500 pointer-events-none"
                 )}
             >
                 {dAppConnected === "connected" && (
-                    <span className="relative inline-flex rounded-full h-2 w-2 mr-2 animate-pulse bg-green-400 pointer-events-none"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 mr-2 animate-pulse bg-green-500 dark:bg-green-400 pointer-events-none"></span>
                 )}
 
                 {dAppConnected === "connected-warning" && (
                     <HiOutlineExclamationCircle
                         size={16}
-                        className="mr-1 text-yellow-600"
+                        className="mr-1 text-yellow-600 dark:text-yellow-400"
                     />
                 )}
 
@@ -136,11 +137,7 @@ const DAppConnection = () => {
 
                 <span
                     className={classnames(
-                        "mr-1 pointer-events-none",
-                        dAppConnected === "connected" &&
-                        "text-secondary-green-default",
-                        dAppConnected === "connected-warning" &&
-                        "text-yellow-600"
+                        "mr-1 pointer-events-none font-medium"
                     )}
                 >
                     {dAppConnected === "not-connected"
@@ -207,71 +204,84 @@ const PopupPage = () => {
                     close={false}
                     backButton={false}
                     permissions={hotkeysPermissions}
-                    className="justify-between w-full"
+                    className="w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm px-4"
                 >
                     {state.isNetworkChanging && <TransparentOverlay />}
-                    <div className="flex flex-row items-center space-x-3">
-                        <div className="relative flex flex-col items-start group">
-                            <Link
-                                to="/accounts"
-                                className="transition duration-300"
-                                draggable={false}
-                                data-testid="navigate-account-link"
-                            >
-                                <AccountIcon
-                                    className="w-8 h-8 transition-transform duration-200 ease-in transform hover:rotate-180"
-                                    fill={getAccountColor(checksumAddress)}
+
+                    {/* Header content with equal spacing */}
+                    <div className="flex flex-row items-center justify-between w-full">
+                        {/* Left Section - Account */}
+                        <div className="flex flex-row items-center space-x-3">
+                            <div className="relative flex items-center group">
+                                <Link
+                                    to="/accounts"
+                                    className="transition-all duration-200 hover:scale-105"
+                                    draggable={false}
+                                    data-testid="navigate-account-link"
+                                >
+                                    <AccountIcon
+                                        className="w-8 h-8 transition-all duration-200 ease-in-out hover:shadow-lg rounded-full"
+                                        fill={getAccountColor(checksumAddress)}
+                                    />
+                                </Link>
+                                <Tooltip
+                                    className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-0 !translate-y-full p-2 rounded-md text-xs font-medium bg-gray-900 dark:bg-gray-800 text-white border border-gray-700 dark:border-gray-600 shadow-lg"
+                                    content={<span>My Accounts</span>}
                                 />
-                            </Link>
-                            <Tooltip
-                                className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-0 !translate-y-full p-2 rounded-md text-xs font-medium bg-primary-black-default text-white"
-                                content={
-                                    <>
-                                        <span>My Accounts</span>
-                                    </>
-                                }
-                            />
-                        </div>
-                        <div className="flex flex-row items-center space-x-1">
+                            </div>
                             <AccountDisplay />
-                            <div className="flex relative group">
+                        </div>
+
+                        {/* Center Section - Tools */}
+                        <div className="flex flex-row items-center space-x-3">
+                            <div className="relative group">
                                 <Link
                                     to="/accounts/menu/receive"
                                     draggable={false}
                                     onClick={(e) => {
                                         e.preventDefault()
-
                                         history.push("/accounts/menu/receive")
                                     }}
-                                    className="p-2 transition duration-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-primary-blue-default"
+                                    className="flex items-center justify-center w-10 h-10 transition-all duration-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 text-gray-600 dark:text-gray-400"
                                 >
                                     <QRIcon />
                                 </Link>
                                 <Tooltip
-                                    className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-3 !translate-y-full p-2 rounded-md text-xs font-medium bg-primary-black-default text-white"
-                                    content={
-                                        <>
-                                            <span>Receive funds</span>
-                                        </>
-                                    }
+                                    className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-0 !translate-y-full p-2 rounded-md text-xs font-medium bg-gray-900 dark:bg-gray-800 text-white border border-gray-700 dark:border-gray-600 shadow-lg"
+                                    content={<span>Receive</span>}
                                 />
                             </div>
-                        </div>
-                    </div>
-                    <div className="flex flex-row items-center -mr-1 space-x-2">
-                        <GasPricesInfo />
-                        <Link
-                            to="/settings"
-                            draggable={false}
-                            onClick={(e) => {
-                                e.preventDefault()
 
-                                history.push("/settings")
-                            }}
-                            className="p-2 transition duration-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-primary-blue-default"
-                        >
-                            <GearIcon />
-                        </Link>
+                            <GenericTooltip
+                                bottom
+                                disabled={!state.isImportingDeposits}
+                                content={
+                                    <p className="w-40 text-center text-xs">
+                                        Please wait until deposits are done loading
+                                        to change networks. This can take up to 15
+                                        minutes.
+                                    </p>
+                                }
+                            >
+                                <NetworkSelect compact />
+                            </GenericTooltip>
+                        </div>
+
+                        {/* Right Section - Settings */}
+                        <div className="flex flex-row items-center space-x-3">
+                            <GasPricesInfo />
+                            <Link
+                                to="/settings"
+                                draggable={false}
+                                onClick={(e) => {
+                                    e.preventDefault()
+                                    history.push("/settings")
+                                }}
+                                className="p-2 transition-all duration-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 hover:scale-105 text-gray-600 dark:text-gray-400"
+                            >
+                                <GearIcon />
+                            </Link>
+                        </div>
                     </div>
                 </PopupHeader>
             }
@@ -286,40 +296,28 @@ const PopupPage = () => {
                 }}
                 onDone={() => setHasErrorDialog(false)}
             />
-            <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 pt-4 space-y-2  hide-scroll">
+            <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 pt-5 space-y-3 hide-scroll bg-white dark:bg-gray-900">
                 <div className="w-full">
                     <ProviderStatus onHomepage />
-                    <div className="flex flex-row items-start w-full justify-between pt-1 pb-1">
-                        <GenericTooltip
-                            bottom
-                            disabled={!state.isImportingDeposits}
-                            content={
-                                <p className="w-40 text-center">
-                                    Please wait until deposits are done loading
-                                    to change networks. This can take up to 15
-                                    minutes.
-                                </p>
-                            }
-                        >
-                            <NetworkSelect />
-                        </GenericTooltip>
+                    <div className="flex flex-row items-start w-full justify-end pt-2 pb-4">
                         <DAppConnection />
                     </div>
-                    <TokenSummary className="p-4">
-                        <TokenSummary.Balances className="!space-y-0">
+                    <TokenSummary className="p-5 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200">
+                        <TokenSummary.Balances className="!space-y-1">
                             <TokenSummary.TokenBalance
                                 title={
                                     displayNetWorth
                                         ? netWorth
                                         : nativeTokenBalance
                                 }
+                                className="text-gray-900 dark:text-gray-100 text-2xl font-bold"
                             >
                                 {displayNetWorth
                                     ? netWorth
                                     : nativeTokenBalanceRounded}
                             </TokenSummary.TokenBalance>
 
-                            <TokenSummary.ExchangeRateBalance className="flex items-center text-xs">
+                            <TokenSummary.ExchangeRateBalance className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                                 <div className="group relative">
                                     <a
                                         href="https://blockwallet.io/docs/net-worth"
@@ -328,13 +326,13 @@ const PopupPage = () => {
                                         className="contents"
                                     >
                                         <AiFillInfoCircle
-                                            size={23}
-                                            className="pr-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
+                                            size={20}
+                                            className="pr-2 text-gray-500 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
                                         />
 
                                         <Tooltip
                                             content={
-                                                <div className="flex flex-col font-normal items-start text-xs text-white-500">
+                                                <div className="flex flex-col font-normal items-start text-xs text-white">
                                                     <div className="flex flex-row items-end space-x-7">
                                                         {displayNetWorth ? (
                                                             <span>
@@ -367,15 +365,17 @@ const PopupPage = () => {
                                         />
                                     </a>
                                 </div>
-                                {displayNetWorth
-                                    ? "Net Worth"
-                                    : nativeCurrencyAmount}
+                                <span className="font-medium">
+                                    {displayNetWorth
+                                        ? "Net Worth"
+                                        : nativeCurrencyAmount}
+                                </span>
                                 <div
                                     title={`Switch to ${displayNetWorth
                                         ? "Native Token"
                                         : "Net Worth"
                                         }`}
-                                    className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
+                                    className="pl-2 text-gray-500 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 hover:scale-110"
                                     onClick={() => {
                                         setUserSettings({
                                             ...state.settings,
@@ -392,16 +392,16 @@ const PopupPage = () => {
                                 to="/send"
                                 draggable={false}
                                 className={classnames(
-                                    "flex flex-col items-center space-y-2 group",
+                                    "flex flex-col items-center space-y-2 group transition-all duration-200 hover:scale-105",
                                     disabledActions && "pointer-events-none"
                                 )}
                             >
                                 <div
                                     className={classnames(
-                                        "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
+                                        "w-10 h-10 overflow-hidden transition-all duration-200 rounded-xl shadow-md group-hover:shadow-lg",
                                         disabledActions
-                                            ? "bg-gray-300"
-                                            : "bg-primary-blue-default"
+                                            ? "bg-gray-300 dark:bg-gray-600"
+                                            : "bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-400"
                                     )}
                                     style={{ transform: "scaleY(-1)" }}
                                 >
@@ -411,14 +411,14 @@ const PopupPage = () => {
                                                 icon={
                                                     AnimatedIconName.BlueCircleLoadingSkeleton
                                                 }
-                                                className="w-4 h-4 pointer-events-none"
+                                                className="w-5 h-5 pointer-events-none"
                                             />
                                         </div>
                                     ) : (
                                         <ArrowHoverAnimation />
                                     )}
                                 </div>
-                                <span className="text-[13px] font-medium">
+                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
                                     Send
                                 </span>
                             </Link>
@@ -427,16 +427,16 @@ const PopupPage = () => {
                                     to="/buy"
                                     draggable={false}
                                     className={classnames(
-                                        "flex flex-col items-center space-y-2 group",
+                                        "flex flex-col items-center space-y-2 group transition-all duration-200 hover:scale-105",
                                         disabledActions && "pointer-events-none"
                                     )}
                                 >
                                     <div
                                         className={classnames(
-                                            "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
+                                            "w-10 h-10 overflow-hidden transition-all duration-200 rounded-xl shadow-md group-hover:shadow-lg",
                                             disabledActions
-                                                ? "bg-gray-300"
-                                                : "bg-primary-blue-default"
+                                                ? "bg-gray-300 dark:bg-gray-600"
+                                                : "bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-400"
                                         )}
                                     >
                                         {isLoading ? (
@@ -445,7 +445,7 @@ const PopupPage = () => {
                                                     icon={
                                                         AnimatedIconName.BlueCircleLoadingSkeleton
                                                     }
-                                                    className="w-4 h-4 pointer-events-none"
+                                                    className="w-5 h-5 pointer-events-none"
                                                 />
                                             </div>
                                         ) : (
@@ -455,7 +455,7 @@ const PopupPage = () => {
                                             />
                                         )}
                                     </div>
-                                    <span className="text-[13px] font-medium">
+                                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
                                         Buy
                                     </span>
                                 </Link>
@@ -465,16 +465,16 @@ const PopupPage = () => {
                                     to="/swap"
                                     draggable={false}
                                     className={classnames(
-                                        "flex flex-col items-center space-y-2 group",
+                                        "flex flex-col items-center space-y-2 group transition-all duration-200 hover:scale-105",
                                         disabledActions && "pointer-events-none"
                                     )}
                                 >
                                     <div
                                         className={classnames(
-                                            "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
+                                            "w-10 h-10 overflow-hidden transition-all duration-200 rounded-xl shadow-md group-hover:shadow-lg",
                                             disabledActions
-                                                ? "bg-gray-300"
-                                                : "bg-primary-blue-default"
+                                                ? "bg-gray-300 dark:bg-gray-600"
+                                                : "bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-400"
                                         )}
                                         style={{ transform: "scaleY(-1)" }}
                                     >
@@ -484,14 +484,14 @@ const PopupPage = () => {
                                                     icon={
                                                         AnimatedIconName.BlueCircleLoadingSkeleton
                                                     }
-                                                    className="w-4 h-4 pointer-events-none rotate-180"
+                                                    className="w-5 h-5 pointer-events-none rotate-180"
                                                 />
                                             </div>
                                         ) : (
                                             <DoubleArrowHoverAnimation />
                                         )}
                                     </div>
-                                    <span className="text-[13px] font-medium">
+                                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
                                         Swap
                                     </span>
                                 </Link>
@@ -499,16 +499,16 @@ const PopupPage = () => {
                             <Link
                                 to="/portfolio"
                                 draggable={false}
-                                className="flex flex-col items-center space-y-2 group"
+                                className="flex flex-col items-center space-y-2 group transition-all duration-200 hover:scale-105"
                             >
-                                <div className="w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75 bg-primary-blue-default">
+                                <div className="w-10 h-10 overflow-hidden transition-all duration-200 rounded-xl shadow-md group-hover:shadow-lg bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-400">
                                     {isLoading ? (
                                         <div className="flex flex-row items-center justify-center w-full h-full">
                                             <AnimatedIcon
                                                 icon={
                                                     AnimatedIconName.BlueCircleLoadingSkeleton
                                                 }
-                                                className="w-4 h-4 pointer-events-none"
+                                                className="w-5 h-5 pointer-events-none"
                                             />
                                         </div>
                                     ) : (
@@ -520,7 +520,7 @@ const PopupPage = () => {
                                         </div>
                                     )}
                                 </div>
-                                <span className="text-[13px] font-medium">
+                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
                                     Portfolio
                                 </span>
                             </Link>
@@ -529,16 +529,16 @@ const PopupPage = () => {
                                     to="/bridge"
                                     draggable={false}
                                     className={classnames(
-                                        "flex flex-col items-center space-y-2 group",
+                                        "flex flex-col items-center space-y-2 group transition-all duration-200 hover:scale-105",
                                         disabledActions && "pointer-events-none"
                                     )}
                                 >
                                     <div
                                         className={classnames(
-                                            "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
+                                            "w-10 h-10 overflow-hidden transition-all duration-200 rounded-xl shadow-md group-hover:shadow-lg",
                                             disabledActions
-                                                ? "bg-gray-300"
-                                                : "bg-primary-blue-default"
+                                                ? "bg-gray-300 dark:bg-gray-600"
+                                                : "bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-400"
                                         )}
                                         style={{ transform: "scaleY(-1)" }}
                                     >
@@ -548,7 +548,7 @@ const PopupPage = () => {
                                                     icon={
                                                         AnimatedIconName.BlueCircleLoadingSkeleton
                                                     }
-                                                    className="w-4 h-4 pointer-events-none"
+                                                    className="w-5 h-5 pointer-events-none"
                                                 />
                                             </div>
                                         ) : (
@@ -565,13 +565,13 @@ const PopupPage = () => {
                                                         icon={
                                                             AnimatedIconName.Bridge
                                                         }
-                                                        className="cursor-pointer bg-primary-blue-default"
+                                                        className="cursor-pointer bg-blue-600 dark:bg-blue-500"
                                                     />
                                                 )}
                                             </>
                                         )}
                                     </div>
-                                    <span className="text-[13px] font-medium">
+                                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
                                         Bridge
                                     </span>
                                 </Link>

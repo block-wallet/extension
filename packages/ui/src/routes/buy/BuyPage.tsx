@@ -111,7 +111,7 @@ const BuyPage = () => {
             <div className="flex flex-col p-6 h-full w-full">
                 <div className={classnames("flex flex-row")}>
                     <div className="flex flex-col space w-1/2 pr-1.5">
-                        <p className="mb-2 text-sm font-medium text-primary-grey-dark">
+                        <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                             Spend
                         </p>
                         <CurrencySelection
@@ -126,7 +126,7 @@ const BuyPage = () => {
                         />
                     </div>
                     <div className="flex flex-col w-1/2 pl-1.5">
-                        <p className="mb-2 text-sm font-medium text-primary-grey-dark">
+                        <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                             Receive
                         </p>
                         <TokenSelection
@@ -146,15 +146,15 @@ const BuyPage = () => {
                     </div>
                 </div>
                 <div className="pt-6">
-                    <hr className="-mx-5" />
+                    <hr className="-mx-5 border-gray-200 dark:border-gray-700" />
                 </div>
                 <div className="mt-6">
-                    <span className="font-medium text-sm text-primary-grey-dark">
+                    <span className="font-medium text-sm text-gray-700 dark:text-gray-300">
                         Will arrive to:
                     </span>
                     <AccountDisplay
                         account={currenctAccountInfo}
-                        className="bg-primary-grey-default hover hover:bg-primary-grey-hover h-20 mt-1.5 cursor-default"
+                        className="bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-750 h-20 mt-1.5 cursor-default border border-gray-200 dark:border-gray-700 rounded-lg"
                         showAddress={true}
                     />
                 </div>
@@ -162,9 +162,7 @@ const BuyPage = () => {
                     <input
                         type="checkbox"
                         checked={acceptedTerms}
-                        className={
-                            "cursor-pointer w-4 h-4 border-1 border-primary-grey-hover rounded-md focus:ring-0 self-baseline"
-                        }
+                        className="cursor-pointer w-4 h-4 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-0 focus:ring-offset-0 bg-white dark:bg-gray-800 text-primary-blue-default dark:text-primary-blue-400 self-baseline"
                         onChange={() => {
                             setAcceptedTerms(!acceptedTerms)
                         }}
@@ -172,7 +170,7 @@ const BuyPage = () => {
                     />
                     <label
                         htmlFor="checkbox"
-                        className=" cursor-pointer text-xs pl-2"
+                        className="cursor-pointer text-xs pl-2 text-gray-700 dark:text-gray-300"
                     >
                         You agree to be redirected to Onramper for your fiat
                         payment. KYC may be required by the selected provider.
@@ -181,25 +179,25 @@ const BuyPage = () => {
                         <a
                             href="https://blockwallet.io/docs/buy-crypto-with-block-wallet"
                             target="_blank"
-                            className="text-primary-blue-default hover:underline"
+                            className="text-primary-blue-default dark:text-primary-blue-400 hover:underline"
                             rel="noreferrer"
                         >
                             Learn More
                         </a>
                     </label>
                 </div>
-                <div className="flex self-center mt-11">
+                <div className="flex self-center mt-11 text-gray-600 dark:text-gray-400 items-center">
                     Powered by{" "}
                     <a
                         href="https://www.onramper.com/"
-                        className="text-primary-blue-default hover:underline"
+                        className="ml-1"
                         target="_blank"
                         rel="noreferrer"
                     >
                         <img
                             src={onramper}
-                            className="ml-1.5 mt-1"
-                            alt="Power by Onramper"
+                            className="ml-0.5 dark:invert"
+                            alt="Onramper"
                         />
                     </a>
                 </div>

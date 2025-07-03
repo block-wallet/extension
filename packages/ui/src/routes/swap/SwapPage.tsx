@@ -122,9 +122,9 @@ const SwapPage = () => {
                 defaultAmount ||
                 (swapDataState?.bigNumberAmount
                     ? formatUnits(
-                          swapDataState?.bigNumberAmount?.toString(),
-                          swapDataState?.tokenFrom?.decimals
-                      )
+                        swapDataState?.bigNumberAmount?.toString(),
+                        swapDataState?.tokenFrom?.decimals
+                    )
                     : undefined),
         },
     })
@@ -134,18 +134,18 @@ const SwapPage = () => {
     const formattedAmount =
         tokenFrom && bigNumberAmount
             ? formatCurrency(
-                  toCurrencyAmount(
-                      bigNumberAmount,
-                      exchangeRates[tokenFrom.symbol.toUpperCase()],
-                      tokenFrom.decimals
-                  ),
-                  {
-                      currency: nativeCurrency,
-                      locale_info: localeInfo,
-                      returnNonBreakingSpace: false,
-                      showSymbol: false,
-                  }
-              )
+                toCurrencyAmount(
+                    bigNumberAmount,
+                    exchangeRates[tokenFrom.symbol.toUpperCase()],
+                    tokenFrom.decimals
+                ),
+                {
+                    currency: nativeCurrency,
+                    locale_info: localeInfo,
+                    returnNonBreakingSpace: false,
+                    showSymbol: false,
+                }
+            )
             : undefined
     const isUsingNetworkNativeCurrency =
         tokenFrom?.address === nativeToken.token.address
@@ -355,14 +355,14 @@ const SwapPage = () => {
 
     const swapFee = quote
         ? `${formatNumberLength(
-              formatUnits(
-                  BigNumber.from(quote.fromTokenAmount)
-                      .mul(BASE_SWAP_FEE * 10)
-                      .div(1000),
-                  quote.fromToken.decimals
-              ),
-              8
-          )} ${quote.fromToken.symbol}`
+            formatUnits(
+                BigNumber.from(quote.fromTokenAmount)
+                    .mul(BASE_SWAP_FEE * 10)
+                    .div(1000),
+                quote.fromToken.decimals
+            ),
+            8
+        )} ${quote.fromToken.symbol}`
         : undefined
 
     return (
@@ -377,11 +377,11 @@ const SwapPage = () => {
                         history.push(
                             fromAssetPage
                                 ? {
-                                      pathname: "/asset/details",
-                                      state: {
-                                          address: fromToken?.address,
-                                      },
-                                  }
+                                    pathname: "/asset/details",
+                                    state: {
+                                        address: fromToken?.address,
+                                    },
+                                }
                                 : { pathname: "/home" }
                         )
                     }}
@@ -417,7 +417,7 @@ const SwapPage = () => {
                 >
                     {/* Asset */}
                     <div className="flex flex-col space w-1/2 pr-1.5">
-                        <p className="mb-2 text-[13px] font-medium text-primary-grey-dark">
+                        <p className="mb-2 text-[13px] font-medium text-gray-700 dark:text-gray-300">
                             Swap From
                         </p>
                         <AssetSelection
@@ -425,9 +425,9 @@ const SwapPage = () => {
                             selectedAsset={
                                 tokenFrom && tokenFromBalance
                                     ? {
-                                          token: tokenFrom,
-                                          balance: tokenFromBalance,
-                                      }
+                                        token: tokenFrom,
+                                        balance: tokenFromBalance,
+                                    }
                                     : undefined
                             }
                             onAssetChange={(asset) => {
@@ -464,8 +464,8 @@ const SwapPage = () => {
                                     "ml-auto text-sm",
                                     isUsingNetworkNativeCurrency && "invisible",
                                     isMaxAmountEnabled
-                                        ? "text-primary-blue-default hover:text-primary-blue-hover cursor-pointer"
-                                        : "text-primary-grey-dark cursor-default"
+                                        ? "text-primary-blue-default dark:text-primary-blue-400 hover:text-primary-blue-hover dark:hover:text-primary-blue-300 cursor-pointer"
+                                        : "text-gray-600 dark:text-gray-400 cursor-default"
                                 )}
                                 onClick={() => {
                                     if (isMaxAmountEnabled) {
@@ -482,13 +482,13 @@ const SwapPage = () => {
                         </div>
                         <div
                             className={classnames(
-                                "flex flex-col items-stretch rounded-md p-4 h-[4rem] hover:bg-primary-grey-hover w-full",
+                                "flex flex-col items-stretch rounded-md p-4 h-[4rem] hover:bg-gray-100 dark:hover:bg-gray-800 w-full border transition-colors",
                                 inputFocus
-                                    ? "bg-primary-grey-hover"
-                                    : "bg-primary-grey-default",
+                                    ? "bg-gray-100 dark:bg-gray-800 border-primary-blue-default dark:border-primary-blue-400"
+                                    : "bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700",
                                 errors.amount
-                                    ? "border-red-400"
-                                    : "border-opacity-0 border-transparent"
+                                    ? "border-red-400 dark:border-red-500"
+                                    : ""
                             )}
                         >
                             <input
@@ -499,10 +499,9 @@ const SwapPage = () => {
                                     onUpdateAmount(e.target.value)
                                 }}
                                 maxLength={80}
-                                className="p-0 text-base bg-transparent border-none font-semibold -mt-0.5"
-                                placeholder={`0.0 ${
-                                    tokenFrom ? tokenFrom.symbol : ""
-                                }`}
+                                className="p-0 text-base bg-transparent border-none font-semibold -mt-0.5 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-0 focus:outline-none"
+                                placeholder={`0.0 ${tokenFrom ? tokenFrom.symbol : ""
+                                    }`}
                                 autoComplete="off"
                                 autoFocus={true}
                                 onFocus={() => setInputFocus(true)}
@@ -510,7 +509,7 @@ const SwapPage = () => {
                             />
                             <p
                                 className={classnames(
-                                    "text-xs text-primary-grey-dark",
+                                    "text-xs text-gray-600 dark:text-gray-400",
                                     !formattedAmount && "hidden"
                                 )}
                             >
@@ -534,19 +533,19 @@ const SwapPage = () => {
                     <hr className="-mx-5" />
                     <button
                         type="button"
-                        className="flex -translate-y-2/4 justify-center items-center mx-auto rounded-full w-8 h-8 border border-grey-200 bg-white z-10 cursor-pointer"
+                        className="flex -translate-y-2/4 justify-center items-center mx-auto rounded-full w-8 h-8 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 z-10 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={switchInputs}
                         disabled={!canSwitchInputs}
                     >
                         <img
                             src={swapIcon}
-                            className="h-4 w-auto mx-auto"
+                            className="h-4 w-auto mx-auto dark:invert"
                             alt="swap"
                         />
                     </button>
                 </div>
 
-                <p className="text-[13px] font-medium text-primary-grey-dark mb-2">
+                <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Swap To
                 </p>
                 <AssetSelection
@@ -555,9 +554,9 @@ const SwapPage = () => {
                     selectedAsset={
                         tokenTo
                             ? {
-                                  token: tokenTo,
-                                  balance: BigNumber.from(0),
-                              }
+                                token: tokenTo,
+                                balance: BigNumber.from(0),
+                            }
                             : undefined
                     }
                     onAssetChange={(asset) => {
@@ -584,7 +583,7 @@ const SwapPage = () => {
                     }}
                 />
                 {swapFee && (
-                    <div className="flex items-center text-xs text-primary-grey-dark pt-0.5 mr-1 mt-2">
+                    <div className="flex items-center text-xs text-gray-600 dark:text-gray-400 pt-0.5 mr-1 mt-2">
                         <span>{`BlockWallet fee (${BASE_SWAP_FEE}%): ${swapFee}`}</span>
                     </div>
                 )}

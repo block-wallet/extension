@@ -135,7 +135,7 @@ const TransactionsList: React.FC<{
                             <div style={style} key={key}>
                                 {index > 0 ? (
                                     <div className="px-6">
-                                        <hr />
+                                        <hr className="border-gray-200 dark:border-gray-700" />
                                     </div>
                                 ) : null}
                                 <TransactionItem

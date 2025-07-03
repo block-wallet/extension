@@ -764,7 +764,7 @@ const SendConfirmPage = () => {
                             "mb-3"
                         )}
                     >
-                        <p className="ml-1 mb-2 text-[13px] font-medium text-primary-grey-dark">
+                        <p className="ml-1 mb-2 text-[13px] font-medium text-gray-700 dark:text-gray-300">
                             Asset
                         </p>
                         <AssetSelection
@@ -827,7 +827,7 @@ const SendConfirmPage = () => {
             </div>
 
             {/* Transaction Notes & Labels */}
-            <div className="mt-3 px-6 border-t pt-3">
+            <div className="mt-3 px-6 border-t border-gray-200 dark:border-gray-700 pt-3">
                 <div
                     className="flex items-center justify-between cursor-pointer mb-2"
                     onClick={() => {
@@ -840,13 +840,13 @@ const SendConfirmPage = () => {
                     }}
                 >
                     <div className="flex items-center">
-                        <MdNoteAdd className="mr-1" size={16} />
-                        <label className="text-sm font-semibold text-primary-grey-dark">
+                        <MdNoteAdd className="mr-1 text-gray-600 dark:text-gray-400" size={16} />
+                        <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                             Transaction Note
                         </label>
                     </div>
                     <FiChevronDown
-                        className={`text-primary-grey-dark transform transition-transform ${noteExpanded ? 'rotate-180' : ''}`}
+                        className={`text-gray-600 dark:text-gray-400 transform transition-transform ${noteExpanded ? 'rotate-180' : ''}`}
                         size={18}
                     />
                 </div>
@@ -863,13 +863,13 @@ const SendConfirmPage = () => {
                     }}
                 >
                     <div className="flex items-center">
-                        <MdOutlineLabel className="mr-1" size={16} />
-                        <label className="text-sm font-semibold text-primary-grey-dark">
+                        <MdOutlineLabel className="mr-1 text-gray-600 dark:text-gray-400" size={16} />
+                        <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                             Labels {labels.length > 0 && `(${labels.length}/5)`}
                         </label>
                     </div>
                     <FiChevronDown
-                        className={`text-primary-grey-dark transform transition-transform ${labelsExpanded ? 'rotate-180' : ''}`}
+                        className={`text-gray-600 dark:text-gray-400 transform transition-transform ${labelsExpanded ? 'rotate-180' : ''}`}
                         size={18}
                     />
                 </div>
@@ -877,13 +877,13 @@ const SendConfirmPage = () => {
                 <div id="note-section" className="mb-4">
                     <div className="relative">
                         <textarea
-                            className="w-full p-2 text-sm border border-primary-grey-hover rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue-default"
+                            className="w-full p-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-blue-default bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                             placeholder="Add a personal note about this transaction (only visible to you)"
                             rows={2}
                             value={note}
                             onChange={handleNoteChange}
                         ></textarea>
-                        <div className="absolute bottom-2 right-2 text-xs text-primary-grey-dark">
+                        <div className="absolute bottom-2 right-2 text-xs text-gray-600 dark:text-gray-400">
                             {note.length}/200
                         </div>
                     </div>
@@ -895,9 +895,9 @@ const SendConfirmPage = () => {
                             <button
                                 key={label}
                                 onClick={() => toggleLabel(label)}
-                                className={`px-3 py-1 text-xs rounded-full ${labels.includes(label)
-                                    ? "bg-primary-blue-default text-white"
-                                    : "bg-primary-grey-default text-gray-700 hover:bg-primary-grey-hover"
+                                className={`px-3 py-1 text-xs rounded-full transition-colors duration-200 ${labels.includes(label)
+                                    ? "bg-primary-blue-default dark:bg-primary-blue-500 text-white"
+                                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
                                     }`}
                             >
                                 {label}
@@ -909,7 +909,7 @@ const SendConfirmPage = () => {
                         <div className="flex mt-2">
                             <input
                                 type="text"
-                                className="flex-1 p-2 text-sm border border-primary-grey-hover rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary-blue-default"
+                                className="flex-1 p-2 text-sm border border-gray-300 dark:border-gray-600 rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary-blue-default bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                                 placeholder="Custom label"
                                 value={customLabel}
                                 onChange={(e) => setCustomLabel(e.target.value)}
@@ -917,7 +917,7 @@ const SendConfirmPage = () => {
                                 maxLength={20}
                             />
                             <button
-                                className="px-3 bg-primary-blue-default text-white rounded-r-md hover:bg-blue-600"
+                                className="px-3 bg-primary-blue-default dark:bg-primary-blue-500 text-white rounded-r-md hover:bg-blue-600 dark:hover:bg-blue-400 transition-colors duration-200"
                                 onClick={addCustomLabel}
                             >
                                 Add
@@ -925,7 +925,7 @@ const SendConfirmPage = () => {
                         </div>
                     ) : labels.length < 5 ? (
                         <button
-                            className="text-xs text-primary-blue-default hover:underline"
+                            className="text-xs text-primary-blue-default dark:text-primary-blue-400 hover:underline"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setShowLabelInput(true);

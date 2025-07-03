@@ -174,12 +174,12 @@ const SwapPageConfirm: FC<{}> = () => {
         useTransactionWaitingDialog(
             inProgressTransaction
                 ? {
-                      id: inProgressTransaction.id,
-                      status: inProgressTransaction.status,
-                      error: inProgressTransaction.error as Error,
-                      epochTime: inProgressTransaction?.approveTime,
-                      qrParams: inProgressTransaction?.qrParams,
-                  }
+                    id: inProgressTransaction.id,
+                    status: inProgressTransaction.status,
+                    error: inProgressTransaction.error as Error,
+                    epochTime: inProgressTransaction?.approveTime,
+                    qrParams: inProgressTransaction?.qrParams,
+                }
                 : undefined,
             HardwareWalletOpTypes.SIGN_TRANSACTION,
             selectedAccount.accountType,
@@ -270,8 +270,8 @@ const SwapPageConfirm: FC<{}> = () => {
     )
     const total = isSwappingNativeToken
         ? BigNumber.from(
-              swapParameters?.fromTokenAmount || swapQuote.fromTokenAmount
-          ).add(fee)
+            swapParameters?.fromTokenAmount || swapQuote.fromTokenAmount
+        ).add(fee)
         : fee
 
     const hasNativeAssetBalance = useHasSufficientBalance(
@@ -481,9 +481,9 @@ const SwapPageConfirm: FC<{}> = () => {
                             errMessage || isInProgressAllowanceTransaction
                                 ? false
                                 : !swapParameters ||
-                                  isGasLoading ||
-                                  isFetchingSwaps ||
-                                  isSwapping
+                                isGasLoading ||
+                                isFetchingSwaps ||
+                                isSwapping
                         }
                         onClick={onSubmit}
                         disabled={!!errMessage}
@@ -590,17 +590,17 @@ const SwapPageConfirm: FC<{}> = () => {
                     asset={fromToken}
                     amount={BigNumber.from(
                         swapParameters?.fromTokenAmount ||
-                            swapQuote.fromTokenAmount
+                        swapQuote.fromTokenAmount
                     )}
                 />
 
                 {/* Divider */}
                 <div className="pt-5">
                     <hr className="-mx-5" />
-                    <div className="flex -translate-y-2/4 justify-center items-center mx-auto rounded-full w-8 h-8 border border-grey-200 bg-white z-10">
+                    <div className="flex -translate-y-2/4 justify-center items-center mx-auto rounded-full w-8 h-8 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 z-10">
                         <img
                             src={arrowDown}
-                            className="h-4 w-auto mx-auto"
+                            className="h-4 w-auto mx-auto dark:invert"
                             alt="arrow"
                         />
                     </div>
@@ -615,7 +615,7 @@ const SwapPageConfirm: FC<{}> = () => {
                 />
 
                 {/* Rates */}
-                <p className="text-sm py-1 leading-loose text-primary-grey-dark uppercase text-center w-full">
+                <p className="text-sm py-1 leading-loose text-gray-600 dark:text-gray-400 uppercase text-center w-full">
                     {`1 ${fromToken.symbol} = ${formatNumberLength(
                         formatRounded(exchangeRate.toFixed(10), 8),
                         10
@@ -623,7 +623,7 @@ const SwapPageConfirm: FC<{}> = () => {
                 </p>
 
                 {/* Gas */}
-                <p className="text-[13px] font-medium pb-1 pt-0.5 text-primary-grey-dark">
+                <p className="text-[13px] font-medium pb-1 pt-0.5 text-gray-700 dark:text-gray-300">
                     Gas Price
                 </p>
                 {isEIP1559Compatible ? (
@@ -697,7 +697,7 @@ const SwapPageConfirm: FC<{}> = () => {
                         className={classnames(
                             "!w-full ml-2 h-12 space-x-2 p-4 ",
                             !swapParameters &&
-                                "cursor-not-allowed hover:border-default"
+                            "cursor-not-allowed hover:border-default"
                         )}
                     >
                         <span className="font-semibold text-sm">Details</span>

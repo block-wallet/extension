@@ -159,11 +159,11 @@ const ApprovePage: FunctionComponent<{}> = () => {
         useTransactionWaitingDialog(
             inProgressTransaction
                 ? {
-                      status: inProgressTransaction?.status,
-                      error: inProgressTransaction?.error as Error,
-                      epochTime: inProgressTransaction?.approveTime,
-                      qrParams: inProgressTransaction?.qrParams,
-                  }
+                    status: inProgressTransaction?.status,
+                    error: inProgressTransaction?.error as Error,
+                    epochTime: inProgressTransaction?.approveTime,
+                    qrParams: inProgressTransaction?.qrParams,
+                }
                 : undefined,
             HardwareWalletOpTypes.APPROVE_ALLOWANCE,
             selectedAccount.accountType,
@@ -263,7 +263,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
 
             setSpenderName(
                 currentSpenderAllowances?.groupBy.name ??
-                    `Spender ${formatHashFirstLastChars(spenderAddress)}`
+                `Spender ${formatHashFirstLastChars(spenderAddress)}`
             )
 
             setSpenderAddressExplorerLink(
@@ -298,7 +298,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 )
                 setSpenderName(
                     currentSpenderAllowances?.groupBy.name ??
-                        `Spender ${formatHashFirstLastChars(spenderAddress)}`
+                    `Spender ${formatHashFirstLastChars(spenderAddress)}`
                 )
                 setSpenderAddressExplorerLink(
                     generateExplorerLink(
@@ -458,8 +458,8 @@ const ApprovePage: FunctionComponent<{}> = () => {
             approveOperation === ApproveOperation.SWAP
                 ? "/swap/confirm"
                 : approveOperation === ApproveOperation.BRIDGE
-                ? "/bridge/confirm"
-                : "/"
+                    ? "/bridge/confirm"
+                    : "/"
 
         history.push({
             pathname,
@@ -567,7 +567,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     currentAllowance={currentAllowanceValue}
                 />
 
-                <label className="text-[13px] font-medium text-primary-grey-dark">
+                <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300">
                     Gas Price
                 </label>
                 {!isEIP1559Compatible ? (
@@ -684,7 +684,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                         {formatName(selectedAccount.name, 15)}
                     </span>
                     <span
-                        className="text-xs text-primary-grey-dark truncate"
+                        className="text-xs text-gray-600 dark:text-gray-400 truncate"
                         title={selectedAccount.address}
                     >
                         {formatHash(selectedAccount.address)}
@@ -697,7 +697,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                             formatUnits(assetBalance || "0", assetDecimals)
                         )} ${assetName}`}
                     >
-                        <span className="text-xs text-primary-grey-dark truncate">
+                        <span className="text-xs text-gray-600 dark:text-gray-400 truncate">
                             {`${formatRounded(
                                 formatUnits(assetBalance || "0", assetDecimals)
                             )}`}
@@ -705,8 +705,8 @@ const ApprovePage: FunctionComponent<{}> = () => {
                         <img
                             src={assetLogo || unknownTokenIcon}
                             onError={(e) => {
-                                ;(e.target as any).onerror = null
-                                ;(e.target as any).src = unknownTokenIcon
+                                ; (e.target as any).onerror = null
+                                    ; (e.target as any).src = unknownTokenIcon
                             }}
                             alt={assetName}
                             width="14px"
@@ -726,7 +726,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                             18
                         )} ${nativeToken.token.symbol}`}
                     >
-                        <span className="text-xs text-primary-grey-dark truncate">
+                        <span className="text-xs text-gray-600 dark:text-gray-400 truncate">
                             {formatName(
                                 formatRounded(
                                     formatUnits(
@@ -740,8 +740,8 @@ const ApprovePage: FunctionComponent<{}> = () => {
                         <img
                             src={nativeToken.token.logo || unknownTokenIcon}
                             onError={(e) => {
-                                ;(e.target as any).onerror = null
-                                ;(e.target as any).src = unknownTokenIcon
+                                ; (e.target as any).onerror = null
+                                    ; (e.target as any).src = unknownTokenIcon
                             }}
                             alt={nativeToken.token.symbol}
                             width="14px"

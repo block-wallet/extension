@@ -20,6 +20,7 @@ import { openReset } from "../context/commActions"
 import { useBlankState } from "../context/background/backgroundHooks"
 import { ButtonWithLoading } from "../components/button/ButtonWithLoading"
 import { AiFillInfoCircle } from "react-icons/ai"
+import { BiShield } from "react-icons/bi"
 import Tooltip from "../components/label/Tooltip"
 import { LINKS } from "../util/constants"
 
@@ -118,8 +119,8 @@ const UnlockPage = () => {
                                 rel="noreferrer"
                             >
                                 <AiFillInfoCircle
-                                    size={26}
-                                    className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
+                                    size={24}
+                                    className="pl-2 text-gray-500 dark:text-gray-400 cursor-pointer hover:text-primary-blue-default dark:hover:text-primary-blue-400 transition-colors duration-200"
                                 />
                                 <Tooltip
                                     className="!w-52 !break-word !whitespace-normal !-translate-x-44 !-mb-4"
@@ -133,9 +134,10 @@ const UnlockPage = () => {
             footer={
                 <PopupFooter>
                     <ButtonWithLoading
-                        label="Confirm"
+                        label="Unlock Wallet"
                         isLoading={isLoading}
                         onClick={onSubmit}
+                        disabled={!!errors.password}
                     />
                 </PopupFooter>
             }
@@ -145,39 +147,88 @@ const UnlockPage = () => {
             }}
         >
             <ConfirmDialog
-                title="Confirmation"
-                message="Are you sure you want to reset your wallet? This action can not be undone."
+                title="Reset Wallet"
+                message="Are you sure you want to reset your wallet? This action cannot be undone and you will lose access to your funds unless you have your seed phrase backed up."
                 open={hasDialog}
                 onClose={() => setHasDialog(false)}
                 onConfirm={() => openReset()}
             />
-            <div className="p-6 pb-0 flex flex-col space-y-8">
-                <div className="flex flex-col space-y-2">
-                    <img src={logo} alt="logo" className="w-12 h-12 mx-auto" />
-                    <span className="text-center text-base font-semibold  ">
-                        Enter your password to continue.
-                    </span>
-                </div>
-                <div className="flex flex-col space-y-2">
-                    <PasswordInput
-                        label="Password"
-                        placeholder="Enter Password"
-                        {...register("password")}
-                        error={errors.password?.message}
-                        autoFocus={isUserNetworkOnline}
-                    />
-                    <div className="text-xs">
-                        or&nbsp;
-                        <ClickableText onClick={() => setHasDialog(true)}>
-                            reset wallet using seed phrase
-                        </ClickableText>
+
+            <div className="flex flex-col h-full">
+                {/* Main Content */}
+                <div className="flex-1 flex flex-col justify-center px-6 py-4 space-y-5">
+                    {/* Logo and Title Section */}
+                    <div className="flex flex-col items-center space-y-4">
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-gradient-to-r from-primary-blue-default/20 to-purple-500/20 rounded-full blur-lg"></div>
+                            <div className="relative bg-white dark:bg-gray-800 rounded-full p-3 shadow-lg border border-gray-200 dark:border-gray-700">
+                                <img
+                                    src={logo}
+                                    alt="BlockWallet logo"
+                                    className="w-10 h-10"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="text-center space-y-1">
+                            <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+                                Welcome Back
+                            </h1>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                                Enter your password to unlock your wallet
+                            </p>
+                        </div>
                     </div>
 
-                    {settings.useAntiPhishingProtection && (
-                        <div className="pt-3">
-                            <AntiPhishing image={antiPhishingImage} />
+                    {/* Security Info Banner */}
+                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
+                        <div className="flex items-center space-x-2">
+                            <BiShield className="text-blue-600 dark:text-blue-400 w-4 h-4 flex-shrink-0" />
+                            <div>
+                                <p className="text-xs font-medium text-blue-800 dark:text-blue-200">
+                                    Secure Access
+                                </p>
+                                <p className="text-xs text-blue-600 dark:text-blue-300">
+                                    Your wallet is protected with end-to-end encryption
+                                </p>
+                            </div>
                         </div>
-                    )}
+                    </div>
+
+                    {/* Password Input Section */}
+                    <div className="space-y-3">
+                        <div className="space-y-2">
+                            <PasswordInput
+                                label="Password"
+                                placeholder="Enter your password"
+                                {...register("password")}
+                                error={errors.password?.message}
+                                autoFocus={isUserNetworkOnline}
+                            />
+                        </div>
+
+                        {/* Reset Option */}
+                        <div className="text-center">
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                                Forgot your password?{" "}
+                                <ClickableText
+                                    onClick={() => setHasDialog(true)}
+                                    className="text-primary-blue-default dark:text-primary-blue-400 hover:text-primary-blue-hover dark:hover:text-primary-blue-300 font-medium"
+                                >
+                                    Reset wallet with seed phrase
+                                </ClickableText>
+                            </div>
+                        </div>
+
+                        {/* Anti-Phishing Section */}
+                        {settings.useAntiPhishingProtection && (
+                            <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                                <div className="flex justify-center">
+                                    <AntiPhishing image={antiPhishingImage} size="sm" />
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </PopupLayout>

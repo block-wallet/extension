@@ -158,7 +158,7 @@ export class Classes {
     )
 
     static clickableText = classnames(
-        "rounded border-none bg-transparent text-primary-blue-default hover:underline"
+        "rounded border-none bg-transparent text-primary-blue-default dark:text-primary-blue-400 hover:text-primary-blue-hover dark:hover:text-primary-blue-300 hover:underline transition-colors duration-200"
     )
     static selectBaseStyle = classnames(
         "relative flex flex-row justify-between items-center cursor-pointer select-none"

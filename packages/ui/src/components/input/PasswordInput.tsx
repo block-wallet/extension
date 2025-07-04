@@ -115,7 +115,7 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
                             />
                             <div
                                 className={classNames(
-                                    "w-6 h-6 p-1 mt-2 mr-3 absolute right-0 transition-all duration-300 cursor-pointer hover:bg-primary-grey-default hover:text-primary-blue-default text-primary-grey-dark rounded-full",
+                                    "w-6 h-6 p-1 mt-2 mr-3 absolute right-0 transition-all duration-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-primary-blue-default dark:hover:text-primary-blue-400 text-gray-600 dark:text-gray-400 rounded-full",
                                     showPassword === false
                                         ? "opacity-100 z-10"
                                         : "opacity-0 pointer-event-none z-0"
@@ -126,7 +126,7 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
                             </div>
                             <div
                                 className={classNames(
-                                    "w-6 h-6 p-1 mt-2 mr-3 absolute right-0 transition-all duration-300 cursor-pointer hover:bg-primary-grey-default  hover:text-primary-blue-default text-primary-grey-dark rounded-full flex items-center",
+                                    "w-6 h-6 p-1 mt-2 mr-3 absolute right-0 transition-all duration-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-primary-blue-default dark:hover:text-primary-blue-400 text-gray-600 dark:text-gray-400 rounded-full flex items-center",
                                     showPassword === true
                                         ? "opacity-100 z-10"
                                         : "opacity-0 pointer-event-none z-0"
@@ -137,8 +137,8 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
                             </div>
                             {isCapsLock && (
                                 <BsCapslockFill
-                                    className="w-4 h-4 absolute right-6"
-                                    color="#8093AB"
+                                    className="w-4 h-4 absolute right-6 text-yellow-500 dark:text-yellow-400"
+                                    title="Caps Lock is on"
                                 />
                             )}
                         </div>

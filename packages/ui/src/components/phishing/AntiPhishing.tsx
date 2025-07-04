@@ -28,11 +28,12 @@ const AntiPhishing: FunctionComponent<{
                         target="_blank"
                         rel="noreferrer"
                         href="https://blockwallet.io/docs/what-is-phishing-protection"
+                        className="block transition-transform duration-200 hover:scale-105"
                     >
                         <img
                             src={image}
-                            className="rounded-lg border border-primary-200 hover:border-primary-blue-default"
-                            alt="anti-phishing"
+                            className="rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary-blue-default dark:hover:border-primary-blue-400 shadow-sm hover:shadow-md transition-all duration-200"
+                            alt="Anti-phishing protection image"
                             width={imgSize}
                             height={imgSize}
                         />
@@ -40,7 +41,7 @@ const AntiPhishing: FunctionComponent<{
                     <Tooltip
                         className={translateTooltip}
                         content={
-                            <div className="flex flex-col items-start text-xs text-white-500 font-semibold p-1">
+                            <div className="flex flex-col items-start text-xs text-white font-semibold p-1">
                                 <div className="flex flex-row items-end space-x-7">
                                     <span>Phishing Protection</span>{" "}
                                 </div>

@@ -12,17 +12,22 @@ const Spinner: FunctionComponent<{
         role="alert"
         aria-busy="true"
         aria-label="loading"
+        className="inline-flex items-center"
     >
         <CgSpinner
             size={size}
-            className="animate-spin text-primary-black-default opacity-50"
+            className={`animate-spin ${color ? '' : 'text-gray-600 dark:text-gray-400'}`}
             style={{
                 display: "inline",
                 marginRight: text && iconTextSeparation,
+                color: color || undefined,
             }}
-            color={color}
         />
-        {text}
+        {text && (
+            <span className="text-gray-600 dark:text-gray-400 ml-2">
+                {text}
+            </span>
+        )}
     </div>
 )
 

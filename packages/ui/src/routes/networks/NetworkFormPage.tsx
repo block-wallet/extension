@@ -14,7 +14,6 @@ import {
     getDefaultRpc,
     getSpecificChainDetails,
     removeNetwork,
-    changeNetwork,
 } from "../../context/commActions"
 import WaitingDialog from "../../components/dialog/WaitingDialog"
 import useAsyncInvoke from "../../util/hooks/useAsyncInvoke"
@@ -34,8 +33,8 @@ import ConfirmDialog, {
 } from "../../components/dialog/ConfirmDialog"
 import { ChainListItem } from "@block-wallet/background/utils/chainlist"
 import { parseChainId } from "../../util/networkUtils"
-import CollapsableMessage from "../../components/CollapsableMessage"
-import { AiOutlineWarning } from "react-icons/ai"
+import { AiOutlineWarning, AiOutlineInfoCircle } from "react-icons/ai"
+import { HiOutlineExternalLink } from "react-icons/hi"
 import usePersistedLocalStorageForm from "../../util/hooks/usePersistedLocalStorageForm"
 
 const getStatusFromEnpoint = (
@@ -80,7 +79,110 @@ interface Props {
     title: string
 }
 
-// new contact schema
+const SecurityWarning = ({ isCollapsed, onToggle }: { isCollapsed: boolean; onToggle: () => void }) => (
+    <div className="mb-6">
+        <div
+            className={`
+                rounded-xl border transition-all duration-200 ease-in-out cursor-pointer
+                ${isCollapsed
+                    ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 dark:hover:bg-amber-900/30'
+                    : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50'
+                }
+            `}
+            onClick={onToggle}
+        >
+            <div className="p-4 flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                    <div className="flex-shrink-0">
+                        <AiOutlineWarning className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-100">
+                            Security Notice
+                        </h4>
+                        <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                            Custom networks are not verified by BlockWallet
+                        </p>
+                    </div>
+                </div>
+                <div className={`transform transition-transform duration-200 ${isCollapsed ? 'rotate-0' : 'rotate-180'}`}>
+                    <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+            </div>
+            {!isCollapsed && (
+                <div className="px-4 pb-4 border-t border-amber-200 dark:border-amber-800/50 mt-4 pt-4">
+                    <div className="text-sm text-amber-800 dark:text-amber-200 space-y-2">
+                        <p>
+                            BlockWallet does not verify custom networks. Please ensure you understand{" "}
+                            <a
+                                className="underline font-medium hover:no-underline text-amber-900 dark:text-amber-100"
+                                href={LINKS.ARTICLES.CUSTOM_NETWORK_RISKS}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                the potential risks
+                            </a>{" "}
+                            that adding a custom network may pose.
+                        </p>
+                        <div className="flex items-start space-x-2 mt-3 p-3 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                            <AiOutlineWarning className="w-4 h-4 text-amber-700 dark:text-amber-300 mt-0.5 flex-shrink-0" />
+                            <div className="text-xs text-amber-800 dark:text-amber-200">
+                                <strong>Important:</strong> Only add networks from trusted sources. Malicious networks can steal your funds or compromise your privacy.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    </div>
+)
+
+const FormField = ({
+    children,
+    label,
+    required = false,
+    error,
+    warning,
+    info
+}: {
+    children: React.ReactNode
+    label: string
+    required?: boolean
+    error?: string
+    warning?: string
+    info?: string
+}) => (
+    <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+            {label}
+            {required && <span className="text-red-500 ml-1">*</span>}
+        </label>
+        {children}
+        {error && (
+            <div className="flex items-start space-x-2 text-red-600 dark:text-red-400 text-xs">
+                <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <span>{error}</span>
+            </div>
+        )}
+        {warning && !error && (
+            <div className="flex items-start space-x-2 text-amber-600 dark:text-amber-400 text-xs">
+                <AiOutlineWarning className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <span>{warning}</span>
+            </div>
+        )}
+        {info && !error && !warning && (
+            <div className="flex items-start space-x-2 text-blue-600 dark:text-blue-400 text-xs">
+                <AiOutlineInfoCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <span>{info}</span>
+            </div>
+        )}
+    </div>
+)
+
 const networkSchema = yup.object({
     name: yup
         .string()
@@ -142,6 +244,7 @@ const NetworkFormPage = ({
     const [rpcChainId, setRpcChainId] = useState<number>(0)
     const [isNativelySupported, setIsNativelySupported] =
         useState<boolean>(false)
+    const [isWarningCollapsed, setIsWarningCollapsed] = useState<boolean>(true)
     const {
         availableNetworks,
         providerStatus: { isCurrentProviderOnline },
@@ -161,7 +264,6 @@ const NetworkFormPage = ({
         getDefaultRpc(network?.chainId).then((defaultRpc) => {
             setDefaultRpcUrl(defaultRpc)
         })
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const {
@@ -204,12 +306,11 @@ const NetworkFormPage = ({
         const derivateRPCStatusFromWatchers = async () => {
             try {
                 const parsedChainId = parseChainId(watchChainId)
-                //if there is a value in the chain Id, try to fetch the network details
                 if (parsedChainId) {
                     if (
                         !chainDetailsRef.current ||
                         Number(chainDetailsRef.current?.chainId) !==
-                            parsedChainId
+                        parsedChainId
                     ) {
                         chainDetailsRef.current = await getSpecificChainDetails(
                             parsedChainId
@@ -219,7 +320,6 @@ const NetworkFormPage = ({
                     chainDetailsRef.current = null
                 }
 
-                //if the rpcUrl or the chainId is empty, do not put an error message.
                 if (!watchRPCUrl || !watchChainId) {
                     setRpcValidationStatus(RPCUrlValidation.EMPTY)
                     return
@@ -230,7 +330,6 @@ const NetworkFormPage = ({
                     return
                 }
                 try {
-                    //Unknown chain id, validation cannot be done.
                     if (!chainDetailsRef.current) {
                         setRpcValidationStatus(
                             RPCUrlValidation.EMPTY_UNKNOWN_CHAIN
@@ -243,25 +342,22 @@ const NetworkFormPage = ({
                     setRpcValidationStatus(
                         Number(chainId) === parsedChainId
                             ? getStatusFromEnpoint(
-                                  chainDetailsRef.current,
-                                  watchRPCUrl
-                              )
+                                chainDetailsRef.current,
+                                watchRPCUrl
+                            )
                             : RPCUrlValidation.CHAIN_ID_DOESNT_MATCH
                     )
                 } catch (e) {
-                    //Invalid URL if we were not able to fetch the chainId using the rpcUrl.
                     setRpcValidationStatus(RPCUrlValidation.INVALID_ENDPOINT)
                 }
             } finally {
                 setIsValidating(false)
             }
         }
-        //debounce the state watchers
         ref = setTimeout(derivateRPCStatusFromWatchers, 300)
         return () => {
             ref && clearTimeout(ref!)
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [watchChainId, watchRPCUrl, setIsValidating])
 
     const onSave = handleSubmit(async (data: networkFormData) => {
@@ -305,6 +401,7 @@ const NetworkFormPage = ({
             )
         }
     })
+
     useEffect(() => {
         const existingNetwork = Object.values(availableNetworks).find(
             (network) => network.chainId === Number(watchChainId)
@@ -312,8 +409,8 @@ const NetworkFormPage = ({
         setIsNativelySupported(
             existingNetwork ? existingNetwork.nativelySupported : false
         )
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [watchChainId])
+
     const deleteNetwork = () => {
         removeNetworkInvoke.run(removeNetwork(network!.chainId!))
     }
@@ -327,7 +424,7 @@ const NetworkFormPage = ({
     const invalidCurrencySymbolWarn =
         chainDetailsRef.current && watchCurrencySymbol
             ? chainDetailsRef.current.nativeCurrency.symbol !==
-              watchCurrencySymbol
+            watchCurrencySymbol
             : false
 
     const networkAlreadyExistError = useMemo(() => {
@@ -338,7 +435,6 @@ const NetworkFormPage = ({
             return existingNetwork && existingNetwork.enable
         }
         return false
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [watchChainId, isEdit])
 
     const networkNameInUseError = useMemo(() => {
@@ -352,7 +448,6 @@ const NetworkFormPage = ({
         )
     }, [availableNetworks, watchChainId, watchName])
 
-    //Do not allow to edit the selected network unless the provider is down.
     const editingSelectedNetwork =
         isEdit &&
         selectedChainId === Number(watchChainId) &&
@@ -380,31 +475,29 @@ const NetworkFormPage = ({
                     actions={
                         !editingSelectedNetwork && canDelete
                             ? [
-                                  <div
-                                      key={1}
-                                      onClick={() => {
-                                          setConfirmationDialog({
-                                              title: "Delete Network",
-                                              message: `Are you sure you want to delete ${network?.name}?`,
-                                              open: true,
-                                              onConfirm: () => {
-                                                  deleteNetwork()
-                                              },
-                                          })
-                                      }}
-                                      className={
-                                          "text-red-500 cursor-pointer flex flex-row items-center p-2 hover:bg-gray-100 rounded-md w-40"
-                                      }
-                                  >
-                                      <div className="pl-1 pr-1 w-8">
-                                          <Icon
-                                              name={IconName.TRASH_BIN}
-                                              profile="danger"
-                                          />
-                                      </div>
-                                      <span>Delete Network</span>
-                                  </div>,
-                              ]
+                                <div
+                                    key={1}
+                                    onClick={() => {
+                                        setConfirmationDialog({
+                                            title: "Delete Network",
+                                            message: `Are you sure you want to delete ${network?.name}?`,
+                                            open: true,
+                                            onConfirm: () => {
+                                                deleteNetwork()
+                                            },
+                                        })
+                                    }}
+                                    className="text-red-500 dark:text-red-400 cursor-pointer flex flex-row items-center p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg w-40 transition-colors duration-150"
+                                >
+                                    <div className="pl-1 pr-1 w-8">
+                                        <Icon
+                                            name={IconName.TRASH_BIN}
+                                            profile="danger"
+                                        />
+                                    </div>
+                                    <span>Delete Network</span>
+                                </div>,
+                            ]
                             : undefined
                     }
                 />
@@ -413,265 +506,283 @@ const NetworkFormPage = ({
                 editMode !== "disabled" && !editingSelectedNetwork ? (
                     <PopupFooter>
                         <ButtonWithLoading
-                            label="Save"
+                            label={isEdit ? "Save Changes" : "Add Network"}
                             type="submit"
                             disabled={!canSubmitForm}
                             onClick={onSave}
+                            buttonClass="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-150"
                         />
                     </PopupFooter>
                 ) : null
             }
         >
-            {!isNativelySupported && (
-                <CollapsableMessage
-                    dialog={{
-                        title: "Warning",
-                        message: (
-                            <span>
-                                BlockWallet does not verify custom networks.
-                                Make sure you understand{" "}
-                                <a
-                                    className="underline text-primary-blue-default hover:text-primary-blue-hover"
-                                    href={LINKS.ARTICLES.CUSTOM_NETWORK_RISKS}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                >
-                                    the potential risks adding a custom network
-                                    may pose
-                                </a>
-                                .
-                            </span>
-                        ),
-                    }}
-                    isCollapsedByDefault
-                    collapsedMessage={
-                        <div className="text-center  bg-yellow-200 hover:bg-yellow-100 opacity-90  w-full p-2 space-x-2 flex tems-center font-semibold justify-center">
-                            <AiOutlineWarning className="w-4 h-4 yellow-300" />
-                            <span className="text-xs text-yellow-900">
-                                <span className="font-semibold">
-                                    BlockWallet does not verify custom networks.
-                                </span>
-                            </span>
-                        </div>
-                    }
-                />
-            )}
-            <WaitingDialog
-                open={!addNetworkInvoke.isIdle}
-                status={
-                    addNetworkInvoke.isError
-                        ? "error"
-                        : addNetworkInvoke.isSuccess
-                        ? "success"
-                        : "loading"
-                }
-                titles={{
-                    loading: isEdit ? "Editing..." : "Adding...",
-                    error: "Error",
-                    success: "Success",
-                }}
-                texts={{
-                    loading: isEdit
-                        ? "Editing network"
-                        : "Adding a new network",
-                    error:
-                        addNetworkInvoke.error?.message ||
-                        "Something went wrong while persisting the network",
-                    success: isEdit ? "Network edited" : "Network added",
-                }}
-                timeout={1500}
-                onDone={() => {
-                    if (addNetworkInvoke.isError) {
-                        return addNetworkInvoke.reset()
-                    }
+            <div className="bg-white dark:bg-gray-900 min-h-full">
+                {!isNativelySupported && (
+                    <SecurityWarning
+                        isCollapsed={isWarningCollapsed}
+                        onToggle={() => setIsWarningCollapsed(!isWarningCollapsed)}
+                    />
+                )}
 
-                    history.push(
-                        isEdit || !switchToNetwork ? "/settings/networks" : "/"
-                    )
-                }}
-            />
-            <WaitingDialog
-                open={!removeNetworkInvoke.isIdle}
-                status={
-                    removeNetworkInvoke.isError
-                        ? "error"
-                        : removeNetworkInvoke.isSuccess
-                        ? "success"
-                        : "loading"
-                }
-                titles={{
-                    loading: "Deleting...",
-                    error: "Error",
-                    success: "Success",
-                }}
-                texts={{
-                    loading: isEdit
-                        ? "Editing network"
-                        : "Adding a new network",
-                    error:
-                        removeNetworkInvoke.error?.message ||
-                        "Something went wrong while deleting the network",
-                    success: "Network deleted",
-                }}
-                timeout={1500}
-                onDone={() => {
-                    if (addNetworkInvoke.isError) {
-                        return addNetworkInvoke.reset()
+                <WaitingDialog
+                    open={!addNetworkInvoke.isIdle}
+                    status={
+                        addNetworkInvoke.isError
+                            ? "error"
+                            : addNetworkInvoke.isSuccess
+                                ? "success"
+                                : "loading"
                     }
-                    history.push("/settings/networks")
-                }}
-                showCloseButton
-            />
-            <ConfirmDialog
-                title={confirmationDialog.title!}
-                message={confirmationDialog.message!}
-                open={confirmationDialog.open}
-                confirmText={confirmationDialog.confirmText}
-                cancelText={confirmationDialog.cancelText}
-                onClose={
-                    confirmationDialog.onClose ??
-                    (() => setConfirmationDialog({ open: false }))
-                }
-                onConfirm={confirmationDialog.onConfirm!}
-            />
-            <div className="flex flex-col w-full justify-between flex-1 h-full !-mt-3">
-                <div className="flex flex-col flex-1 p-6 space-y-3">
-                    <div className="flex flex-col space-y-1">
-                        <TextInput
-                            appearance="outline"
+                    titles={{
+                        loading: isEdit ? "Saving Changes..." : "Adding Network...",
+                        error: "Error",
+                        success: "Success",
+                    }}
+                    texts={{
+                        loading: isEdit
+                            ? "Updating network configuration"
+                            : "Adding new network to your wallet",
+                        error:
+                            addNetworkInvoke.error?.message ||
+                            "Something went wrong while saving the network",
+                        success: isEdit ? "Network updated successfully" : "Network added successfully",
+                    }}
+                    timeout={1500}
+                    onDone={() => {
+                        if (addNetworkInvoke.isError) {
+                            return addNetworkInvoke.reset()
+                        }
+
+                        history.push(
+                            isEdit || !switchToNetwork ? "/settings/networks" : "/"
+                        )
+                    }}
+                />
+
+                <WaitingDialog
+                    open={!removeNetworkInvoke.isIdle}
+                    status={
+                        removeNetworkInvoke.isError
+                            ? "error"
+                            : removeNetworkInvoke.isSuccess
+                                ? "success"
+                                : "loading"
+                    }
+                    titles={{
+                        loading: "Deleting...",
+                        error: "Error",
+                        success: "Success",
+                    }}
+                    texts={{
+                        loading: "Removing network from your wallet",
+                        error:
+                            removeNetworkInvoke.error?.message ||
+                            "Something went wrong while deleting the network",
+                        success: "Network deleted successfully",
+                    }}
+                    timeout={1500}
+                    onDone={() => {
+                        if (removeNetworkInvoke.isError) {
+                            return removeNetworkInvoke.reset()
+                        }
+                        history.push("/settings/networks")
+                    }}
+                    showCloseButton
+                />
+
+                <ConfirmDialog
+                    title={confirmationDialog.title!}
+                    message={confirmationDialog.message!}
+                    open={confirmationDialog.open}
+                    confirmText={confirmationDialog.confirmText}
+                    cancelText={confirmationDialog.cancelText}
+                    onClose={
+                        confirmationDialog.onClose ??
+                        (() => setConfirmationDialog({ open: false }))
+                    }
+                    onConfirm={confirmationDialog.onConfirm!}
+                />
+
+                <div className="flex flex-col w-full justify-between flex-1 h-full">
+                    <div className="flex flex-col flex-1 p-6 space-y-6">
+                        <FormField
                             label="Network Name"
-                            {...register("name")}
-                            placeholder="Ethereum Mainnet"
+                            required
                             error={
                                 networkNameInUseError
                                     ? "This name is already in use."
                                     : errors.name?.message
                             }
-                            autoFocus={true}
-                            maxLength={40}
-                            defaultValue={network?.name}
-                            readOnly={
-                                editMode === "disabled" ||
-                                editingSelectedNetwork
-                            }
-                        />
-                    </div>
-                    <div>
-                        <TextInput
-                            appearance="outline"
+                        >
+                            <TextInput
+                                appearance="outline"
+                                {...register("name")}
+                                placeholder="e.g., Ethereum Mainnet"
+                                autoFocus={true}
+                                maxLength={40}
+                                defaultValue={network?.name}
+                                readOnly={
+                                    editMode === "disabled" ||
+                                    editingSelectedNetwork
+                                }
+                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-150"
+                            />
+                        </FormField>
+
+                        <FormField
                             label="RPC URL"
-                            {...register("rpcUrl")}
-                            placeholder="https://..."
+                            required
                             error={errors.rpcUrl?.message}
-                            autoFocus={true}
-                            defaultValue={network?.rpcUrl}
-                            readOnly={
-                                editMode === "disabled" ||
-                                editingSelectedNetwork
-                            }
-                            endLabel={
-                                <RPCValidationEndLabelInfo
-                                    currentChainId={watchChainId}
-                                    rpcChainId={rpcChainId}
-                                    isValidating={isValidating}
-                                    rpcValidation={rpcValidationStatus}
+                        >
+                            <div className="space-y-3">
+                                <TextInput
+                                    appearance="outline"
+                                    {...register("rpcUrl")}
+                                    placeholder="https://..."
+                                    defaultValue={network?.rpcUrl}
+                                    readOnly={
+                                        editMode === "disabled" ||
+                                        editingSelectedNetwork
+                                    }
+                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-150"
+                                    endLabel={
+                                        <RPCValidationEndLabelInfo
+                                            currentChainId={watchChainId}
+                                            rpcChainId={rpcChainId}
+                                            isValidating={isValidating}
+                                            rpcValidation={rpcValidationStatus}
+                                        />
+                                    }
                                 />
-                            }
-                        />
-                        {defaultRpcUrl && !isUsingDefaultRPC && (
-                            <div className="flex flex-col items-end mt-2 -mb-4">
-                                <span
-                                    className="text-xs font-semibold text-primary-blue-default cursor-pointer hover:underline"
+                                {defaultRpcUrl && !isUsingDefaultRPC && (
+                                    <div className="flex justify-end">
+                                        <button
+                                            type="button"
+                                            className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors duration-150"
+                                            onClick={() => {
+                                                setValue("rpcUrl", defaultRpcUrl)
+                                            }}
+                                        >
+                                            Reset to default RPC
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </FormField>
+
+                        <FormField
+                            label="Chain ID"
+                            required
+                            error={errors.chainId?.message}
+                            info="Used for signing transactions. Must match the chain ID from the RPC endpoint."
+                        >
+                            <div className="relative">
+                                <TextInput
+                                    appearance="outline"
+                                    {...register("chainId")}
+                                    placeholder="e.g., 1 or 0x1"
+                                    defaultValue={network?.chainId}
+                                    readOnly={editMode !== "all"}
+                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-150"
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                                     onClick={() => {
-                                        setValue("rpcUrl", defaultRpcUrl)
+                                        window.open(
+                                            LINKS.ARTICLES.CUSTOM_NETWORK_RISKS,
+                                            "_blank"
+                                        )
                                     }}
                                 >
-                                    Revert to default RPC
-                                </span>
+                                    <HiOutlineExternalLink className="w-4 h-4" />
+                                </button>
                             </div>
+                        </FormField>
+
+                        <FormField
+                            label="Currency Symbol"
+                            required
+                            error={errors.symbol?.message}
+                            warning={
+                                invalidCurrencySymbolWarn
+                                    ? `Chain ${watchChainId} typically uses ${chainDetailsRef.current?.nativeCurrency.symbol} as currency symbol.`
+                                    : undefined
+                            }
+                        >
+                            <TextInput
+                                appearance="outline"
+                                {...register("symbol")}
+                                placeholder="e.g., ETH"
+                                defaultValue={network?.symbol}
+                                readOnly={editMode !== "all"}
+                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-150"
+                            />
+                        </FormField>
+
+                        <FormField
+                            label="Block Explorer URL"
+                            error={errors.blockExplorerUrl?.message}
+                            info="Optional. Used to view transactions and addresses."
+                        >
+                            <TextInput
+                                appearance="outline"
+                                {...register("blockExplorerUrl")}
+                                placeholder="https://etherscan.io (optional)"
+                                defaultValue={network?.blockExplorerUrl}
+                                readOnly={
+                                    editMode === "disabled" || editingSelectedNetwork
+                                }
+                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors duration-150"
+                            />
+                        </FormField>
+
+                        <div className="space-y-2">
+                            <ToggleButton
+                                label="Testnet"
+                                defaultChecked={!!network?.isTestnet}
+                                inputName="test"
+                                onToggle={(isChecked) => {
+                                    setValue("test", isChecked)
+                                }}
+                                readOnly={isNativelySupported}
+                                disabled={isNativelySupported}
+                            />
+                            <p className="text-xs text-gray-600 dark:text-gray-400 ml-4">
+                                Mark this as a testnet if it's used for testing purposes
+                            </p>
+                        </div>
+
+                        {networkAlreadyExistError && (
+                            <Alert type="error">
+                                <div className="flex items-start space-x-2">
+                                    <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                    </svg>
+                                    <div>
+                                        <span className="font-semibold">Network already exists</span>
+                                        <p className="text-sm mt-1">
+                                            This network is already in your wallet. Try editing the existing network instead.
+                                        </p>
+                                    </div>
+                                </div>
+                            </Alert>
+                        )}
+
+                        {editingSelectedNetwork && (
+                            <Alert type="warn">
+                                <div className="flex items-start space-x-2">
+                                    <AiOutlineWarning className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                        <span className="font-semibold">Cannot edit active network</span>
+                                        <p className="text-sm mt-1">
+                                            You cannot edit this network while it's currently selected. Switch to another network first.
+                                        </p>
+                                    </div>
+                                </div>
+                            </Alert>
                         )}
                     </div>
-
-                    <TextInput
-                        appearance="outline"
-                        label="Chain ID"
-                        {...register("chainId")}
-                        placeholder="Network Chain ID"
-                        error={errors.chainId?.message}
-                        autoFocus={true}
-                        onClickInfo={() => {
-                            window.open(
-                                LINKS.ARTICLES.CUSTOM_NETWORK_RISKS,
-                                "_blank"
-                            )
-                        }}
-                        info={
-                            <span className="p-1">
-                                The chain ID is used for signing transactions
-                                and it must match with the chain ID returned by
-                                the RPC endpoint configured above. You can enter
-                                a decimal or a{" "}
-                                <span className="font-semibold">0x</span>{" "}
-                                prefixed hexadecimal number.
-                            </span>
-                        }
-                        defaultValue={network?.chainId}
-                        readOnly={editMode !== "all"}
-                    />
-                    <TextInput
-                        appearance="outline"
-                        label="Currency Symbol"
-                        {...register("symbol")}
-                        placeholder="ETH"
-                        error={errors.symbol?.message}
-                        warning={
-                            invalidCurrencySymbolWarn
-                                ? `Chain ${watchChainId} uses ${chainDetailsRef.current?.nativeCurrency.symbol} as currency symbol.`
-                                : undefined
-                        }
-                        autoFocus={true}
-                        defaultValue={network?.symbol}
-                        readOnly={editMode !== "all"}
-                    />
-                    <TextInput
-                        appearance="outline"
-                        label="Block Explorer URL (Optional)"
-                        {...register("blockExplorerUrl")}
-                        placeholder="https://..."
-                        error={errors.blockExplorerUrl?.message}
-                        autoFocus={true}
-                        defaultValue={network?.blockExplorerUrl}
-                        readOnly={
-                            editMode === "disabled" || editingSelectedNetwork
-                        }
-                    />
-                    <ToggleButton
-                        label="Testnet"
-                        defaultChecked={!!network?.isTestnet}
-                        inputName="test"
-                        onToggle={(isChecked) => {
-                            setValue("test", isChecked)
-                        }}
-                        readOnly={isNativelySupported}
-                        disabled={isNativelySupported}
-                    />
-                    {networkAlreadyExistError && (
-                        <Alert type="error">
-                            <span className="font-semibold">Error: </span>
-                            <span className="font-medium">
-                                The network you're trying to add already exists.
-                                Try editing the existing network instead.
-                            </span>
-                        </Alert>
-                    )}
-                    {editingSelectedNetwork && (
-                        <Alert type="warn">
-                            <span className="font-medium">
-                                You can't edit this network while it is
-                                selected.
-                            </span>
-                        </Alert>
-                    )}
                 </div>
             </div>
         </PopupLayout>

@@ -6,13 +6,11 @@ import Dialog from "../dialog/Dialog"
 
 import AnimatedIcon, { AnimatedIconName } from "../AnimatedIcon"
 
-// icons
 import CloseIcon from "../icons/CloseIcon"
 import GasIcon from "../icons/GasIcon"
 import Tooltip from "../label/Tooltip"
 import { AiFillInfoCircle } from "react-icons/ai"
 
-// hooks
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import {
@@ -76,8 +74,8 @@ const getDisplayGasPrices = (
 
 const GasData = ({ children }: { children: React.ReactNode }) => {
     return (
-        <div className="flex flex-col p-3 space-y-1">
-            <ul className="list-none">{children}</ul>
+        <div className="flex flex-col p-3 space-y-1 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+            <ul className="list-none space-y-1">{children}</ul>
         </div>
     )
 }
@@ -87,9 +85,9 @@ const GasDataInfo: FC<{ label: string; value: string }> = ({
     value,
 }) => {
     return (
-        <li className="flex flex-row space-x-2 justify-between space-y-1">
-            <span className="font-semibold text-xs">{label}:</span>
-            <span className="text-xs text-primary-grey-dark">{value}</span>
+        <li className="flex flex-row justify-between items-center">
+            <span className="font-semibold text-xs text-gray-700 dark:text-gray-300">{label}:</span>
+            <span className="text-xs text-gray-600 dark:text-gray-400">{value}</span>
         </li>
     )
 }
@@ -98,17 +96,23 @@ const INFO_BY_LEVEL = {
     slow: {
         icon: scooter,
         title: "Low",
-        color: "text-green-500",
+        color: "text-green-600 dark:text-green-400",
+        bgColor: "bg-green-50 dark:bg-green-900/20",
+        borderColor: "border-green-200 dark:border-green-800/50",
     },
     average: {
         icon: car,
         title: "Medium",
-        color: "text-yellow-500",
+        color: "text-amber-600 dark:text-amber-400",
+        bgColor: "bg-amber-50 dark:bg-amber-900/20",
+        borderColor: "border-amber-200 dark:border-amber-800/50",
     },
     fast: {
         icon: plane,
         title: "Fast",
-        color: "text-red-600",
+        color: "text-red-600 dark:text-red-400",
+        bgColor: "bg-red-50 dark:bg-red-900/20",
+        borderColor: "border-red-200 dark:border-red-800/50",
     },
 }
 
@@ -164,11 +168,10 @@ const GasPricesInfo: FC = () => {
 
     return (
         <>
-            {/* Label */}
             <div
                 className={`flex flex-row items-center space-x-1 ${showGasLevels
-                        ? "transition duration-300 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
-                        : ""
+                    ? "transition duration-300 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
+                    : ""
                     }`}
                 onClick={() => {
                     if (showGasLevels) setActive(!active)
@@ -190,137 +193,108 @@ const GasPricesInfo: FC = () => {
                 </div>
             </div>
 
-            {/* Modal */}
-            <div style={undefined}>
-                <Dialog open={active} onClickOutside={() => setActive(false)}>
-                    <span className="absolute top-0 right-0 p-4 z-50">
-                        <div
-                            onClick={() => setActive(false)}
-                            className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
-                        >
-                            <CloseIcon size="10" />
+            <Dialog open={active} onClickOutside={() => setActive(false)}>
+                <span className="absolute top-0 right-0 p-4 z-50">
+                    <div
+                        onClick={() => setActive(false)}
+                        className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 dark:text-gray-100 transition duration-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                        <CloseIcon size="10" />
+                    </div>
+                </span>
+                <div className="flex flex-col w-full space-y-4">
+                    <div className="flex flex-row items-center space-x-3 px-3">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            Gas Prices
+                        </h2>
+                        <div className="group relative">
+                            <a
+                                href="https://ethereum.org/en/developers/docs/gas/"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center"
+                            >
+                                <AiFillInfoCircle className="w-5 h-5 text-gray-600 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-150" />
+                            </a>
+                            <Tooltip
+                                content={
+                                    <div className="flex flex-col font-normal items-start text-xs text-white space-y-1">
+                                        <span>Gas is used to operate on the network.</span>
+                                        <span>Click on this icon to learn more.</span>
+                                    </div>
+                                }
+                            />
                         </div>
-                    </span>
-                    <div className="flex flex-col w-full space-y-2">
-                        <div className="z-10 flex flex-row items-center p-2 bg-white bg-opacity-75">
-                            <h2 className="px-2 pr-0 text-lg font-semibold">
-                                Gas Prices
-                            </h2>
-                            <div className="group relative">
-                                <a
-                                    href="https://ethereum.org/en/developers/docs/gas/"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                >
-                                    <AiFillInfoCircle
-                                        size={26}
-                                        className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
-                                    />
-                                </a>
-                                <Tooltip
-                                    content={
-                                        <div className="flex flex-col font-normal items-start text-xs text-white-500">
-                                            <div className="flex flex-row items-end space-x-7">
-                                                <span>
-                                                    Gas is used to operate on
-                                                    the network.
-                                                </span>{" "}
-                                            </div>
-                                            <div className="flex flex-row items-end space-x-4">
-                                                <span>
-                                                    Click on this icon to learn
-                                                    more.
-                                                </span>{" "}
-                                            </div>
-                                        </div>
-                                    }
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <div className="flex flex-col px-4 space-y-4">
-                                {displayGasPrices &&
-                                    Object.entries(displayGasPrices).map(
-                                        ([level, gasPriceData]) => {
-                                            const info =
-                                                INFO_BY_LEVEL[
-                                                level as keyof DisplayGasPricesLevels
-                                                ]
-                                            return (
-                                                <div
-                                                    className="flex flex-col border border-primary-grey-hover rounded-lg space-y-1"
-                                                    key={level}
-                                                >
-                                                    <div
-                                                        className={classnames(
-                                                            "flex flex-row  items-center space-x-1 p-3",
-                                                            isEIP1559Compatible &&
-                                                            "border-b border-primary-grey-hover"
-                                                        )}
-                                                    >
+                    </div>
+
+                    <div className="px-4 space-y-3">
+                        {displayGasPrices &&
+                            Object.entries(displayGasPrices).map(
+                                ([level, gasPriceData]) => {
+                                    const info = INFO_BY_LEVEL[level as keyof DisplayGasPricesLevels]
+                                    return (
+                                        <div
+                                            className={`border rounded-xl transition-all duration-200 ${info.borderColor} ${info.bgColor}`}
+                                            key={level}
+                                        >
+                                            <div className={classnames(
+                                                "flex flex-row items-center justify-between p-4",
+                                                isEIP1559Compatible && "border-b border-gray-200 dark:border-gray-700"
+                                            )}>
+                                                <div className="flex items-center space-x-3">
+                                                    <div className="flex items-center space-x-2">
                                                         <img
                                                             src={info.icon}
                                                             alt={`gas-prices-${info.title}`}
-                                                            className="mr-1"
+                                                            className="w-5 h-5"
                                                         />
-                                                        <span className="font-semibold text-xs">
-                                                            {info.title} /
-                                                        </span>
-                                                        <span
-                                                            className={classnames(
-                                                                "font-semibold text-xs ml-6 flex-1"
-                                                            )}
-                                                        >
-                                                            {
-                                                                gasPriceData.totalGwei
-                                                            }{" "}
-                                                            GWEI
-                                                        </span>
-                                                        <span className="text-primary-grey-dark text-xs">
-                                                            ~
-                                                            {gasPriceToNativeCurrency(
-                                                                gasPriceData.totalTransactionCost,
-                                                                {
-                                                                    exchangeRates,
-                                                                    localeInfo:
-                                                                    {
-                                                                        currency:
-                                                                            nativeCurrency,
-                                                                        language:
-                                                                            localeInfo,
-                                                                    },
-                                                                    minValue: 0.01,
-                                                                    networkNativeCurrency:
-                                                                    {
-                                                                        symbol: networkNativeCurrency.symbol,
-                                                                        decimals:
-                                                                            nativeCurrencyDecimals,
-                                                                    },
-                                                                }
-                                                            )}
+                                                        <span className={`font-semibold text-sm ${info.color}`}>
+                                                            {info.title}
                                                         </span>
                                                     </div>
-                                                    {isEIP1559Compatible && (
-                                                        <GasData>
-                                                            <GasDataInfo
-                                                                label="Base Fee"
-                                                                value={`${gasPriceData.baseFee} GWEI`}
-                                                            />
-                                                            <GasDataInfo
-                                                                label="Tip"
-                                                                value={`${gasPriceData.priority} GWEI`}
-                                                            />
-                                                        </GasData>
-                                                    )}
+                                                    <span className="font-medium text-sm text-gray-900 dark:text-gray-100">
+                                                        {gasPriceData.totalGwei} GWEI
+                                                    </span>
                                                 </div>
-                                            )
-                                        }
-                                    )}
-                            </div>
-                        </div>
+                                                <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                                    ~{gasPriceToNativeCurrency(
+                                                        gasPriceData.totalTransactionCost,
+                                                        {
+                                                            exchangeRates,
+                                                            localeInfo: {
+                                                                currency: nativeCurrency,
+                                                                language: localeInfo,
+                                                            },
+                                                            minValue: 0.01,
+                                                            networkNativeCurrency: {
+                                                                symbol: networkNativeCurrency.symbol,
+                                                                decimals: nativeCurrencyDecimals,
+                                                            },
+                                                        }
+                                                    )}
+                                                </span>
+                                            </div>
+                                            {isEIP1559Compatible && (
+                                                <div className="p-4 pt-3">
+                                                    <GasData>
+                                                        <GasDataInfo
+                                                            label="Base Fee"
+                                                            value={`${gasPriceData.baseFee} GWEI`}
+                                                        />
+                                                        <GasDataInfo
+                                                            label="Tip"
+                                                            value={`${gasPriceData.priority} GWEI`}
+                                                        />
+                                                    </GasData>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )
+                                }
+                            )}
                     </div>
-                </Dialog>
-            </div>
+                </div>
+            </Dialog>
         </>
     )
 }

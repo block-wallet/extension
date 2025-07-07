@@ -10,7 +10,6 @@ import { useForm } from "react-hook-form"
 import { GasPriceLevels } from "@block-wallet/background/controllers/GasPricesController"
 import { TransactionFeeData } from "@block-wallet/background/controllers/erc-20/transactions/SignedTransaction"
 
-// Components
 import HorizontalSelect from "../input/HorizontalSelect"
 import Tooltip from "../../components/label/Tooltip"
 import { AiFillInfoCircle } from "react-icons/ai"
@@ -20,7 +19,6 @@ import Dialog from "../dialog/Dialog"
 import EndLabel from "../input/EndLabel"
 import { ButtonWithLoading as Button } from "../button/ButtonWithLoading"
 
-// Utils
 import { capitalize } from "../../util/capitalize"
 import {
     handleKeyDown,
@@ -31,12 +29,9 @@ import {
 import { useOnClickOutside } from "../../util/useOnClickOutside"
 import { formatRounded } from "../../util/formatRounded"
 
-// Assets
-import { Classes } from "../../styles"
 import { ArrowUpDown } from "../icons/ArrowUpDown"
 import CloseIcon from "../icons/CloseIcon"
 
-// Context
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
@@ -60,7 +55,6 @@ interface GasComponentProps {
 interface GasPriceOption {
     label: string
     gasFees: TransactionFeeData
-    //EIP-1559: range
     totalETHCostRange: string
     totalNativeCurrencyCostRange: string
     totalETHCost: string
@@ -93,77 +87,113 @@ const getTransactionSpeeds = (gasPrices: GasPriceLevels): TransactionSpeed => {
         },
     }
 }
-// Basic Tab. Shows 3 levels of gas calculated with values received from state.
+
+const FormField = ({
+    children,
+    label,
+    tooltip,
+    error,
+    warning
+}: {
+    children: React.ReactNode
+    label: string
+    tooltip?: string
+    error?: string
+    warning?: string
+}) => (
+    <div className="space-y-2">
+        <label className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-100">
+            {label}
+            {tooltip && (
+                <span className="ml-1 group relative">
+                    <AiFillInfoCircle className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                    <Tooltip content={tooltip} />
+                </span>
+            )}
+        </label>
+        {children}
+        {error && (
+            <div className="flex items-start space-x-2 text-red-600 dark:text-red-400 text-xs">
+                <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <span>{error}</span>
+            </div>
+        )}
+        {warning && !error && (
+            <div className="flex items-start space-x-2 text-amber-600 dark:text-amber-400 text-xs">
+                <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <span>{warning}</span>
+            </div>
+        )}
+    </div>
+)
+
 const GasSelectorBasic = (props: GasComponentProps) => {
     const { selectedOption, options, setSelectedGas } = props
 
     return (
-        <div className="flex flex-col w-full">
-            <div className="flex flex-col w-full space-y">
-                {options.map((option, i) => (
-                    <div
-                        key={option.label}
-                        className="w-full flex flex-row items-center p-1 cursor-pointer rounded-md hover:bg-gray-100"
-                        onClick={() => {
-                            setSelectedGas(option)
-                        }}
-                    >
-                        <div className="flex flex-col flex-grow px-1 py-1  w-11/12">
+        <div className="flex flex-col w-full space-y-1">
+            {options.map((option, i) => (
+                <div
+                    key={option.label}
+                    className="w-full flex flex-row items-center p-3 cursor-pointer rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-150"
+                    onClick={() => {
+                        setSelectedGas(option)
+                    }}
+                >
+                    <div className="flex flex-col flex-grow space-y-2">
+                        <div className="flex items-center justify-between">
                             <label
                                 className={classnames(
                                     "text-base font-semibold cursor-pointer capitalize",
-                                    selectedOption.label === option.label &&
-                                    "text-primary-blue-default"
+                                    selectedOption.label === option.label
+                                        ? "text-blue-600 dark:text-blue-400"
+                                        : "text-gray-900 dark:text-gray-100"
                                 )}
                             >
                                 {option.label}
                             </label>
-                            <div className="flex flex-col w-full justify-between py-2 space-y-1">
-                                <div className="flex flex-row justify-between items-center">
-                                    <span
-                                        className={classnames(
-                                            "text-xs",
-                                            selectedOption.label ===
-                                            option.label &&
-                                            "text-primary-blue-default"
-                                        )}
-                                    >
-                                        {option.totalNativeCurrencyCostRange}
-                                    </span>
-                                    <div>
-                                        <ImCheckmark
-                                            className={classnames(
-                                                "text-sm",
-                                                selectedOption.label ===
-                                                    option.label
-                                                    ? "text-primary-blue-default"
-                                                    : "hidden"
-                                            )}
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <span
-                                        className={classnames(
-                                            "text-primary-grey-dark text-xs",
-                                            selectedOption.label ===
-                                            option.label &&
-                                            "!text-primary-blue-default"
-                                        )}
-                                    >
-                                        {option.totalETHCostRange}
-                                    </span>
-                                </div>
-                            </div>
+                            <ImCheckmark
+                                className={classnames(
+                                    "w-4 h-4",
+                                    selectedOption.label === option.label
+                                        ? "text-blue-600 dark:text-blue-400"
+                                        : "invisible"
+                                )}
+                            />
+                        </div>
+                        <div className="flex flex-col space-y-1">
+                            <span
+                                className={classnames(
+                                    "text-sm font-medium",
+                                    selectedOption.label === option.label
+                                        ? "text-blue-600 dark:text-blue-400"
+                                        : "text-gray-700 dark:text-gray-300"
+                                )}
+                            >
+                                {option.totalNativeCurrencyCostRange}
+                            </span>
+                            <span
+                                className={classnames(
+                                    "text-xs",
+                                    selectedOption.label === option.label
+                                        ? "text-blue-500 dark:text-blue-300"
+                                        : "text-gray-500 dark:text-gray-400"
+                                )}
+                            >
+                                {option.totalETHCostRange}
+                            </span>
                         </div>
                     </div>
-                ))}
-            </div>
+                </div>
+            ))}
         </div>
     )
 }
 
-// Schema
 const schemaBuilder = ({ minGasLimit }: { minGasLimit?: string } = {}) =>
     yup.object({
         gasLimit: makeStringNumberFormField("Gas limit is required", false, {
@@ -180,7 +210,6 @@ const schemaBuilder = ({ minGasLimit }: { minGasLimit?: string } = {}) =>
     })
 type GasAdvancedForm = InferType<ReturnType<typeof schemaBuilder>>
 
-// Advanced tab. Allows users to enter manual fee values.
 const GasSelectorAdvanced = (props: GasComponentProps) => {
     const { gasFees, selectedOption, getGasOption, setSelectedGas } = props
     const { estimatedBaseFee: baseFeePerGas, gasPricesLevels } =
@@ -211,6 +240,9 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
     const [tipWarning, setTipWarning] = useState("")
     const [maxFeeWarning, setMaxFeeWarning] = useState("")
     const [showGasLimitInput, setShowGasLimitInput] = useState(false)
+    const [userRequestedGasLimit, setUserRequestedGasLimit] = useState(false)
+    const [userExplicitlyHid, setUserExplicitlyHid] = useState(false)
+    const justClickedRef = useRef(false)
 
     const {
         register,
@@ -219,7 +251,6 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
         getValues,
         setError,
         clearErrors,
-
         formState: { errors },
     } = useForm<GasAdvancedForm>({
         defaultValues: {
@@ -253,6 +284,18 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
             formatUnits(defaultFees.maxPriorityFeePerGas!, "gwei")
         )
         setValue("maxFeePerGas", formatUnits(defaultFees.maxFeePerGas!, "gwei"))
+    }
+
+    const handleGasLimitFocus = () => {
+        if (!isCustom) {
+            handleCustomChange()
+        }
+        if (!showGasLimitInput || userExplicitlyHid) {
+            justClickedRef.current = true
+            setShowGasLimitInput(true)
+            setUserRequestedGasLimit(true)
+            setUserExplicitlyHid(false)
+        }
     }
 
     const validateGasLimit = (gasLimit?: BigNumber) => {
@@ -352,37 +395,47 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
         setValue("maxPriorityFeePerGas", formatUnits(isCustom ? selectedOption.gasFees.maxPriorityFeePerGas! : defaultFees.maxPriorityFeePerGas!, "gwei"))
         setValue("maxFeePerGas", formatUnits(isCustom ? selectedOption.gasFees.maxFeePerGas! : defaultFees.maxFeePerGas!, "gwei"))
 
-        setShowGasLimitInput(isCustom || isGasLimitCustom)
+        if (!userRequestedGasLimit && !userExplicitlyHid && !justClickedRef.current) {
+            const shouldShow = isCustom || isGasLimitCustom
+            setShowGasLimitInput(shouldShow)
+        }
 
         validateFees(isCustom ? selectedOption.gasFees : defaultFees)
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+
+        if (justClickedRef.current) {
+            const timer = setTimeout(() => {
+                justClickedRef.current = false
+            }, 100)
+            return () => clearTimeout(timer)
+        }
     }, [isCustom, selectedOption.gasFees, defaultFees])
 
+    const inputClasses = (hasError?: boolean, hasWarning?: boolean) =>
+        classnames(
+            "w-full px-4 py-3 border rounded-lg transition-colors duration-150",
+            "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100",
+            !isCustom && "text-gray-400 dark:text-gray-500",
+            hasError
+                ? "border-red-400 dark:border-red-600 focus:border-red-500 dark:focus:border-red-400 focus:ring-1 focus:ring-red-500 dark:focus:ring-red-400"
+                : hasWarning
+                    ? "border-amber-400 dark:border-amber-600 focus:border-amber-500 dark:focus:border-amber-400 focus:ring-1 focus:ring-amber-500 dark:focus:ring-amber-400"
+                    : "border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400"
+        )
+
     return (
-        <div className="flex flex-col w-full">
-            <div className="flex flex-col w-full space-y-3 px-3 pb-3">
-                <div className="flex flex-col relative">
-                    <label className="text-[13px] font-medium text-primary-grey-dark">
-                        Max Priority Fee (Tip)
-                        <span className="inline-block ml-1 group relative">
-                            <AiFillInfoCircle className="text-primary-grey-dark align-middle" />
-                            <Tooltip content="Max amount added to the base fee that goes directly to the miner." />
-                        </span>
-                    </label>
+        <div className="flex flex-col w-full h-full">
+            <div className="flex-1 px-4 py-4 space-y-6">
+                <FormField
+                    label="Max Priority Fee (Tip)"
+                    tooltip="Max amount added to the base fee that goes directly to the miner."
+                    error={errors.maxPriorityFeePerGas?.message}
+                    warning={tipWarning}
+                >
                     <EndLabel label="GWEI">
                         <input
                             type="text"
                             {...register("maxPriorityFeePerGas")}
-                            className={classnames(
-                                Classes.inputBordered,
-                                "w-full",
-                                !isCustom && "text-gray-400",
-                                errors.maxPriorityFeePerGas
-                                    ? "border-red-400 focus:border-red-600"
-                                    : tipWarning
-                                        ? "border-yellow-400 focus:border-yellow-600"
-                                        : ""
-                            )}
+                            className={inputClasses(!!errors.maxPriorityFeePerGas, !!tipWarning)}
                             autoComplete="off"
                             onKeyDown={handleKeyDown}
                             onInput={handleChangeAmountGwei((value) => {
@@ -392,8 +445,7 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                             })}
                             placeholder={formatUnits(
                                 isCustom
-                                    ? selectedOption.gasFees
-                                        .maxPriorityFeePerGas!
+                                    ? selectedOption.gasFees.maxPriorityFeePerGas!
                                     : defaultFees.maxPriorityFeePerGas!,
                                 "gwei"
                             )}
@@ -402,32 +454,19 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                             tabIndex={1}
                         />
                     </EndLabel>
-                    <span className={classnames("text-xs h-4 mt-1", errors.maxPriorityFeePerGas ? "text-red-500" : tipWarning ? "text-yellow-500" : "m-0 h-0")}>
-                        {errors.maxPriorityFeePerGas?.message || tipWarning || ""}
-                    </span>
-                </div>
-                <div className="flex flex-col relative">
-                    <label className="text-[13px] font-medium text-primary-grey-dark">
-                        Max Fee
-                        <span className="inline-block ml-1 group relative">
-                            <AiFillInfoCircle className="text-primary-grey-dark align-middle" />
-                            <Tooltip content="Max total amount (Base Fee + Tip) you are willing to pay per gas unit. You only pay the Base Fee + Tip." />
-                        </span>
-                    </label>
+                </FormField>
+
+                <FormField
+                    label="Max Fee"
+                    tooltip="Max total amount (Base Fee + Tip) you are willing to pay per gas unit. You only pay the Base Fee + Tip."
+                    error={errors.maxFeePerGas?.message}
+                    warning={maxFeeWarning}
+                >
                     <EndLabel label="GWEI">
                         <input
                             type="text"
                             {...register("maxFeePerGas")}
-                            className={classnames(
-                                Classes.inputBordered,
-                                "w-full",
-                                !isCustom && "text-gray-400",
-                                !!errors.maxFeePerGas?.message
-                                    ? "border-red-400 focus:border-red-600"
-                                    : maxFeeWarning
-                                        ? "border-yellow-400 focus:border-yellow-600"
-                                        : ""
-                            )}
+                            className={inputClasses(!!errors.maxFeePerGas, !!maxFeeWarning)}
                             autoComplete="off"
                             onKeyDown={handleKeyDown}
                             onInput={handleChangeAmountGwei((value) => {
@@ -446,85 +485,92 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                             tabIndex={2}
                         />
                     </EndLabel>
-                    <span className={classnames("text-xs h-4 mt-1", !!errors.maxFeePerGas?.message ? "text-red-500" : maxFeeWarning ? "text-yellow-500" : "m-0 h-0")}>
-                        {errors.maxFeePerGas?.message || maxFeeWarning || ""}
+                </FormField>
+
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800/50">
+                    <span className="text-sm text-blue-800 dark:text-blue-200 font-medium">
+                        Current Base Fee: {formatUnits(baseFeePerGas!, "gwei")} GWEI
                     </span>
                 </div>
-                <span className="text-primary-grey-dark text-xs">
-                    Current Base Fee: {formatUnits(baseFeePerGas!, "gwei")} GWEI
-                </span>
 
                 {showGasLimitInput ? (
-                    <div className="flex flex-col mt-2">
-                        <label className="text-[13px] font-medium text-primary-grey-dark">
-                            Gas Limit
-                            <span className="inline-block ml-1 group relative">
-                                <AiFillInfoCircle className="text-primary-grey-dark align-middle" />
-                                <Tooltip content="Max amount of gas units your transaction can consume. Standard transfers usually take 21000 units." />
-                            </span>
-                        </label>
-                        <input
-                            type="text"
-                            {...register("gasLimit")}
-                            className={classnames(
-                                Classes.inputBordered,
-                                "w-full",
-                                !isCustom && "text-gray-400",
-                                errors.gasLimit
-                                    ? "border-red-400 focus:border-red-600"
-                                    : gasLimitWarning
-                                        ? "border-yellow-400 focus:border-yellow-600"
-                                        : ""
-                            )}
-                            autoComplete="off"
-                            onKeyDown={handleKeyDown}
-                            onInput={handleChangeAmountWei((value) => {
-                                if (gasLimitWarning) {
-                                    validateGasLimit(BigNumber.from(value ?? "0"))
-                                }
-                                setValue("gasLimit", value, {
-                                    shouldValidate: true,
-                                })
-                            })}
-                            placeholder={formatUnits(
-                                isCustom
-                                    ? selectedOption.gasFees.gasLimit!
-                                    : defaultFees.gasLimit!,
-                                "wei"
-                            )}
-                            onFocus={() => !isCustom && handleCustomChange()}
-                            onBlur={handleBlur}
-                            tabIndex={3}
-                        />
-                        <span className={classnames("text-xs h-4 mt-1", errors.gasLimit ? "text-red-500" : gasLimitWarning ? "text-yellow-500" : "m-0 h-0")}>
-                            {errors.gasLimit?.message || gasLimitWarning || ""}
-                        </span>
+                    <div className="space-y-2">
+                        <FormField
+                            label="Gas Limit"
+                            tooltip="Max amount of gas units your transaction can consume. Standard transfers usually take 21000 units."
+                            error={errors.gasLimit?.message}
+                            warning={gasLimitWarning}
+                        >
+                            <input
+                                type="text"
+                                {...register("gasLimit")}
+                                className={inputClasses(!!errors.gasLimit, !!gasLimitWarning)}
+                                autoComplete="off"
+                                onKeyDown={handleKeyDown}
+                                onInput={handleChangeAmountWei((value) => {
+                                    if (gasLimitWarning) {
+                                        validateGasLimit(BigNumber.from(value ?? "0"))
+                                    }
+                                    setValue("gasLimit", value, {
+                                        shouldValidate: true,
+                                    })
+                                })}
+                                placeholder={formatUnits(
+                                    isCustom
+                                        ? selectedOption.gasFees.gasLimit!
+                                        : defaultFees.gasLimit!,
+                                    "wei"
+                                )}
+                                onFocus={handleGasLimitFocus}
+                                onBlur={handleBlur}
+                                tabIndex={3}
+                            />
+                        </FormField>
+                        {userRequestedGasLimit && (
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    justClickedRef.current = true
+                                    setUserRequestedGasLimit(false)
+                                    setUserExplicitlyHid(true)
+                                    setShowGasLimitInput(false)
+                                }}
+                                className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:underline"
+                            >
+                                Hide Gas Limit
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <button
                         type="button"
-                        onClick={() => setShowGasLimitInput(true)}
-                        className="text-xs text-primary-blue-default hover:underline mt-2 self-start"
+                        onClick={() => {
+                            justClickedRef.current = true
+                            setShowGasLimitInput(true)
+                            setUserRequestedGasLimit(true)
+                            setUserExplicitlyHid(false)
+                        }}
+                        className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline font-medium"
                     >
                         Edit Gas Limit (Advanced)
                     </button>
                 )}
             </div>
-            <div>
-                <hr className="absolute left-0 border-0.5 border-primary-grey-hover w-full" />
-                <div className="flex flex-row w-full items-center pt-5 justify-between space-x-4 mt-auto px-4">
-                    <Button
-                        label="Save"
-                        buttonClass={Classes.button}
-                        type="button"
-                        onClick={handleSave}
-                        disabled={
-                            Object.values(errors).filter(
-                                (v) => v.message !== ""
-                            ).length > 0
-                        }
-                    />
-                </div>
+
+            <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-4">
+                <Button
+                    label="Save"
+                    buttonClass="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-150"
+                    type="button"
+                    onClick={handleSave}
+                    disabled={
+                        Object.values(errors).filter(
+                            (v) => v.message !== ""
+                        ).length > 0
+                    }
+                />
             </div>
         </div>
     )
@@ -541,12 +587,11 @@ const tabs = [
     },
 ]
 
-// Main Component
 const GasPriceComponent: FunctionComponent<{
     defaultGas: {
         feeData: TransactionFeeData
         defaultLevel?: "low" | "medium" | "high"
-    } // can receive either custom values (i.e. dApps or estimation) or a level to set as default basic value
+    }
     setGas: (gasFees: TransactionFeeData) => void
     disabled?: boolean
     isParentLoading?: boolean
@@ -562,19 +607,16 @@ const GasPriceComponent: FunctionComponent<{
     displayOnlyMaxValue = false,
     minGasLimit,
 }) => {
-        //Popup variables
         const ref = useRef(null)
         const [active, setActive] = useState(false)
         useOnClickOutside(ref, () => setActive(false))
 
-        //State
         const { exchangeRates, nativeCurrency, localeInfo, networkNativeCurrency } =
             useBlankState()!
 
         const { estimatedBaseFee: baseFeePerGas, gasPricesLevels } =
             useGasPriceData()
 
-        // force gas updates
         useEffect(() => {
             const interval = setInterval(() => {
                 updateGasPrices()
@@ -633,7 +675,6 @@ const GasPriceComponent: FunctionComponent<{
 
             const networkSymbol = networkNativeCurrency.symbol
 
-            // For parent's label, apply displayOnlyMaxValue flag. Otherwise always display range
             const totalETHCost =
                 (label !== "Custom" || minValue.lte(maxValue)) &&
                     !displayOnlyMaxValue
@@ -669,29 +710,21 @@ const GasPriceComponent: FunctionComponent<{
 
         const [gasOptions, setGasOptions] = useState<GasPriceOption[]>([])
 
-        // Selected gas state
         const [selectedGas, setSelectedGas] = useState<GasPriceOption>()
 
-        // Tabs variables
         const [tab, setTab] = useState(tabs[!defaultGas.defaultLevel ? 1 : 0])
         const TabComponent = tab.component
         const [isLoaded, setIsLoaded] = useState<boolean>(false)
 
-        // Effects
         useEffect(() => {
-            // Waits till parent component finishes loading (estimation and transaction values)
             if (isParentLoading) {
-                // This means there was a change on parent component that is updating values so we should reload all values.
                 if (isLoaded) setIsLoaded(false)
 
-                // keeps waiting for parent to finish
                 return
             }
 
-            //Update transaction speeds
             setTransactionSpeeds(getTransactionSpeeds(gasPricesLevels))
 
-            //Get & set gas options
             let speedOptions: GasPriceOption[] = []
             for (let speed in transactionSpeeds) {
                 speedOptions.push(
@@ -705,9 +738,7 @@ const GasPriceComponent: FunctionComponent<{
             }
             setGasOptions(speedOptions)
 
-            // First load will check if comp received default values or level
             if (!isLoaded) {
-                // If the default gas was set to a basic level, update the selected option with the new gas values
                 if (defaultGas.defaultLevel) {
                     const defaultOption = speedOptions.find(
                         (s) => s.label === defaultGas.defaultLevel
@@ -719,7 +750,6 @@ const GasPriceComponent: FunctionComponent<{
                         setTab(tabs[0])
                     }
                 } else {
-                    // If the default gas was set to custom values, update them and set the advance tab as active
                     const defaultOption = getGasOption("Custom", defaultGas.feeData)
                     setSelectedGas(defaultOption)
                     setGas(defaultOption.gasFees!)
@@ -729,7 +759,6 @@ const GasPriceComponent: FunctionComponent<{
 
             setIsLoaded(true)
 
-            //Updated selected gas on gas price change
             if (isLoaded && selectedGas!.label !== "Custom") {
                 const selected = speedOptions.find(
                     (s) => s.label === selectedGas!.label
@@ -739,28 +768,26 @@ const GasPriceComponent: FunctionComponent<{
                     setGas(selectedGas!.gasFees!)
                 }
             }
-            // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [isParentLoading, gasPricesLevels, defaultGas.feeData.gasLimit])
 
         useEffect(() => {
             setBaseFee(BigNumber.from(baseFeePerGas))
         }, [baseFeePerGas])
 
-        // Effect to check if estimation failed when switching to a new tx
         useEffect(() => {
             if (showEstimationError && !showEstimationWarning)
                 setShowEstimationWarning(true)
-            // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [showEstimationError])
 
         return (
             <>
-                {/* Label */}
                 <div
                     className={classnames(
-                        Classes.greySection,
-                        active && Classes.blueSectionActive,
-                        disabled && "pointer-events-none"
+                        "p-3 rounded-lg border transition-all duration-200 cursor-pointer",
+                        active
+                            ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700"
+                            : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700",
+                        disabled && "pointer-events-none opacity-50"
                     )}
                     onClick={() =>
                         !disabled &&
@@ -771,153 +798,141 @@ const GasPriceComponent: FunctionComponent<{
                 >
                     <div
                         className={classnames(
-                            "flex justify-start w-full items-center",
+                            "flex justify-between w-full items-center",
                             displayOnlyMaxValue && "space-x-4"
                         )}
                     >
-                        <div
-                            className={classnames(
-                                "text-xs font-semibold",
-                                (isParentLoading || !isLoaded) && "w-56"
-                            )}
-                        >
-                            {isParentLoading || !isLoaded
-                                ? "Loading prices..."
-                                : capitalize(selectedGas!.label)}
-                        </div>
+                        <div className="flex-1">
+                            <div
+                                className={classnames(
+                                    "text-sm font-semibold text-gray-900 dark:text-gray-100",
+                                    (isParentLoading || !isLoaded) && "w-32"
+                                )}
+                            >
+                                {isParentLoading || !isLoaded
+                                    ? "Loading prices..."
+                                    : capitalize(selectedGas!.label)}
+                            </div>
 
-                        <div className="flex flex-row w-full items-center justify-around text-xs">
-                            {!isParentLoading &&
-                                isLoaded &&
-                                (displayOnlyMaxValue ? (
-                                    <div className="flex flex-row w-full items-center space-x-4">
-                                        <span className="text-xs text-gray-600 dark:text-gray-400">
-                                            {selectedGas!.totalNativeCurrencyCost}
-                                        </span>
-                                        <div className="flex flex-row space-x-1 items-center">
-                                            <img
-                                                src={
-                                                    nativeCurrencyLogo ??
-                                                    defaultNetworkLogo
-                                                }
-                                                alt={networkNativeCurrency.symbol}
-                                                width="20px"
-                                                draggable={false}
-                                            />
-                                            <span className="text-xs">
-                                                {selectedGas!.totalETHCost}
+                            <div className="flex flex-row w-full items-center justify-start mt-2 space-x-4 text-sm">
+                                {!isParentLoading &&
+                                    isLoaded &&
+                                    (displayOnlyMaxValue ? (
+                                        <div className="flex flex-row w-full items-center space-x-4">
+                                            <span className="text-gray-600 dark:text-gray-400 font-medium">
+                                                {selectedGas!.totalNativeCurrencyCost}
                                             </span>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <>
-                                        <span className="text-xs text-gray-600 dark:text-gray-400">
-                                            {selectedGas!.totalNativeCurrencyCost}
-                                        </span>
-                                        <div className="flex flex-row space-x-1 items-center justify-self-end">
-                                            <div className="justify-self-start">
+                                            <div className="flex flex-row space-x-2 items-center">
                                                 <img
                                                     src={
                                                         nativeCurrencyLogo ??
                                                         defaultNetworkLogo
                                                     }
-                                                    alt={
-                                                        networkNativeCurrency.symbol
-                                                    }
-                                                    width="20px"
+                                                    alt={networkNativeCurrency.symbol}
+                                                    width="16px"
+                                                    className="rounded-full"
                                                     draggable={false}
                                                 />
-                                            </div>
-                                            <div className="w-full">
-                                                <span className="text-xs">
+                                                <span className="text-gray-700 dark:text-gray-300 font-medium">
                                                     {selectedGas!.totalETHCost}
                                                 </span>
                                             </div>
                                         </div>
-                                    </>
-                                ))}
+                                    ) : (
+                                        <>
+                                            <span className="text-gray-600 dark:text-gray-400 font-medium">
+                                                {selectedGas!.totalNativeCurrencyCost}
+                                            </span>
+                                            <div className="flex flex-row space-x-2 items-center">
+                                                <img
+                                                    src={
+                                                        nativeCurrencyLogo ??
+                                                        defaultNetworkLogo
+                                                    }
+                                                    alt={networkNativeCurrency.symbol}
+                                                    width="16px"
+                                                    className="rounded-full"
+                                                    draggable={false}
+                                                />
+                                                <span className="text-gray-700 dark:text-gray-300 font-medium">
+                                                    {selectedGas!.totalETHCost}
+                                                </span>
+                                            </div>
+                                        </>
+                                    ))}
+                            </div>
+                        </div>
+                        <div className="flex justify-end items-center">
+                            {isParentLoading || !isLoaded ? (
+                                <Spinner />
+                            ) : (
+                                <ArrowUpDown active={active} />
+                            )}
                         </div>
                     </div>
-                    <div className="flex justify-end items-center w-4 h-full">
-                        {isParentLoading || !isLoaded ? (
-                            <Spinner />
-                        ) : (
-                            <ArrowUpDown active={active} />
-                        )}
-                    </div>
                 </div>
+
                 <WarningDialog
                     open={showEstimationWarning}
                     onDone={() => setShowEstimationWarning(false)}
                     title="Gas estimation failed"
                     message="The provided gas estimation could be incorrect. Please review gas settings before submitting."
                 />
-                {/* Modal */}
 
                 <Dialog open={active} onClickOutside={() => setActive(false)}>
                     <span className="absolute top-0 right-0 p-4 z-50">
                         <div
                             onClick={() => setActive(false)}
-                            className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 dark:text-gray-100 transition duration-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary-blue-default dark:hover:text-primary-blue-400"
+                            className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 dark:text-gray-100 transition duration-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
                         >
                             <CloseIcon size="10" />
                         </div>
                     </span>
-                    <div>
-                        <div className="flex flex-col w-full space-y-2">
-                            <div className="z-10 flex flex-row items-center p-2 bg-white bg-opacity-75">
-                                <h2 className="p-0 text-lg font-semibold">
-                                    Gas Price
-                                </h2>
-                                <div className="group relative">
-                                    <a
-                                        href="https://ethereum.org/en/developers/docs/gas/"
-                                        target="_blank"
-                                        rel="noreferrer"
-                                    >
-                                        <AiFillInfoCircle
-                                            size={26}
-                                            className="pl-2 text-gray-600 dark:text-gray-400 cursor-pointer hover:text-primary-blue-default dark:hover:text-primary-blue-400"
-                                        />
-                                    </a>
-                                    <Tooltip
-                                        content={
-                                            <div className="flex flex-col font-normal items-start text-xs text-white-500">
-                                                <div className="flex flex-row items-end space-x-7">
-                                                    <span>
-                                                        Gas is used to operate on
-                                                        the network.
-                                                    </span>{" "}
-                                                </div>
-                                                <div className="flex flex-row items-end space-x-4">
-                                                    <span>
-                                                        Click on this icon to learn
-                                                        more.
-                                                    </span>{" "}
-                                                </div>
-                                            </div>
-                                        }
-                                    />
-                                </div>
+                    <div className="flex flex-col w-full h-full">
+                        <div className="flex flex-row items-center space-x-3 px-4 py-3">
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                Gas Price
+                            </h2>
+                            <div className="group relative">
+                                <a
+                                    href="https://ethereum.org/en/developers/docs/gas/"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="flex items-center"
+                                >
+                                    <AiFillInfoCircle className="w-5 h-5 text-gray-600 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-150" />
+                                </a>
+                                <Tooltip
+                                    content={
+                                        <div className="flex flex-col font-normal items-start text-xs text-white space-y-1">
+                                            <span>Gas is used to operate on the network.</span>
+                                            <span>Click on this icon to learn more.</span>
+                                        </div>
+                                    }
+                                />
                             </div>
-                            <HorizontalSelect
-                                options={tabs}
-                                value={tab}
-                                onChange={setTab}
-                                display={(t) => t.label}
-                                disableStyles
-                                optionClassName={(value) =>
-                                    `flex-1 flex flex-row items-center justify-center p-3 text-sm
-                                            ${tab === value
-                                        ? "border-primary-blue-default dark:border-primary-blue-400 border-b-2 text-primary-blue-default dark:text-primary-blue-400 font-semibold"
-                                        : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 border-b hover:text-primary-blue-default dark:hover:text-primary-blue-400 font-medium"
-                                    }`
-                                }
-                                containerClassName="flex flex-row -ml-3"
-                                containerStyle={{
-                                    width: "calc(100% + 1.5rem)",
-                                }}
-                            />
+                        </div>
+
+                        <HorizontalSelect
+                            options={tabs}
+                            value={tab}
+                            onChange={setTab}
+                            display={(t) => t.label}
+                            disableStyles
+                            optionClassName={(value) =>
+                                `flex-1 flex flex-row items-center justify-center p-3 text-sm font-medium transition-colors duration-150
+                                ${tab === value
+                                    ? "border-blue-600 dark:border-blue-400 border-b-2 text-blue-600 dark:text-blue-400"
+                                    : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 border-b hover:text-blue-600 dark:hover:text-blue-400"
+                                }`
+                            }
+                            containerClassName="flex flex-row border-b border-gray-200 dark:border-gray-700"
+                            containerStyle={{
+                                width: "100%",
+                            }}
+                        />
+
+                        <div className="flex-1 overflow-hidden">
                             <TabComponent
                                 symbol={networkNativeCurrency.symbol}
                                 nativeCurrencyIcon={
@@ -937,11 +952,9 @@ const GasPriceComponent: FunctionComponent<{
                             />
                         </div>
                     </div>
-                    {/*</div>*/}
                 </Dialog>
             </>
         )
     }
 
-// OPTIMIZED: Wrapped with React.memo to prevent unnecessary re-renders of this complex component
 export default memo(GasPriceComponent)

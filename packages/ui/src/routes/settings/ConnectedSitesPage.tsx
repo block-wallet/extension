@@ -25,38 +25,49 @@ const ConnectedSite: FunctionComponent<{
 
     return (
         <>
-            <div className="group flex flex-row items-center justify-between w-full p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200">
+            <div className="group flex flex-row items-center w-full p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200">
                 <div
-                    className="flex flex-row items-center space-x-4 flex-1 cursor-pointer"
+                    className="flex flex-row items-center space-x-4 flex-1 cursor-pointer min-w-0"
                     onClick={() => onSiteClick(origin)}
                 >
-                    <div className="flex flex-row items-center justify-center w-12 h-12 p-2 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 shadow-sm">
+                    <div className="flex flex-row items-center justify-center w-12 h-12 p-2 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 shadow-sm flex-shrink-0">
                         {site.iconURL ? (
                             <AppIcon iconURL={site.iconURL} size={12} />
                         ) : (
                             <HiGlobeAlt className="w-6 h-6 text-gray-500 dark:text-gray-400" />
                         )}
                     </div>
-                    <div className="flex flex-col space-y-1 flex-1">
+                    <div className="flex flex-col space-y-1 flex-1 min-w-0">
                         <div className="flex items-center space-x-2">
-                            <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
                                 {hostname}
                             </span>
-                            <BsShieldCheck className="w-4 h-4 text-green-500 dark:text-green-400" title="Connected" />
+                            <BsShieldCheck className="w-4 h-4 text-green-500 dark:text-green-400 flex-shrink-0" title="Connected" />
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">
                             Can view your account address
                         </div>
                     </div>
-                    <HiExternalLink className="w-4 h-4 text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <button
-                    onClick={() => setConfirmOpen(true)}
-                    className="ml-3 p-2 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
-                    title="Disconnect site"
-                >
-                    <HiTrash className="w-5 h-5" />
-                </button>
+                <div className="flex items-center space-x-2 flex-shrink-0">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            window.open(origin, '_blank', 'noopener,noreferrer')
+                        }}
+                        className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded transition-all duration-200 opacity-0 group-hover:opacity-100"
+                        title={`Open ${hostname} in new tab`}
+                    >
+                        <HiExternalLink className="w-4 h-4" />
+                    </button>
+                    <button
+                        onClick={() => setConfirmOpen(true)}
+                        className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
+                        title="Disconnect site"
+                    >
+                        <HiTrash className="w-5 h-5" />
+                    </button>
+                </div>
             </div>
             <ConfirmDialog
                 title="Remove Site Connection"

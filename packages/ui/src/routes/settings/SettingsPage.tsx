@@ -6,17 +6,12 @@ import PopupLayout from "../../components/popup/PopupLayout"
 import VerticalSelect from "../../components/input/VerticalSelect"
 
 // Style
-import { Classes } from "../../styles/classes"
 import { classnames } from "../../styles/classes"
-
-// Assets - keeping logoutIcon for potential future use in logout button
-import logoutIcon from "../../assets/images/icons/logout.svg"
 
 // Context
 import { lockApp } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useBlankState } from "../../context/background/backgroundHooks"
-import classNames from "classnames"
 import GenericTooltip from "../../components/label/GenericTooltip"
 import { openHardwareConnect } from "../../context/commActions"
 
@@ -109,10 +104,10 @@ const SettingsPage = () => {
                 <option.iconComponent className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </div>
             <div className="flex-1 ml-4 pr-4 min-w-0">
-                <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 text-left">
                     {option.label}
                 </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400">
+                <div className="text-xs text-gray-600 dark:text-gray-400 text-left">
                     {option.description}
                 </div>
             </div>
@@ -150,19 +145,17 @@ const SettingsPage = () => {
         >
             <div className="flex flex-col space-y-6 p-6 bg-white dark:bg-gray-900 min-h-full">
                 {/* Header Section */}
-                <div className="text-center space-y-2">
-                    <div className="flex justify-center">
-                        <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center border border-gray-200 dark:border-gray-700">
-                            <HiCog className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+                <div className="bg-blue-50 dark:bg-gray-800 p-4 rounded-lg border border-blue-200 dark:border-gray-700">
+                    <div className="flex items-start space-x-3">
+                        <HiCog className="text-blue-600 dark:text-blue-400 text-lg mt-0.5 flex-shrink-0" />
+                        <div>
+                            <h3 className="text-base font-semibold text-blue-800 dark:text-blue-200 mb-2">
+                                Wallet Settings
+                            </h3>
+                            <p className="text-sm text-blue-700 dark:text-blue-300">
+                                Configure your wallet preferences and manage your accounts
+                            </p>
                         </div>
-                    </div>
-                    <div>
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                            Wallet Settings
-                        </h2>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Configure your wallet preferences and manage your accounts
-                        </p>
                     </div>
                 </div>
 

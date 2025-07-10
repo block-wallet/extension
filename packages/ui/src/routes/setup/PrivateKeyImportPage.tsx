@@ -158,134 +158,226 @@ const PrivateKeyImportPage = () => {
   }
 
   return (
-    <PageLayout header maxWidth="max-w-lg">
-      <span className="my-6 text-lg font-semibold">
-        Import from Private Key
-      </span>
-      <Divider />
-      <form
-        className="flex flex-col w-full text-primary-grey-dark"
-        onSubmit={handleSubmit(onSubmit)}
-        noValidate
-      >
-        <div className="flex flex-col p-6 space-y-6">
-          <div className="flex flex-col space-y-4">
-            <div className="flex flex-col px-6 my-2 space-y-1">
-              <span className="text-sm leading-relaxed text-center text-primary-grey-dark">
-                Enter your private key and set a password to import your account.
-              </span>
+    <PageLayout header className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30 min-h-screen">
+      <div className="relative z-10 w-full max-w-2xl mx-auto px-4 py-8">
+        {/* Page header */}
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-gray-100 dark:via-blue-100 dark:to-indigo-100 bg-clip-text text-transparent mb-2">
+            Import from Private Key
+          </h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+            Import a specific account using its private key
+          </p>
+        </div>
+
+        <Divider />
+
+        {/* Main content card */}
+        <div className="mt-8 w-full max-w-lg mx-auto">
+          <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl dark:shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-indigo-900/20 p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="text-center space-y-3">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl mx-auto flex items-center justify-center shadow-lg">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                    Import Private Key
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Enter your private key and set a password to import your account
+                  </p>
+                </div>
+              </div>
             </div>
-            <div className="w-full px-4 py-4 text-sm text-center text-secondary-red-default bg-red-100 rounded">
-              <strong className="font-semibold">Warning: </strong>
-              <span>
-                Never disclose your private key. Anyone with your private key can access your account and steal your funds.
-              </span>
+
+            {/* Warning section */}
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-800/50 rounded-xl p-4">
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0">
+                    <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-red-900 dark:text-red-100 mb-1">
+                      Security Warning
+                    </h3>
+                    <p className="text-xs text-red-800 dark:text-red-200 leading-relaxed">
+                      Never share your private key with anyone. BlockWallet will never ask for your private key.
+                      Anyone with access to your private key can control your account and steal your funds.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* Private Key Input */}
-          <div className="flex flex-col space-y-2">
-            <TextInput
-              appearance="outline"
-              label="Private Key"
-              placeholder="Enter your private key (with or without 0x prefix)"
-              {...register("privateKey")}
-              error={errors.privateKey?.message}
-            />
-          </div>
+            {/* Form section */}
+            <form onSubmit={handleSubmit(onSubmit)} noValidate>
+              <div className="p-6 space-y-6">
+                {/* Private Key Input */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                    Private Key
+                  </label>
+                  <div className="relative">
+                    <div className="relative">
+                      <TextInput
+                        appearance="outline"
+                        placeholder="Enter your private key (with or without 0x prefix)"
+                        {...register("privateKey")}
+                        error={errors.privateKey?.message}
+                        className="font-mono text-sm pr-12 py-3 min-h-[48px] leading-relaxed"
+                      />
+                      <div className="absolute right-3 top-4 pointer-events-none">
+                        <svg className="w-6 h-6 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 32 32">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 9.33a2.67 2.67 0 012.67 2.67m5.33 0a8 8 0 01-10.32 7.66L14.67 22.67H12v2.66H9.33v2.67H5.33a1.33 1.33 0 01-1.33-1.33v-3.45a1.33 1.33 0 01.39-.94l7.95-7.95A8 8 0 0128 12z" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-          {/* Password Inputs */}
-          <div className="flex flex-col space-y-4">
-            <PasswordInput
-              label="New Password"
-              placeholder="Enter New Password"
-              {...register("password")}
-              error={errors.password?.message}
-              strengthBar={true}
-              setPasswordScore={setPasswordScore}
-            />
-            <PasswordInput
-              label="Confirm Password"
-              placeholder="Confirm New Password"
-              {...register("passwordConfirmation")}
-              error={errors.passwordConfirmation?.message}
-            />
-          </div>
+                {/* Password Section */}
+                <div className="bg-gray-50 dark:bg-gray-800/30 rounded-xl p-4 space-y-4">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+                    <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    Set Wallet Password
+                  </h3>
 
-          {/* Terms of Use Checkbox */}
-          <div className="flex flex-col space-y-1">
-            <div className="flex flex-row items-center space-x-2">
-              <input
-                type="checkbox"
-                className={Classes.checkbox}
-                id="acceptTOU"
-                {...register("acceptTOU")}
-              />
-              <label htmlFor="acceptTOU" className="text-xs">
-                I have read and agree to the{" "}
-                <a
-                  href="https://blockwallet.io/terms-of-use-of-block-wallet.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary-blue-default hover:underline"
-                >
-                  Terms of Use
-                </a>
-              </label>
-            </div>
-            <span className="text-xs text-red-500 h-4">
-              {errors.acceptTOU?.message || <>&nbsp;</>}
-            </span>
-          </div>
+                  <div className="space-y-4">
+                    <PasswordInput
+                      label="New Password"
+                      placeholder="Enter New Password"
+                      {...register("password")}
+                      error={errors.password?.message}
+                      strengthBar={true}
+                      setPasswordScore={setPasswordScore}
+                    />
+                    <PasswordInput
+                      label="Confirm Password"
+                      placeholder="Confirm New Password"
+                      {...register("passwordConfirmation")}
+                      error={errors.passwordConfirmation?.message}
+                    />
+                  </div>
+                </div>
 
-          {/* Display Import Error */}
-          {importError && (
-            <div className="w-full p-3 text-sm text-center text-red-700 bg-red-100 border border-red-300 rounded">
-              <div className="flex flex-col">
-                <strong>Import Error:</strong> {importError}
-                {importError.includes("Connection to extension was interrupted") && retryAttempts < 3 && (
-                  <button
-                    onClick={handleRetry}
-                    className="text-red-700 underline font-medium mt-2 self-end"
-                    type="button"
-                  >
-                    Retry
-                  </button>
+                {/* Terms of Use */}
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                        id="acceptTOU"
+                        {...register("acceptTOU")}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label htmlFor="acceptTOU" className="text-xs text-blue-900 dark:text-blue-100 leading-relaxed cursor-pointer">
+                        I have read and agree to the{" "}
+                        <a
+                          href="https://blockwallet.io/terms-of-use-of-block-wallet.html"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-semibold underline hover:no-underline"
+                        >
+                          Terms of Use
+                        </a>
+                      </label>
+                      {errors.acceptTOU?.message && (
+                        <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                          {errors.acceptTOU.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Error Display */}
+                {importError && (
+                  <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-800/50 rounded-xl p-4">
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0">
+                        <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-sm font-bold text-red-900 dark:text-red-100 mb-1">
+                          Import Error
+                        </h3>
+                        <p className="text-xs text-red-800 dark:text-red-200 mb-2">
+                          {importError}
+                        </p>
+                        {importError.includes("Connection to extension was interrupted") && retryAttempts < 3 && (
+                          <button
+                            onClick={handleRetry}
+                            className="text-xs font-semibold text-red-700 dark:text-red-300 hover:text-red-800 dark:hover:text-red-200 underline transition-colors duration-200"
+                            type="button"
+                          >
+                            Try Again
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
-            </div>
-          )}
-        </div>
 
-        {/* Divider and Action Buttons */}
-        <Divider />
-        <div className="flex flex-row p-6 space-x-4">
-          <LinkButton
-            location="/setup/"
-            text="Back"
-            lite
-            disabled={isImporting}
-          />
-          <button
-            type="submit"
-            className={classnames(
-              Classes.button,
-              "w-1/2 font-semibold border-2 border-primary-blue-default",
-              (!isValid || isImporting) && "opacity-50 cursor-not-allowed"
-            )}
-            disabled={!isValid || isImporting || (retryAttempts >= 3 && importError.includes("Connection to extension"))}
-          >
-            {isImporting ? (
-              <div className="flex items-center justify-center space-x-2">
-                <Spinner size="16px" />
-                <span className="text-sm">{getStepMessage()}</span>
+              {/* Footer with actions */}
+              <div className="bg-gray-50 dark:bg-gray-800/50 p-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex flex-row justify-between space-x-4">
+                  <LinkButton
+                    location="/setup/"
+                    text="Back"
+                    lite
+                    disabled={isImporting}
+                    classes="flex items-center px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                  />
+
+                  <button
+                    type="submit"
+                    className="flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg min-w-[120px]"
+                    disabled={!isValid || isImporting || (retryAttempts >= 3 && importError.includes("Connection to extension"))}
+                  >
+                    {isImporting ? (
+                      <>
+                        <Spinner size="16px" />
+                        <span className="ml-2">{getStepMessage()}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Import Account</span>
+                        <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-            ) : (
-              "Import"
-            )}
-          </button>
+            </form>
+          </div>
         </div>
-      </form>
+      </div>
+
+      {/* Decorative background elements */}
+      <div className="absolute top-1/4 -left-8 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-purple-400/10 dark:from-blue-400/5 dark:to-purple-400/5 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-1/4 -right-8 w-40 h-40 bg-gradient-to-tl from-indigo-400/10 to-purple-400/10 dark:from-indigo-400/5 dark:to-purple-400/5 rounded-full blur-3xl"></div>
+
+      {/* Subtle grid pattern */}
+      <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03]" style={{
+        backgroundImage: `radial-gradient(circle at 1px 1px, rgba(100,100,100,0.3) 1px, transparent 0)`,
+        backgroundSize: '24px 24px'
+      }}></div>
     </PageLayout>
   )
 }

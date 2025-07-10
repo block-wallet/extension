@@ -67,38 +67,63 @@ const SeedWordsInput: FunctionComponent<{
     }
 
     return (
-        <div className="flex flex-col space-y-4">
-            <div className="p-2 border border-primary-grey-default rounded-md grid grid-cols-4 grid-rows-3 gap-2 h-36">
-                {value.map((wordObj, index) => (
-                    <button
-                        type="button"
-                        key={`${wordObj.word}_${index}`}
-                        className="bg-primary-black-default text-white rounded-md py-2"
-                        style={{ height: "fit-content" }}
-                        onClick={() => handleWordClick(wordObj, index, true)}
-                    >
-                        {wordObj.word}
-                    </button>
-                ))}
+        <div className="space-y-6">
+            {/* Input area */}
+            <div className="bg-white dark:bg-gray-800/50 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-4 min-h-[120px]">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                    Selected Words ({value.length}/12)
+                </h3>
+                <div className="grid grid-cols-4 gap-2">
+                    {value.map((wordObj, index) => (
+                        <button
+                            type="button"
+                            key={`${wordObj.word}_${index}`}
+                            className="group relative bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg py-2 px-3 text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95"
+                            onClick={() => handleWordClick(wordObj, index, true)}
+                        >
+                            <span className="mr-1 text-xs opacity-75">#{index + 1}</span>
+                            {wordObj.word}
+                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                ×
+                            </div>
+                        </button>
+                    ))}
+                </div>
+                {value.length === 0 && (
+                    <div className="flex items-center justify-center h-16 text-gray-400 dark:text-gray-500">
+                        <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                        </svg>
+                        <span className="text-sm">Click words below to add them</span>
+                    </div>
+                )}
             </div>
-            <div className="grid grid-cols-4 gap-2">
-                {availableWords.map((wordObj, index) => (
-                    <button
-                        type="button"
-                        key={`${wordObj.word}_${index}`}
-                        className={classnames(
-                            "rounded-md py-3 border",
-                            wordObj.isSelected
-                                ? "border-transparent bg-primary-black-default text-white"
-                                : "border-primary-grey-default text-primary-black-default"
-                        )}
-                        onClick={() => {
-                            return handleWordClick(wordObj, index, false)
-                        }}
-                    >
-                        {wordObj.word}
-                    </button>
-                ))}
+
+            {/* Available words */}
+            <div>
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                    Available Words
+                </h3>
+                <div className="grid grid-cols-4 gap-2">
+                    {availableWords.map((wordObj, index) => (
+                        <button
+                            type="button"
+                            key={`${wordObj.word}_${index}`}
+                            className={classnames(
+                                "rounded-lg py-3 px-3 text-sm font-medium border-2 transition-all duration-200 transform hover:scale-105 active:scale-95",
+                                wordObj.isSelected
+                                    ? "border-transparent bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-50"
+                                    : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800/50 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm hover:shadow-md"
+                            )}
+                            onClick={() => {
+                                return handleWordClick(wordObj, index, false)
+                            }}
+                            disabled={wordObj.isSelected}
+                        >
+                            {wordObj.word}
+                        </button>
+                    ))}
+                </div>
             </div>
         </div>
     )
@@ -115,25 +140,51 @@ const SeedPhraseBlock = (props: any) => {
     } = props
 
     return (
-        <div
-            className={classnames(
-                "flex flex-col text-primary-grey-dark text-sm",
-                isReminder ? "space-y-6 p-4" : "space-y-8 p-8"
-            )}
-        >
-            <span>
-                Make sure that you've got it right - type out your phrase by
-                selecting the words below in the correct order.
-            </span>
+        <div className={classnames(
+            "space-y-6",
+            isReminder ? "p-4" : "p-8"
+        )}>
+            {/* Instructions */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4">
+                <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0">
+                        <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-bold text-blue-900 dark:text-blue-100 mb-1">
+                            Verification Instructions
+                        </h3>
+                        <p className="text-xs text-blue-800 dark:text-blue-200 leading-relaxed">
+                            Make sure that you've got it right - type out your phrase by selecting the words below in the correct order.
+                        </p>
+                    </div>
+                </div>
+            </div>
 
-            <span
-                className={classnames(
-                    "text-red-500 text-xs",
-                    verificationError ? "" : "hidden"
-                )}
-            >
-                verificationError || <>&nbsp;</>
-            </span>
+            {/* Error display */}
+            {verificationError && (
+                <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-800/50 rounded-xl p-4">
+                    <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0">
+                            <svg className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-bold text-red-900 dark:text-red-100 mb-1">
+                                Verification Failed
+                            </h3>
+                            <p className="text-xs text-red-800 dark:text-red-200">
+                                {verificationError}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Word selection interface */}
             <SeedWordsInput
                 words={seedWords}
                 value={inputWords}
@@ -236,58 +287,119 @@ const BackupConfirmPage = () => {
             ) : (
                 // browser tab version during installation
                 <PageLayout
-                    screen={isReminder}
                     header={!isReminder}
-                    maxWidth={isReminder ? "" : "max-w-md"}
-                    className={"text-center"}
+                    className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30 min-h-screen"
                     withSteps={!isReminder}
                     currentStep={3}
                     totalSteps={4}
                     stepLabels={CREATE_WALLET_STEP_LABELS}
                 >
-                    <span className="font-semibold my-6   text-lg">
-                        Confirm Secret Phrase
-                    </span>
-                    <Divider />
-                    <SeedPhraseBlock
-                        isReminder={isReminder}
-                        verificationError={verificationError}
-                        seedWords={seedWords}
-                        inputWords={inputWords}
-                        onSeedWordsChange={(words: any) => setInputWords(words)}
-                    />
-                    <Divider />
+                    <div className="relative z-10 w-full max-w-4xl mx-auto px-4 py-8">
+                        {/* Page header */}
+                        <div className="text-center mb-8">
+                            <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-gray-100 dark:via-blue-100 dark:to-indigo-100 bg-clip-text text-transparent mb-2">
+                                Confirm Secret Phrase
+                            </h1>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+                                Verify your seed phrase by selecting words in the correct order
+                            </p>
+                        </div>
 
-                    <div className="flex flex-row w-full p-6 justify-between">
-                        <Link
-                            to={{
-                                pathname: backLink,
-                                state: { seedPhrase, password },
-                            }}
-                            className={Classes.liteButton}
-                            draggable={false}
-                            style={{ maxWidth: "170px" }}
-                        >
-                            Back
-                        </Link>
-                        <button
-                            type="button"
-                            className={classnames(
-                                Classes.button,
-                                "font-semibold border-2 border-primary-blue-default max-w-[170px]",
-                                (!isPhraseValid() ||
-                                    isVerificationInProgress) &&
-                                "opacity-50 pointer-events-none"
-                            )}
-                            onClick={confirmSeedPhrase}
-                        >
-                            {!isVerificationInProgress ? (
-                                "Confirm"
-                            ) : (
-                                <Spinner />
-                            )}
-                        </button>
+                        <Divider />
+
+                        {/* Main content card */}
+                        <div className="mt-8">
+                            <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl dark:shadow-2xl overflow-hidden">
+                                {/* Header */}
+                                <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-indigo-900/20 p-6 border-b border-gray-200 dark:border-gray-700">
+                                    <div className="text-center space-y-3">
+                                        <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl mx-auto flex items-center justify-center shadow-lg">
+                                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                                                Verify Your Backup
+                                            </h2>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                                Select the words in the correct order to confirm your backup
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Content */}
+                                <SeedPhraseBlock
+                                    isReminder={isReminder}
+                                    verificationError={verificationError}
+                                    seedWords={seedWords}
+                                    inputWords={inputWords}
+                                    onSeedWordsChange={(words: any) => setInputWords(words)}
+                                />
+
+                                {/* Footer with actions */}
+                                <div className="bg-gray-50 dark:bg-gray-800/50 p-6 border-t border-gray-200 dark:border-gray-700">
+                                    <div className="flex flex-row justify-between space-x-4">
+                                        <Link
+                                            to={{
+                                                pathname: backLink,
+                                                state: { seedPhrase, password },
+                                            }}
+                                            className="flex items-center px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm max-w-[170px]"
+                                            draggable={false}
+                                        >
+                                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                            </svg>
+                                            Back
+                                        </Link>
+
+                                        <button
+                                            type="button"
+                                            className={classnames(
+                                                "flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg max-w-[170px] min-w-[140px]",
+                                                (!isPhraseValid() || isVerificationInProgress) &&
+                                                "opacity-50 pointer-events-none transform-none"
+                                            )}
+                                            onClick={confirmSeedPhrase}
+                                            disabled={!isPhraseValid() || isVerificationInProgress}
+                                        >
+                                            {!isVerificationInProgress ? (
+                                                <>
+                                                    <span>Confirm</span>
+                                                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Spinner />
+                                                    <span className="ml-2">Verifying...</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+
+                                    {!isPhraseValid() && inputWords.length > 0 && (
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-3">
+                                            Please select all 12 words in the correct order
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    {/* Decorative background elements */}
+                    <div className="absolute top-1/4 -left-8 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-purple-400/10 dark:from-blue-400/5 dark:to-purple-400/5 rounded-full blur-3xl"></div>
+                    <div className="absolute bottom-1/4 -right-8 w-40 h-40 bg-gradient-to-tl from-indigo-400/10 to-purple-400/10 dark:from-indigo-400/5 dark:to-purple-400/5 rounded-full blur-3xl"></div>
+
+                    {/* Subtle grid pattern */}
+                    <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03]" style={{
+                        backgroundImage: `radial-gradient(circle at 1px 1px, rgba(100,100,100,0.3) 1px, transparent 0)`,
+                        backgroundSize: '24px 24px'
+                    }}></div>
                 </PageLayout>
             )}
         </IdleComponent>

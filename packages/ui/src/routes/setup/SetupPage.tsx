@@ -5,7 +5,6 @@ import Divider from "../../components/Divider"
 import { Classes, classnames } from "../../styles/classes"
 
 import importSeedIcon from "../../assets/images/icons/import_seed.svg"
-import privateKeyIcon from "../../assets/images/icons/key.svg"
 import newAccountIcon from "../../assets/images/icons/new_account.svg"
 import PageLayout from "../../components/PageLayout"
 import { useCheckUserIsOnboarded } from "../../context/hooks/useCheckUserIsOnboarded"
@@ -13,7 +12,7 @@ import { useCheckUserIsOnboarded } from "../../context/hooks/useCheckUserIsOnboa
 const SetupOption: FunctionComponent<{
     title: string
     description: string
-    icon: string
+    icon: string | React.ReactElement
     linkTo: string
     linkLabel: string
     recommended?: boolean
@@ -48,11 +47,17 @@ const SetupOption: FunctionComponent<{
 
                         {/* Icon container */}
                         <div className="relative w-14 h-14 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-xl shadow-md dark:shadow-lg flex items-center justify-center border border-gray-200 dark:border-gray-600 group-hover:border-blue-300 dark:group-hover:border-blue-500 transition-all duration-300 overflow-hidden">
-                            <img
-                                src={icon}
-                                alt={title}
-                                className="w-7 h-7 rounded-lg filter group-hover:brightness-110 transition-all duration-300"
-                            />
+                            {typeof icon === 'string' ? (
+                                <img
+                                    src={icon}
+                                    alt={title}
+                                    className="w-7 h-7 rounded-lg filter group-hover:brightness-110 transition-all duration-300"
+                                />
+                            ) : (
+                                <div className="w-7 h-7 filter group-hover:brightness-110 transition-all duration-300">
+                                    {icon}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -124,7 +129,11 @@ const SetupPage = () => {
                     <SetupOption
                         title="Import Private Key"
                         description="Add a specific account using its private key. Ideal for importing individual accounts from other wallets."
-                        icon={privateKeyIcon}
+                        icon={
+                            <svg className="w-7 h-7 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 32 32">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 9.33a2.67 2.67 0 012.67 2.67m5.33 0a8 8 0 01-10.32 7.66L14.67 22.67H12v2.66H9.33v2.67H5.33a1.33 1.33 0 01-1.33-1.33v-3.45a1.33 1.33 0 01.39-.94l7.95-7.95A8 8 0 0128 12z" />
+                            </svg>
+                        }
                         linkTo="/setup/import-private-key"
                         linkLabel="Import Key"
                         recommended={false}

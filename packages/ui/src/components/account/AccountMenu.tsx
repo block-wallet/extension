@@ -186,7 +186,7 @@ const AccountMenu = () => {
             </div>
             <div className="flex-1 ml-4 pr-4 min-w-0">
                 <div className={classnames(
-                    "text-sm font-semibold",
+                    "text-sm font-semibold text-left",
                     option.disabled
                         ? "text-gray-400 dark:text-gray-500"
                         : option.warning
@@ -196,7 +196,7 @@ const AccountMenu = () => {
                     {option.label}
                 </div>
                 <div className={classnames(
-                    "text-xs",
+                    "text-xs text-left",
                     option.disabled
                         ? "text-gray-400 dark:text-gray-500"
                         : option.warning

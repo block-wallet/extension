@@ -20,6 +20,7 @@ import ChevronRightIcon from "../icons/ChevronRightIcon"
 import { ButtonWithLoading } from "../button/ButtonWithLoading"
 import { TokenAllowanceStatus } from "../../context/commTypes"
 import TokenLogo from "../token/TokenLogo"
+import { themeColors, cn } from "../../styles/theme"
 
 // Icons
 import { HiTrash, HiExternalLink, HiClock } from "react-icons/hi"
@@ -79,31 +80,22 @@ const AllowanceItem = ({
     }
 
     const name = showToken ? token.name : spender.name
-
-    const formattedTokenAllowance = formatUnits(
-        allowance.value || "0",
-        token.decimals
-    )
-
+    const formattedTokenAllowance = formatUnits(allowance.value || "0", token.decimals)
     const roundedTokenAllowance = formatRounded(formattedTokenAllowance, 5)
-
     const allowanceValue = allowance.isUnlimited
         ? `Unlimited ${token.symbol}`
         : `${roundedTokenAllowance} ${token.symbol}`
-
     const logo = showToken ? token.logo : spender.logo
 
     const options = [
         {
             title: "Transaction Hash",
-            link:
-                allowance.txHash &&
-                generateExplorerLink(
-                    availableNetworks,
-                    selectedNetwork,
-                    allowance.txHash,
-                    "tx"
-                ),
+            link: allowance.txHash && generateExplorerLink(
+                availableNetworks,
+                selectedNetwork,
+                allowance.txHash,
+                "tx"
+            ),
             content: allowance.txHash,
             copyable: true,
         },
@@ -161,17 +153,7 @@ const AllowanceItem = ({
     ]
 
     return (
-        <div
-            onClick={() => {
-                if (!isHoveringButton) setOpen(true)
-            }}
-            className={classnames(
-                "flex flex-row items-center justify-between p-4 transition duration-300 bg-white dark:bg-gray-800",
-                !isHoveringButton &&
-                !open &&
-                "hover:cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700"
-            )}
-        >
+        <>
             <DetailsDialog
                 open={open}
                 fixedTitle
@@ -179,101 +161,166 @@ const AllowanceItem = ({
                 itemTitleSize="text-sm"
                 itemContentSize="text-xs"
                 title="Allowance Details"
-                onClose={() => {
-                    setOpen(false)
-                }}
+                onClose={() => setOpen(false)}
                 options={options}
                 expandedByDefault
             />
 
-            <div className="flex flex-row items-center flex-1 min-w-0">
-                <TokenLogo
-                    logo={logo}
-                    name={(showToken ? token.symbol : spender.symbol) ?? ""}
-                    logoSize="big"
-                    filled={false}
-                />
-                <div className="flex flex-col ml-3 flex-1 min-w-0">
-                    <div className="flex items-center space-x-2">
-                        <span
-                            className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate"
-                            title={name}
-                        >
-                            {name}
-                        </span>
-                        {spender.websiteURL && (
-                            <HiExternalLink className="w-3 h-3 text-gray-400 dark:text-gray-500 flex-shrink-0" />
-                        )}
+            <div
+                onClick={() => {
+                    if (!isHoveringButton) setOpen(true)
+                }}
+                className={cn(
+                    "group relative flex items-center justify-between px-6 py-4",
+                    "bg-white dark:bg-gray-900 transition-all duration-200",
+                    "border-b border-gray-100 dark:border-gray-800 last:border-b-0",
+                    !isHoveringButton && !open && "cursor-pointer",
+                    !isHoveringButton && !open && "hover:bg-gray-50 dark:hover:bg-gray-800/50",
+                    !isHoveringButton && !open && "active:bg-gray-100 dark:active:bg-gray-800"
+                )}
+                role="button"
+                tabIndex={0}
+                aria-label={`View details for ${name} allowance`}
+                onKeyDown={(e) => {
+                    if ((e.key === 'Enter' || e.key === ' ') && !isHoveringButton) {
+                        e.preventDefault()
+                        setOpen(true)
+                    }
+                }}
+            >
+                {/* Main Content */}
+                <div className="flex items-center flex-1 min-w-0 space-x-4">
+                    {/* Token/Spender Logo */}
+                    <div className="flex-shrink-0">
+                        <TokenLogo
+                            logo={logo}
+                            name={(showToken ? token.symbol : spender.symbol) ?? ""}
+                            logoSize="big"
+                            filled={false}
+                        />
                     </div>
 
-                    <div className="flex items-center space-x-2 mt-1">
-                        <span
-                            className={classnames(
-                                "text-xs font-medium flex items-center space-x-1",
-                                allowance.isUnlimited
-                                    ? "text-amber-600 dark:text-amber-400"
-                                    : "text-gray-600 dark:text-gray-400"
+                    {/* Information */}
+                    <div className="flex-1 min-w-0 space-y-1">
+                        {/* Primary Info Line */}
+                        <div className="flex items-center space-x-2">
+                            <h3
+                                className={cn(
+                                    "text-sm font-semibold truncate",
+                                    themeColors.text.primary
+                                )}
+                                title={name}
+                            >
+                                {name}
+                            </h3>
+                            {spender.websiteURL && (
+                                <HiExternalLink
+                                    className={cn(
+                                        "w-3 h-3 flex-shrink-0",
+                                        themeColors.text.tertiary
+                                    )}
+                                />
                             )}
-                            title={allowanceValue}
-                        >
-                            {allowance.isUnlimited && (
-                                <BiInfinite className="w-3 h-3" />
-                            )}
-                            <span className="truncate max-w-32">
-                                {allowanceValue}
-                            </span>
-                        </span>
+                        </div>
 
-                        {isPendingUpdate && (
-                            <div className="flex items-center space-x-1 text-xs text-blue-600 dark:text-blue-400">
-                                <HiClock className="w-3 h-3" />
-                                <span>Updating</span>
+                        {/* Allowance Value */}
+                        <div className="flex items-center space-x-2">
+                            <div
+                                className={cn(
+                                    "flex items-center space-x-1 text-xs font-medium",
+                                    allowance.isUnlimited
+                                        ? "text-amber-600 dark:text-amber-400"
+                                        : themeColors.text.secondary
+                                )}
+                                title={allowanceValue}
+                            >
+                                {allowance.isUnlimited && (
+                                    <BiInfinite className="w-3 h-3 flex-shrink-0" />
+                                )}
+                                <span className="truncate max-w-32">
+                                    {allowanceValue}
+                                </span>
+                            </div>
+
+                            {/* Pending Status Badge */}
+                            {isPendingUpdate && (
+                                <div className={cn(
+                                    "flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-medium",
+                                    "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400",
+                                    "border border-blue-200 dark:border-blue-800"
+                                )}>
+                                    <HiClock className="w-3 h-3 animate-pulse" />
+                                    <span>Updating</span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Last Updated */}
+                        {allowance.txTime && (
+                            <div className={cn("text-xs", themeColors.text.tertiary)}>
+                                Last updated: {new Date(allowance.txTime).toLocaleDateString()}
                             </div>
                         )}
                     </div>
-
-                    {allowance.txTime && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Last updated: {new Date(allowance.txTime).toLocaleDateString()}
-                        </div>
-                    )}
                 </div>
-            </div>
 
-            <div className="flex flex-row items-center ml-4 space-x-3">
-                {isPendingUpdate ? (
-                    <ButtonWithLoading
-                        isLoading={true}
-                        label="Updating"
-                        spinnerSize="12"
-                        buttonClass={classnames(
-                            Classes.smallButton,
-                            "px-3 py-1.5 text-xs",
-                            "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 pointer-events-none"
-                        )}
-                    />
-                ) : (
-                    <button
-                        {...getIsHoveringProps()}
-                        onClick={revoke}
-                        className={classnames(
-                            "flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
-                            "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800",
-                            "hover:bg-red-100 dark:hover:bg-red-900/30 hover:border-red-300 dark:hover:border-red-700",
-                            "active:bg-red-200 dark:active:bg-red-900/40",
-                            "disabled:opacity-50 disabled:cursor-not-allowed"
-                        )}
-                        disabled={isPendingUpdate}
-                        title="Revoke this allowance"
-                    >
-                        <HiTrash className="w-3 h-3" />
-                        <span>Revoke</span>
-                    </button>
-                )}
+                {/* Actions */}
+                <div className="flex items-center space-x-3 ml-4">
+                    {/* Revoke Button */}
+                    {isPendingUpdate ? (
+                        <div className={cn(
+                            "px-3 py-1.5 rounded-lg text-xs font-medium",
+                            "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400",
+                            "border border-blue-200 dark:border-blue-800",
+                            "flex items-center space-x-1.5"
+                        )}>
+                            <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            <span>Updating</span>
+                        </div>
+                    ) : (
+                        <button
+                            {...getIsHoveringProps()}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                revoke()
+                            }}
+                            className={cn(
+                                "flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium rounded-lg",
+                                "transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2",
+                                "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400",
+                                "border border-red-200 dark:border-red-800",
+                                "hover:bg-red-100 dark:hover:bg-red-900/30",
+                                "hover:border-red-300 dark:hover:border-red-700",
+                                "hover:shadow-sm hover:scale-105",
+                                "active:bg-red-200 dark:active:bg-red-900/40 active:scale-95",
+                                "focus:ring-red-500 dark:focus:ring-red-400 focus:ring-offset-white dark:focus:ring-offset-gray-900",
+                                "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                            )}
+                            disabled={isPendingUpdate}
+                            title="Revoke this allowance"
+                            aria-label={`Revoke allowance for ${name}`}
+                        >
+                            <HiTrash className="w-3 h-3" />
+                            <span>Revoke</span>
+                        </button>
+                    )}
 
-                <ChevronRightIcon />
+                    {/* Details Arrow */}
+                    <div className={cn(
+                        "transition-transform duration-200 group-hover:translate-x-0.5",
+                        themeColors.text.tertiary
+                    )}>
+                        <ChevronRightIcon />
+                    </div>
+                </div>
+
+                {/* Hover Overlay for Visual Feedback */}
+                <div className={cn(
+                    "absolute inset-0 bg-gradient-to-r from-transparent to-blue-50/10 dark:to-blue-900/10",
+                    "opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
+                )} />
             </div>
-        </div>
+        </>
     )
 }
 

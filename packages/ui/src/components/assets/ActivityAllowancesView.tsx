@@ -44,28 +44,30 @@ const ActivityAllowancesView = () => {
     }
 
     return (
-        <div className="flex flex-col w-full !mt-0">
-            <HorizontalSelect
-                options={tabs}
-                value={tab}
-                onChange={onTabChange}
-                display={(t) =>
-                    t.label === TabLabels.ALLOWANCES && allowances?.length > 0
-                        ? `${t.label} (${allowances.length})`
-                        : t.label
-                }
-                disableStyles
-                optionClassName={(value) =>
-                    classnames(
-                        "flex-1 flex flex-row items-center justify-center p-3 text-sm hover:text-primary-blue-default dark:hover:text-primary-blue-400 transition-colors duration-200",
-                        tab === value
-                            ? "border-primary-blue-default dark:border-primary-blue-400 border-b-2 text-primary-blue-default dark:text-primary-blue-400 font-semibold"
-                            : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 border-b hover:text-primary-blue-default dark:hover:text-primary-blue-400 font-medium"
-                    )
-                }
-                containerClassName="flex flex-row -ml-6 !mt-0 w-[calc(100%+3rem)]"
-            />
-            <div className="flex flex-col w-full">
+        <div className="flex flex-col h-full">
+            <div className="flex-shrink-0">
+                <HorizontalSelect
+                    options={tabs}
+                    value={tab}
+                    onChange={onTabChange}
+                    display={(t) =>
+                        t.label === TabLabels.ALLOWANCES && allowances?.length > 0
+                            ? `${t.label} (${allowances.length})`
+                            : t.label
+                    }
+                    disableStyles
+                    optionClassName={(value) =>
+                        classnames(
+                            "flex-1 flex flex-row items-center justify-center p-3 text-sm hover:text-primary-blue-default dark:hover:text-primary-blue-400 transition-colors duration-200",
+                            tab === value
+                                ? "border-primary-blue-default dark:border-primary-blue-400 border-b-2 text-primary-blue-default dark:text-primary-blue-400 font-semibold"
+                                : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 border-b hover:text-primary-blue-default dark:hover:text-primary-blue-400 font-medium"
+                        )
+                    }
+                    containerClassName="flex flex-row w-full"
+                />
+            </div>
+            <div className="flex-1 min-h-0 overflow-hidden">
                 <TabComponent />
             </div>
         </div>

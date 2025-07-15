@@ -1,14 +1,10 @@
 import { FunctionComponent, useState, useEffect, useRef } from "react"
-import classnames from "classnames"
-
 import Dialog from "./Dialog"
-import Divider from "../Divider"
-
-import openExternal from "../../assets/images/icons/open_external.svg"
-import CloseIcon from "../icons/CloseIcon"
-import { Classes } from "../../styles"
 import useCopyToClipboard from "../../util/hooks/useCopyToClipboard"
-import CopyTooltip from "../label/СopyToClipboardTooltip"
+import { themeColors, cn } from "../../styles/theme"
+
+// Icons
+import { HiOutlineExternalLink, HiOutlineX, HiChevronDown, HiChevronUp } from "react-icons/hi"
 
 export type option = {
     title: string | JSX.Element
@@ -50,10 +46,17 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
     const [expends, setExpends] = useState<boolean[]>(
         new Array(options.length).fill(expandedByDefault)
     )
+    const [copiedMessage, setCopiedMessage] = useState<string>("")
 
-    const { onCopy, copied } = useCopyToClipboard()
+    const { onCopy } = useCopyToClipboard()
 
     const previousLengthRef = useRef(options.length)
+
+    const handleCopy = (content: string) => {
+        onCopy(content)
+        setCopiedMessage("Copied to clipboard!")
+        setTimeout(() => setCopiedMessage(""), 2000)
+    }
 
     useEffect(() => {
         if (options.length === previousLengthRef.current) return
@@ -62,172 +65,209 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [options])
 
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            onClose()
+        }
+    }
+
     return (
         <Dialog open={open} onClickOutside={() => onClose()}>
             <div
-                className={classnames("flex flex-col", !fixedTitle && "px-3")}
+                className={cn("flex flex-col", !fixedTitle && "px-3")}
+                onKeyDown={handleKeyDown}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="dialog-title"
                 style={{ height: "calc(100vh - 8rem)" }}
             >
                 {fixedTitle && (
                     <div className="w-full">
                         <h2
-                            className={classnames(
+                            id="dialog-title"
+                            className={cn(
                                 titleSize,
-                                "font-semibold pl-2 pb-3"
+                                "font-semibold pl-2 pb-3",
+                                themeColors.text.primary
                             )}
                         >
                             {title}
                         </h2>
                         <div className="-mx-3">
-                            <Divider />
+                            <hr className="border-gray-200 dark:border-gray-700" />
                         </div>
                     </div>
                 )}
-                <div
-                    className={classnames(
-                        "grow mb-auto overflow-auto -mr-3",
-                        fixedTitle && "px-3"
-                    )}
-                >
+
+                <div className={cn(
+                    "grow mb-auto overflow-auto -mr-3",
+                    fixedTitle && "px-3"
+                )}>
                     <span className="absolute top-0 right-0 p-4">
-                        <div
-                            onClick={() => onClose()}
-                            className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
+                        <button
+                            onClick={onClose}
+                            className={cn(
+                                "p-2 rounded-lg transition-all duration-200",
+                                "hover:bg-gray-200 dark:hover:bg-gray-700",
+                                "focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400",
+                                themeColors.text.secondary,
+                                "hover:text-gray-900 dark:hover:text-gray-100"
+                            )}
+                            aria-label="Close dialog"
+                            title="Close dialog"
                         >
-                            <CloseIcon size="10" />
-                        </div>
+                            <HiOutlineX className="w-5 h-5" />
+                        </button>
                     </span>
+
                     {!fixedTitle && (
-                        <h2 className={classnames(titleSize, "font-semibold")}>
+                        <h2
+                            id="dialog-title"
+                            className={cn(
+                                titleSize,
+                                "font-semibold",
+                                themeColors.text.primary
+                            )}
+                        >
                             {title}
                         </h2>
                     )}
+
+                    {/* Copy Notification - Overlay */}
+                    {copiedMessage && (
+                        <div className={cn(
+                            "absolute top-16 left-1/2 transform -translate-x-1/2 z-50",
+                            "px-4 py-2 rounded-lg shadow-lg",
+                            "bg-green-50 dark:bg-green-900/90 text-green-700 dark:text-green-300",
+                            "border border-green-200 dark:border-green-800",
+                            "text-sm font-medium animate-pulse"
+                        )}>
+                            {copiedMessage}
+                        </div>
+                    )}
+
                     <div className="flex flex-col space-y-4 mt-6 mb-6">
                         {options
-                            .filter(
-                                (option) => !!option.content || showUndefined
-                            )
+                            .filter((option) => !!option.content || showUndefined)
                             .map((option, i) => {
                                 if (onOption) return onOption(option)
 
+                                const isExpanded = expends[i]
+                                const canExpand = option.expandable
+                                const canCopy = option.copyable && typeof option.content === "string"
+
                                 return (
                                     <div
-                                        key={
-                                            typeof option.title === "string"
-                                                ? option.title
-                                                : i
-                                        }
+                                        key={typeof option.title === "string" ? option.title : i}
+                                        className="space-y-2"
                                     >
-                                        {typeof option.title === "string" ? (
-                                            <div className="flex flex-row w-full items-center">
-                                                <h3
-                                                    className={classnames(
+                                        {/* Item Header */}
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center space-x-2">
+                                                {typeof option.title === "string" ? (
+                                                    <h3 className={cn(
                                                         itemTitleSize,
-                                                        "font-semibold mr-2"
-                                                    )}
-                                                >
-                                                    {option.title}
-                                                </h3>
+                                                        "font-semibold",
+                                                        themeColors.text.primary
+                                                    )}>
+                                                        {option.title}
+                                                    </h3>
+                                                ) : (
+                                                    <div className={cn(themeColors.text.primary)}>
+                                                        {option.title}
+                                                    </div>
+                                                )}
+
+                                                {/* External Link */}
                                                 {option.link && (
                                                     <a
                                                         href={option.link}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
+                                                        className={cn(
+                                                            "p-1 rounded transition-colors duration-200",
+                                                            "hover:bg-blue-100 dark:hover:bg-blue-900/30",
+                                                            "text-blue-600 dark:text-blue-400",
+                                                            "focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                        )}
                                                         title="Open in explorer"
+                                                        aria-label="Open in explorer"
                                                     >
-                                                        <img
-                                                            src={openExternal}
-                                                            alt="Open in explorer"
-                                                            className="w-3 h-3"
-                                                        />
+                                                        <HiOutlineExternalLink className="w-4 h-4" />
                                                     </a>
                                                 )}
                                             </div>
-                                        ) : (
-                                            <div className="flex flex-row w-full items-center">
-                                                {option.title}
-                                                {option.link && (
-                                                    <a
-                                                        href={option.link}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="ml-2"
-                                                        title="Open in explorer"
+
+                                            {/* Action Buttons */}
+                                            <div className="flex items-center space-x-1">
+                                                {canExpand && (
+                                                    <button
+                                                        onClick={() => {
+                                                            const newExpends = [...expends]
+                                                            newExpends[i] = !expends[i]
+                                                            setExpends(newExpends)
+                                                        }}
+                                                        className={cn(
+                                                            "p-1.5 rounded transition-all duration-200",
+                                                            "hover:bg-gray-200 dark:hover:bg-gray-700",
+                                                            themeColors.text.secondary,
+                                                            "focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                        )}
+                                                        title={isExpanded ? "Collapse" : "Expand"}
+                                                        aria-label={isExpanded ? "Collapse content" : "Expand content"}
                                                     >
-                                                        <img
-                                                            src={openExternal}
-                                                            alt="Open in explorer"
-                                                            className="w-3 h-3"
-                                                        />
-                                                    </a>
+                                                        {isExpanded ? (
+                                                            <HiChevronUp className="w-4 h-4" />
+                                                        ) : (
+                                                            <HiChevronDown className="w-4 h-4" />
+                                                        )}
+                                                    </button>
                                                 )}
                                             </div>
-                                        )}
-                                        <div
-                                            className={classnames(
-                                                "flex w-full",
-                                                option.copyable &&
-                                                    "cursor-pointer group relative"
-                                            )}
-                                            onClick={(_) => {
-                                                if (
-                                                    option.copyable &&
-                                                    typeof option.content ===
-                                                        "string"
-                                                ) {
-                                                    onCopy(option.content)
-                                                }
-                                            }}
-                                        >
+                                        </div>
+
+                                        {/* Item Content */}
+                                        <div className="relative">
                                             <p
-                                                className={classnames(
+                                                className={cn(
                                                     itemContentSize,
-                                                    "mt-1 w-5/6",
-                                                    expends[i]
-                                                        ? "break-words"
-                                                        : "truncate",
-                                                    option.expandable
-                                                        ? "cursor-pointer"
-                                                        : ""
+                                                    themeColors.text.secondary,
+                                                    "font-mono leading-relaxed",
+                                                    isExpanded ? "break-all whitespace-pre-wrap" : "truncate",
+                                                    canCopy && "cursor-pointer hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-200"
                                                 )}
-                                                onClick={(_) => {
-                                                    if (!option.expandable)
-                                                        return
-
-                                                    const newExpends = [
-                                                        ...expends,
-                                                    ]
-                                                    newExpends[i] = !expends[i]
-
-                                                    setExpends(newExpends)
+                                                onClick={() => {
+                                                    if (canCopy) {
+                                                        handleCopy(option.content as string)
+                                                    }
                                                 }}
-                                                title={
-                                                    typeof option.content ===
-                                                    "string"
-                                                        ? option.content ??
-                                                          "N/A"
-                                                        : ""
-                                                }
+                                                title={canCopy ? "Click to copy" : (typeof option.content === "string" ? option.content ?? "N/A" : "")}
                                             >
                                                 {option.content ?? "N/A"}
                                             </p>
-                                            <CopyTooltip copied={copied} />
                                         </div>
                                     </div>
                                 )
                             })}
                     </div>
                 </div>
+
                 <div className="mt-auto w-full">
                     <div className="-mx-3">
-                        <Divider />
+                        <hr className="border-gray-200 dark:border-gray-700" />
                     </div>
                     <button
-                        className={classnames(
-                            Classes.liteButton,
-                            "mt-4 w-full"
-                        )}
                         onClick={onClose}
+                        className={cn(
+                            "w-full px-4 py-3 rounded-lg text-sm font-semibold mt-4",
+                            "transition-all duration-200",
+                            "bg-blue-600 dark:bg-blue-500 text-white",
+                            "hover:bg-blue-700 dark:hover:bg-blue-600",
+                            "focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400",
+                            "focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900",
+                            "active:scale-95 hover:shadow-md"
+                        )}
+                        autoFocus
                     >
                         Close
                     </button>

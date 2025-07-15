@@ -13,18 +13,22 @@ const AssetActivity = () => {
 
     return (
         <div
-            className="flex flex-col flex-1 w-full space-y-0 h-full max-h-[470px] min-h-[266px] bg-white dark:bg-gray-900"
+            className="flex flex-col h-full bg-white dark:bg-gray-900 overflow-hidden"
             data-testid="activity-list"
         >
             {tokenTransactions.length > 0 ? (
-                <TransactionsList
-                    transactions={tokenTransactions}
-                    isNetworkChanging={isNetworkChanging}
-                />
+                <div className="flex-1 overflow-auto">
+                    <TransactionsList
+                        transactions={tokenTransactions}
+                        isNetworkChanging={isNetworkChanging}
+                    />
+                </div>
             ) : (
-                <span className="text-sm text-gray-500 dark:text-gray-400 pt-4 mx-auto">
-                    You have no transactions.
-                </span>
+                <div className="flex items-center justify-center flex-1 p-4">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                        You have no transactions.
+                    </span>
+                </div>
             )}
         </div>
     )

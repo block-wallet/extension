@@ -34,10 +34,24 @@ const ConnectionErrorDialog: React.FC<ErrorDialogProps> = ({
             open={isOpen}
             title={getConnectionErrorMessage(errorType)}
             message={
-                <div>
-                    <p>
+                <div className="text-gray-900 dark:text-gray-100">
+                    <p className="pb-3 text-gray-700 dark:text-gray-300">
                         We encountered an issue while trying to connect your hardware wallet.
                     </p>
+                    {recommendations.length > 0 && (
+                        <div className="mt-4 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg p-4">
+                            <p className="font-semibold mb-3 text-amber-800 dark:text-amber-200">
+                                💡 Try the following steps:
+                            </p>
+                            <ul className="list-disc pl-5 space-y-2">
+                                {recommendations.map((recommendation, index) => (
+                                    <li key={index} className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                                        {recommendation}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
                 </div>
             }
             onDone={onRetry || onClose}

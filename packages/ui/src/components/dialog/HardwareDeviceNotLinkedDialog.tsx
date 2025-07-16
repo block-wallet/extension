@@ -72,14 +72,14 @@ const HardwareDeviceNotLinkedDialog: React.FC<{
                 fullScreen={fullScreen}
                 wideMargins={fullScreen}
                 message={
-                    <div>
-                        <p className="pb-3">
+                    <div className="text-gray-900 dark:text-gray-100">
+                        <p className="pb-3 text-gray-700 dark:text-gray-300">
                             We're having trouble connecting with your hardware
                             device.
                         </p>
                         <Divider />
                         <div className="text-left">
-                            <p className={!fullScreen ? "pt-3" : "pt-4"}>
+                            <p className={`${!fullScreen ? "pt-3" : "pt-4"} text-gray-800 dark:text-gray-200 font-medium`}>
                                 Please ensure that you have:
                             </p>
                             <div
@@ -95,18 +95,22 @@ const HardwareDeviceNotLinkedDialog: React.FC<{
                                         className="flex flex-row items-center h-7"
                                         key={index}
                                     >
-                                        <span className="text-sm">
+                                        <span className="text-sm text-gray-700 dark:text-gray-300">
                                             {index + 1}.&nbsp;{step.label}
                                         </span>
                                         {step.info && (
                                             <div className="group relative">
                                                 <AiFillInfoCircle
                                                     size={26}
-                                                    className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
+                                                    className="pl-2 text-gray-500 dark:text-gray-400 cursor-pointer hover:text-primary-blue-default dark:hover:text-primary-blue-400 transition-colors duration-200"
                                                 />
                                                 <Tooltip
                                                     className="!-translate-x-48 !w-60 !break-word !whitespace-normal"
-                                                    content={step.info}
+                                                    content={
+                                                        <span className="text-gray-700 dark:text-gray-300">
+                                                            {step.info}
+                                                        </span>
+                                                    }
                                                 />
                                             </div>
                                         )}
@@ -114,7 +118,7 @@ const HardwareDeviceNotLinkedDialog: React.FC<{
                                 ))}
                             </div>
                             {showReconnect && (
-                                <span className="text-xs">
+                                <span className="text-xs text-gray-600 dark:text-gray-400">
                                     Issue persists?{" "}
                                     <ClickableText
                                         onClick={() =>

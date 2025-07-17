@@ -87,10 +87,8 @@ const ImportAccountPage = () => {
                 return
             }
 
-            // Reset any previous discovery errors
             setDiscoveryError("")
 
-            //run always receives a promise
             await run(
                 new Promise(async (resolve, reject) => {
                     try {
@@ -101,9 +99,7 @@ const ImportAccountPage = () => {
                         await selectAccount(newAccount.address)
                         resolve(true)
                     } catch (e: any) {
-                        // Check if this is a port disconnection error
                         if (e.message && e.message.toLowerCase().includes("attempting to use a disconnected port object")) {
-                            // Set a more user-friendly error message
                             setDiscoveryError("Communication with the extension was interrupted. Please try again.")
                             reject(e)
                         } else {
@@ -166,13 +162,10 @@ const ImportAccountPage = () => {
         }
     }, [isLoading, isSuccess, isError, dispatch])
 
-    // Function to retry the import when there's a port connection error
     const handleRetry = () => {
         setRetryAttempts(prev => prev + 1)
         setDiscoveryError("")
-        // Wait for 500ms to ensure connection is reestablished
         setTimeout(() => {
-            // Get current form values and resubmit manually
             const currentValues = watch();
             onSubmit(currentValues as any);
         }, 500)
@@ -184,14 +177,14 @@ const ImportAccountPage = () => {
                 status={status}
                 open={isOpen}
                 titles={{
-                    loading: "Fetching balances...",
-                    error: "Error",
-                    success: "Success!",
+                    loading: "Importing Account...",
+                    error: "Import Failed",
+                    success: "Account Imported Successfully!",
                 }}
                 texts={{
-                    loading: `Please wait while your account is being imported...`,
-                    error: "There was an error while importing the account",
-                    success: `Congratulations! Your account has been imported!`,
+                    loading: `Please wait while your account is being imported and added to your wallet...`,
+                    error: "We couldn't import your account. Please verify your private key and try again.",
+                    success: `🎉 Your account has been successfully imported! You can now access your existing digital assets through BlockWallet.`,
                 }}
                 onDone={() => {
                     if (isError) {
@@ -223,16 +216,13 @@ const ImportAccountPage = () => {
                     </div>
                 )}
 
-                {/* Background with gradient - ensure full coverage */}
                 <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/10"></div>
                 <div className="relative z-10 min-h-full flex-1">
                     <form
                         className="flex flex-col justify-between flex-1 h-full"
                         onSubmit={onSubmit}
                     >
-                        {/* Main content area */}
                         <div className="flex-1 p-6">
-                            {/* Header section */}
                             <div className="text-center mb-8">
                                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 dark:from-purple-400 dark:to-purple-500 flex items-center justify-center shadow-lg">
                                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -247,9 +237,7 @@ const ImportAccountPage = () => {
                                 </p>
                             </div>
 
-                            {/* Form fields with enhanced styling */}
                             <div className="space-y-6">
-                                {/* Account Name Field */}
                                 <div className="space-y-2">
                                     <TextInput
                                         appearance="outline"
@@ -263,7 +251,6 @@ const ImportAccountPage = () => {
                                     />
                                 </div>
 
-                                {/* Import Type Selector */}
                                 <div className="space-y-2">
                                     <Select
                                         onChange={(value) => {
@@ -280,7 +267,6 @@ const ImportAccountPage = () => {
                                     </Select>
                                 </div>
 
-                                {/* Private Key Field */}
                                 <div className="space-y-2">
                                     <TextInput
                                         appearance="outline"
@@ -298,7 +284,6 @@ const ImportAccountPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Security Warning */}
                                 <div className="p-4 rounded-xl bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-800/30">
                                     <div className="flex items-start space-x-3">
                                         <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
@@ -317,7 +302,6 @@ const ImportAccountPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Anti-phishing protection */}
                                 {state.settings.useAntiPhishingProtection && (
                                     <div className="pt-2">
                                         <AntiPhishing
@@ -329,7 +313,6 @@ const ImportAccountPage = () => {
                             </div>
                         </div>
 
-                        {/* Footer with enhanced button */}
                         <div className="border-t border-gray-200 dark:border-gray-700/50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
                             <PopupFooter>
                                 <ButtonWithLoading

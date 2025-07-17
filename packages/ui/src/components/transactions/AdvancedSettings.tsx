@@ -1,15 +1,12 @@
 import * as yup from "yup"
 import CloseIcon from "../icons/CloseIcon"
 import Dialog from "../dialog/Dialog"
-import Divider from "../Divider"
 import Icon, { IconName } from "../ui/Icon"
-import OutlinedButton from "../ui/OutlinedButton"
 import ToggleButton from "../button/ToggleButton"
 import Tooltip from "../label/Tooltip"
 import { AiFillInfoCircle } from "react-icons/ai"
 import { BigNumber } from "@ethersproject/bignumber"
-import { ButtonWithLoading } from "../button/ButtonWithLoading"
-import { Classes, classnames } from "../../styles"
+import { classnames } from "../../styles"
 import { FunctionComponent, useEffect, useRef, useState } from "react"
 import { InferType } from "yup"
 import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
@@ -133,7 +130,6 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
         setIsOpen(false)
     })
 
-    // Validation
     const schema = GetAdvancedSettingsSchema(display)
 
     const {
@@ -243,7 +239,6 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
         validateSlippage(value)
     }
 
-    // Reset settings to default
     const resetSettings = () => {
         clearErrors()
 
@@ -301,7 +296,6 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
 
         fetch()
 
-        // eslint-disable-next-line
     }, [transactionId])
 
     useEffect(() => {
@@ -311,7 +305,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
             setValue(
                 "nonce",
                 advancedSettings.customNonce?.toString() ||
-                    nextNonce.current.toString(),
+                nextNonce.current.toString(),
                 {
                     shouldValidate: true,
                 }
@@ -341,170 +335,236 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
             )
         }
 
-        // eslint-disable-next-line
     }, [isOpen, nextNonce.current])
 
     return (
         <>
             {buttonDisplay ? (
-                <OutlinedButton
+                <button
                     onClick={() => setIsOpen(true)}
-                    className="!w-full py-3 h-12 space-x-2 p-4"
+                    className="group w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all duration-200 shadow-sm hover:shadow-md"
                 >
-                    <span className="font-semibold text-sm">{label}</span>
-                    <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
-                </OutlinedButton>
+                    <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 flex items-center justify-center transition-colors duration-200">
+                            <svg className="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+                            </svg>
+                        </div>
+                        <span className="font-medium text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
+                            {label}
+                        </span>
+                    </div>
+                    <Icon name={IconName.RIGHT_CHEVRON} size="sm" className="text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors duration-200" />
+                </button>
             ) : (
                 <div className="flex flex-col items-end">
-                    <span
-                        className="text-xs font-semibold text-primary-blue-default cursor-pointer hover:underline"
+                    <button
                         onClick={() => setIsOpen(true)}
+                        className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors duration-200"
                     >
                         {label}
-                    </span>
+                    </button>
                 </div>
             )}
 
-            <Dialog open={isOpen}>
-                <div className="absolute top-0 right-0 p-5 z-40">
-                    <div
-                        onClick={() => {
-                            setIsOpen(false)
-                        }}
-                        className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
+            <Dialog open={isOpen} className="px-6">
+                <div className="relative">
+                    <button
+                        onClick={() => setIsOpen(false)}
+                        className="absolute -top-2 -right-2 p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                        aria-label="Close advanced settings"
                     >
-                        <CloseIcon size="10" />
+                        <CloseIcon size="16" />
+                    </button>
+
+                    <div className="text-center mb-6">
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 dark:from-purple-400 dark:to-purple-500 flex items-center justify-center shadow-lg">
+                            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+                            </svg>
+                        </div>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                            {label}
+                        </h2>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Customize transaction parameters for optimal execution
+                        </p>
                     </div>
-                </div>
-                <div
-                    className="flex flex-col w-full px-3"
-                    ref={clickOutsideRef}
-                >
-                    <p className="text-base font-semibold pb-3">{label}</p>
 
-                    {display.slippage && (
-                        <div className="w-full pb-3">
-                            <p className="text-[13px] font-medium text-primary-grey-dark">
-                                Slippage percentage (%)
-                            </p>
-                            <input
-                                {...register("slippage")}
-                                id="slippage"
-                                name="slippage"
-                                type="text"
-                                autoComplete="off"
-                                onChange={(e) => {
-                                    onSlippageChange(e)
-                                }}
-                                className={classnames(
-                                    "w-full mt-2",
-                                    Classes.inputBordered,
-                                    errors.slippage
-                                        ? "border-red-400 focus:border-red-400"
-                                        : slippageWarning &&
-                                              "border-yellow-400 focus:border-yellow-600"
-                                )}
-                            />
-                            {errors.slippage?.message || slippageWarning ? (
-                                <p className="text-xs text-red-500 pt-1">
-                                    {errors.slippage?.message ||
-                                        slippageWarning}
-                                </p>
-                            ) : null}
-                        </div>
-                    )}
-
-                    {display.nonce && (
-                        <div className="w-full pb-2">
-                            <p className="text-[13px] font-medium text-primary-grey-dark">
-                                Custom Nonce
-                            </p>
-                            <input
-                                {...register("nonce")}
-                                id="nonce"
-                                name="nonce"
-                                type="text"
-                                autoComplete="off"
-                                onChange={(e) => {
-                                    onNonceChange(e)
-                                }}
-                                className={classnames(
-                                    "w-full mt-2",
-                                    Classes.inputBordered,
-                                    errors.nonce &&
-                                        "border-red-400 focus:border-red-400"
-                                )}
-                            />
-                            {errors.nonce?.message ? (
-                                <p className="text-xs text-red-500 pt-1">
-                                    {errors.nonce.message}
-                                </p>
-                            ) : null}
-                        </div>
-                    )}
-
-                    {display.flashbots && isFlashbotsAvailable && (
-                        <div className="w-full pb-2">
-                            <div className="flex items-center pb-1">
-                                <p className="text-xs font-medium ">
-                                    Flashbots
-                                </p>
-                                <div className="group relative">
-                                    <AiFillInfoCircle
-                                        size={20}
-                                        className="pl-1 text-primary-grey-dark  hover:text-primary-blue-default"
+                    <div className="space-y-6" ref={clickOutsideRef}>
+                        {display.slippage && (
+                            <div className="space-y-3">
+                                <div className="flex items-center space-x-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Slippage Tolerance
+                                    </label>
+                                    <div className="group relative">
+                                        <AiFillInfoCircle className="w-4 h-4 text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 cursor-help" />
+                                        <Tooltip
+                                            content={
+                                                <div className="text-xs text-center">
+                                                    <p>Maximum price movement you're willing to accept.</p>
+                                                    <p>Higher values reduce failure risk but increase cost.</p>
+                                                </div>
+                                            }
+                                        />
+                                    </div>
+                                </div>
+                                <div className="relative">
+                                    <input
+                                        {...register("slippage")}
+                                        id="slippage"
+                                        name="slippage"
+                                        type="text"
+                                        autoComplete="off"
+                                        onChange={onSlippageChange}
+                                        className={classnames(
+                                            "w-full px-4 py-3 text-sm rounded-xl border transition-all duration-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 dark:focus:border-purple-400",
+                                            "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100",
+                                            errors.slippage
+                                                ? "border-red-300 dark:border-red-600 focus:ring-red-500/20"
+                                                : slippageWarning
+                                                    ? "border-amber-300 dark:border-amber-600 focus:ring-amber-500/20"
+                                                    : "border-gray-300 dark:border-gray-600"
+                                        )}
+                                        placeholder="0.5"
                                     />
-                                    <Tooltip
-                                        content={
-                                            <div className="p-0.5 font-normal text-center text-xs text-white-500">
-                                                <p>
-                                                    Transactions consuming less
-                                                    than 42,000 gas
-                                                </p>
-                                                <p>
-                                                    will be mined normally,
-                                                    without Flashbots.
-                                                </p>
-                                            </div>
-                                        }
+                                    <div className="absolute inset-y-0 right-0 flex items-center pr-4">
+                                        <span className="text-sm text-gray-500 dark:text-gray-400">%</span>
+                                    </div>
+                                </div>
+                                {(errors.slippage?.message || slippageWarning) && (
+                                    <div className={classnames(
+                                        "flex items-center space-x-2 text-xs",
+                                        errors.slippage?.message
+                                            ? "text-red-600 dark:text-red-400"
+                                            : "text-amber-600 dark:text-amber-400"
+                                    )}>
+                                        <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                        </svg>
+                                        <span>{errors.slippage?.message || slippageWarning}</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Nonce setting */}
+                        {display.nonce && (
+                            <div className="space-y-3">
+                                <div className="flex items-center space-x-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Custom Nonce
+                                    </label>
+                                    <div className="group relative">
+                                        <AiFillInfoCircle className="w-4 h-4 text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 cursor-help" />
+                                        <Tooltip
+                                            content={
+                                                <div className="text-xs text-center">
+                                                    <p>Transaction sequence number.</p>
+                                                    <p>Use higher values to replace pending transactions.</p>
+                                                </div>
+                                            }
+                                        />
+                                    </div>
+                                </div>
+                                <input
+                                    {...register("nonce")}
+                                    id="nonce"
+                                    name="nonce"
+                                    type="text"
+                                    autoComplete="off"
+                                    onChange={onNonceChange}
+                                    className={classnames(
+                                        "w-full px-4 py-3 text-sm rounded-xl border transition-all duration-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 dark:focus:border-purple-400",
+                                        "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100",
+                                        errors.nonce
+                                            ? "border-red-300 dark:border-red-600 focus:ring-red-500/20"
+                                            : "border-gray-300 dark:border-gray-600"
+                                    )}
+                                    placeholder="0"
+                                />
+                                {errors.nonce?.message && (
+                                    <div className="flex items-center space-x-2 text-xs text-red-600 dark:text-red-400">
+                                        <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                        </svg>
+                                        <span>{errors.nonce.message}</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Flashbots setting */}
+                        {display.flashbots && isFlashbotsAvailable && (
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-2">
+                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            Flashbots Protection
+                                        </label>
+                                        <div className="group relative">
+                                            <AiFillInfoCircle className="w-4 h-4 text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 cursor-help" />
+                                            <Tooltip
+                                                content={
+                                                    <div className="text-xs text-center">
+                                                        <p>Protects against MEV attacks by sending</p>
+                                                        <p>transactions through Flashbots relay.</p>
+                                                        <p className="mt-1 text-amber-200">Requires 42,000+ gas</p>
+                                                    </div>
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                    <ToggleButton
+                                        defaultChecked={advancedSettings.flashbots ?? false}
+                                        disabled={transactionGasLimit.lt(FLASHBOTS_MIN_GAS_LIMIT)}
+                                        inputName="flashbots"
+                                        onToggle={(checked) => {
+                                            setIsFlashbotsEnabled(checked)
+                                        }}
                                     />
                                 </div>
-                            </div>
-                            <ToggleButton
-                                defaultChecked={
-                                    advancedSettings.flashbots ?? false
-                                }
-                                disabled={transactionGasLimit.lt(
-                                    FLASHBOTS_MIN_GAS_LIMIT
+                                {transactionGasLimit.lt(FLASHBOTS_MIN_GAS_LIMIT) && (
+                                    <div className="flex items-center space-x-2 text-xs text-amber-600 dark:text-amber-400">
+                                        <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span>Flashbots disabled: transaction gas below 42,000 limit</span>
+                                    </div>
                                 )}
-                                inputName="flashbots"
-                                onToggle={(checked) => {
-                                    setIsFlashbotsEnabled(checked)
-                                }}
-                            />
+                            </div>
+                        )}
+
+                        {/* Reset button */}
+                        <div className="flex justify-center pt-2">
+                            <button
+                                onClick={resetSettings}
+                                className="text-sm font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:underline transition-colors duration-200"
+                            >
+                                Reset to Default
+                            </button>
                         </div>
-                    )}
 
-                    <p
-                        onClick={() => resetSettings()}
-                        className="text-xs text-primary-blue-default hover:text-primary-blue-hover cursor-pointer w-min"
-                    >
-                        Reset
-                    </p>
-
-                    <div className="-mx-5 py-2">
-                        <Divider />
+                        {/* Actions */}
+                        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div className="flex space-x-3">
+                                <button
+                                    onClick={() => setIsOpen(false)}
+                                    className="flex-1 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors duration-200"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={onSubmit}
+                                    disabled={!(canSubmit && isModified())}
+                                    className="flex-1 px-4 py-3 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 dark:from-purple-500 dark:to-purple-600 dark:hover:from-purple-600 dark:hover:to-purple-700 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:transform-none disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-md"
+                                >
+                                    Save Settings
+                                </button>
+                            </div>
+                        </div>
                     </div>
-
-                    <ButtonWithLoading
-                        type="submit"
-                        label="Save"
-                        disabled={!(canSubmit && isModified())}
-                        buttonClass={Classes.button}
-                        onClick={() => {
-                            onSubmit()
-                        }}
-                    />
                 </div>
             </Dialog>
         </>

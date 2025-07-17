@@ -19,7 +19,6 @@ import PopupHeader from "../../components/popup/PopupHeader"
 import useNewAccountHelper from "./useNewAccountHelper"
 import Icon, { IconName } from "../../components/ui/Icon"
 
-// Schema
 const createAccountSchema = yup.object({
     accountName: yup.string().max(40, "Account name is too long"),
 })
@@ -58,7 +57,6 @@ const AddAccountPage = () => {
                 throw new Error(accountNameErr)
             }
 
-            //run always receives a promise
             await run(
                 new Promise(async (resolve, reject) => {
                     try {
@@ -125,13 +123,13 @@ const AddAccountPage = () => {
                 open={isOpen}
                 titles={{
                     loading: "Creating Account...",
-                    error: "Error",
-                    success: "Success!",
+                    error: "Account Creation Failed",
+                    success: "Account Created Successfully!",
                 }}
                 texts={{
-                    loading: `Please wait while your account is being created...`,
-                    error: "There was an error while creating the account",
-                    success: `Congratulations! Your account has been created!`,
+                    loading: `Please wait while your new account is being created and added to your wallet...`,
+                    error: "We couldn't create your account. Please check your details and try again.",
+                    success: `🎉 Your new account has been created and is ready to use! You can now start managing your digital assets securely.`,
                 }}
                 onDone={() => {
                     if (isError) {
@@ -144,7 +142,6 @@ const AddAccountPage = () => {
                 timeout={1100}
             />
 
-            {/* Background with gradient - ensure full coverage */}
             <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/10"></div>
             <div className="relative z-10 min-h-full">
                 <div className="flex flex-col flex-1 w-full h-full">
@@ -154,9 +151,7 @@ const AddAccountPage = () => {
                         id="create-account-form"
                         aria-label="New Account"
                     >
-                        {/* Main content area */}
                         <div className="flex-1 p-6">
-                            {/* Header section */}
                             <div className="text-center mb-8">
                                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-400 dark:to-blue-500 flex items-center justify-center shadow-lg">
                                     <Icon name={IconName.WALLET} size="xl" className="text-white" />
@@ -169,7 +164,6 @@ const AddAccountPage = () => {
                                 </p>
                             </div>
 
-                            {/* Form section with enhanced styling */}
                             <div className="space-y-6">
                                 <div className="relative">
                                     <TextInput
@@ -182,7 +176,6 @@ const AddAccountPage = () => {
                                         maxLength={40}
                                         className="transition-all duration-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-400"
                                     />
-                                    {/* Character counter */}
                                     <div className="mt-2 flex justify-between items-center text-xs">
                                         <span className="text-gray-500 dark:text-gray-400">
                                             {accountNameValue?.length || 0}/40 characters
@@ -198,7 +191,6 @@ const AddAccountPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Preview section */}
                                 <div className="p-4 rounded-xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-200/50 dark:border-blue-800/30">
                                     <div className="flex items-center space-x-3">
                                         <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
@@ -215,7 +207,6 @@ const AddAccountPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Info section */}
                                 <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50">
                                     <div className="flex items-start space-x-3">
                                         <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
@@ -236,7 +227,6 @@ const AddAccountPage = () => {
                             </div>
                         </div>
 
-                        {/* Footer with enhanced button */}
                         <div className="border-t border-gray-200 dark:border-gray-700/50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
                             <PopupFooter>
                                 <ButtonWithLoading

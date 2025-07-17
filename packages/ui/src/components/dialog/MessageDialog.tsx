@@ -1,5 +1,5 @@
 import { FunctionComponent } from "react"
-import { Classes, classnames } from "../../styles"
+import { classnames } from "../../styles"
 import Dialog from "./Dialog"
 import FullScreenDialog from "./FullScreenDialog"
 
@@ -37,25 +37,27 @@ const MessageDialog: FunctionComponent<messageDialogProps> = ({
         >
             <>
                 {header}
-                <h2 className="text-lg font-semibold text-center mt-4">
-                    {title}
-                </h2>
-                <div
-                    className={classnames(
-                        "flex mt-2 mb-4",
-                        wideMargins ? "px-5 " : "px-1"
-                    )}
-                >
-                    <span className="text-sm text-center w-full text-primary-grey-dark">
-                        {message}
-                    </span>
+
+                <div className="text-center mb-4">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
+                        {title}
+                    </h2>
                 </div>
+
+                <div className={classnames(
+                    "mb-6 text-center",
+                    wideMargins ? "px-2" : "px-1"
+                )}>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed max-w-sm mx-auto">
+                        {message}
+                    </p>
+                </div>
+
                 {buttonLabel && (
-                    <div className="p-1 w-full flex">
+                    <div className="w-full">
                         <button
                             className={classnames(
-                                Classes.liteButton,
-                                "mt-4",
+                                "w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]",
                                 fullScreen && "mx-4"
                             )}
                             onClick={onDone}
@@ -64,6 +66,7 @@ const MessageDialog: FunctionComponent<messageDialogProps> = ({
                         </button>
                     </div>
                 )}
+
                 {footer}
             </>
         </DialogComponent>

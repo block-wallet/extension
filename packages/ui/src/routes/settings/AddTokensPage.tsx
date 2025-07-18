@@ -1,24 +1,20 @@
 import { useState, useEffect } from "react"
 
-// Components
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import SearchInput from "../../components/input/SearchInput"
 import AddTokenManualView from "../../components/token/AddTokenManualView"
 import AddTokenListView from "../../components/token/AddTokenListView"
 
-// Comm
 import { searchTokenInAssetsList } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 
-// Assets
 import { isAddress } from "@ethersproject/address"
 import PopupFooter from "../../components/popup/PopupFooter"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import useLocalStorageState from "../../util/hooks/useLocalStorageState"
 import log from "loglevel"
 
-// Types
 export type TokenResponse = {
     address: string
     decimals: number | undefined
@@ -28,11 +24,9 @@ export type TokenResponse = {
     type: string
 }
 
-// Main component
 const AddTokensPage = () => {
     const history = useOnMountHistory()
 
-    // State
     const [results, setResults] = useState<TokenResponse[]>([])
     const [submitEnabled, setSubmitEnabled] = useState<boolean>(false)
     const [searchedValue, setSearchedValue] = useLocalStorageState<string>(
@@ -44,7 +38,6 @@ const AddTokensPage = () => {
     useEffect(() => {
         if (searchedValue && !isManualTokenView) {
             if (/^[a-zA-Z0-9_.-]{3,}$/.test(searchedValue)) {
-                // Accept only number, letters and - . _
                 searchTokenInAssetsList(searchedValue.toUpperCase())
                     .then((res) => {
                         const exacts = res.tokens.filter(
@@ -110,42 +103,62 @@ const AddTokensPage = () => {
                                 ? "manualViewForm"
                                 : "listViewForm"
                         }
+                        buttonClass="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:transform-none disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-md"
                     />
                 </PopupFooter>
             }
-            // submitOnEnter={{ isEnabled: submitEnabled }}
         >
-            <div className="flex flex-col flex-1 w-full">
-                <div className="h-full max-h-screen overflow-auto hide-scroll">
-                    {/* INPUT */}
-                    <div className="w-full p-6 pb-2 bg-white fixed z-20">
-                        <SearchInput
-                            // {...register("tokenName")}
-                            name="tokenName"
-                            placeholder="Search Tokens by name or fill in Address"
-                            disabled={false}
-                            onChange={(e: any) =>
-                                setSearchedValue(e.target.value)
-                            }
-                            autoFocus={true}
-                            debounced
-                            minSearchChar={3}
-                            defaultValue={searchedValue}
-                        />
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-green-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-green-900/10"></div>
+            <div className="relative z-10 flex flex-col flex-1 w-full h-full">
+                <div className="h-full max-h-screen overflow-auto">
+                    <div className="sticky top-0 z-20 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200/50 dark:border-gray-700/50">
+                        <div className="p-6 pb-4">
+                            <div className="mb-4">
+                                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                                    {isManualTokenView ? "Add Custom Token" : "Search Tokens"}
+                                </h2>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    {isManualTokenView
+                                        ? "Enter token contract details to add a custom token"
+                                        : "Search for tokens by name or enter a contract address"
+                                    }
+                                </p>
+                            </div>
+
+                            <div className="relative">
+                                <SearchInput
+                                    name="tokenName"
+                                    placeholder={isManualTokenView
+                                        ? "Contract address detected - fill in details below"
+                                        : "Search tokens by name or enter contract address"
+                                    }
+                                    disabled={false}
+                                    onChange={(e: any) =>
+                                        setSearchedValue(e.target.value)
+                                    }
+                                    autoFocus={true}
+                                    debounced
+                                    minSearchChar={3}
+                                    defaultValue={searchedValue}
+                                />
+                            </div>
+                        </div>
                     </div>
 
-                    {!isManualTokenView ? (
-                        <AddTokenListView
-                            results={results}
-                            searchedValue={searchedValue}
-                            setSubmitEnabled={handleSubmitEnabled}
-                        />
-                    ) : (
-                        <AddTokenManualView
-                            manualTokenAddress={searchedValue}
-                            setSubmitEnabled={handleSubmitEnabled}
-                        />
-                    )}
+                    <div className="flex-1">
+                        {!isManualTokenView ? (
+                            <AddTokenListView
+                                results={results}
+                                searchedValue={searchedValue}
+                                setSubmitEnabled={handleSubmitEnabled}
+                            />
+                        ) : (
+                            <AddTokenManualView
+                                manualTokenAddress={searchedValue}
+                                setSubmitEnabled={handleSubmitEnabled}
+                            />
+                        )}
+                    </div>
                 </div>
             </div>
         </PopupLayout>

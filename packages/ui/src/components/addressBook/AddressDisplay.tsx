@@ -95,13 +95,13 @@ export const AddressDisplay: FunctionComponent<{
                         title={receivingAddress}
                     >
                         {showingTheWholeAddress &&
-                        !(accountNameToDisplay !== addressToDisplay)
+                            !(accountNameToDisplay !== addressToDisplay)
                             ? fullAddressToDisplay
                             : accountNameToDisplay}
                     </span>
 
                     {displayAddressSpan && (
-                        <span className="text-gray truncate ml-1">
+                        <span className="text-gray-600 dark:text-gray-400 truncate ml-1">
                             {addressToDisplay}
                         </span>
                     )}
@@ -125,7 +125,7 @@ export const AddressDisplay: FunctionComponent<{
                             >
                                 {getWarningTitle(addressType)}
                             </span>
-                            <span className="text-gray truncate ml-1">
+                            <span className="text-gray-600 dark:text-gray-400 truncate ml-1">
                                 {addressToDisplay}
                             </span>
                         </div>

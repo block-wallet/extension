@@ -8,12 +8,22 @@ import { isNativeTokenAddress } from "../../util/tokenUtils"
 
 const AssetAllowances = () => {
     const history = useOnMountHistory()
-    const tokenAddress: string = history.location.state.address
+    const tokenAddress: string = history.location.state?.address
 
     const tokenAllowances = useAccountAllowances(
         AllowancesFilters.TOKEN,
         tokenAddress
     )[0]
+
+    if (!tokenAddress) {
+        return (
+            <div className="flex items-center justify-center flex-1 p-4">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                    Token address not found
+                </span>
+            </div>
+        )
+    }
 
     const emptyMessage = isNativeTokenAddress(tokenAddress)
         ? "Native tokens do not require allowances. You can access all your allowances via the button below."

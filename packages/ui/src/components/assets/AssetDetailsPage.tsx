@@ -30,7 +30,6 @@ import DoubleArrowHoverAnimation from "../icons/DoubleArrowHoverAnimation"
 import ActivityAllowancesView from "./ActivityAllowancesView"
 import TokenLogo from "../token/TokenLogo"
 
-// Loading skeleton component matching the updated layout
 const AssetLoadingSkeleton = () => (
     <div className="flex flex-col flex-1 w-full min-h-0">
         <div className="p-3 pb-1">
@@ -90,7 +89,6 @@ const AssetDetailsPage = () => {
     const [isRemoving, setIsRemoving] = useState(false)
     const [successOpen, setSuccessOpen] = useState(false)
 
-    // Show loading state while asset is being fetched
     if (!asset) {
         return (
             <PopupLayout
@@ -153,7 +151,6 @@ const AssetDetailsPage = () => {
 
     const disabledActions = !isSendEnabled || !state.isUserNetworkOnline
 
-    // Enhanced header actions with better styling
     const headerActions = !isNative ? [
         <a
             href={generateExplorerLink(
@@ -236,47 +233,43 @@ const AssetDetailsPage = () => {
                 timeout={1000}
             />
 
-            <div className="flex flex-col flex-1 w-full min-h-0">
-                {/* Token Summary Card - minimal design for maximum activity space */}
-                <div className="p-3 pb-1">
-                    <div className={cn(layouts.card, "w-full p-3")}>
-                        <TokenSummary>
-                            <TokenSummary.Balances>
-                                <div className="mb-4">
-                                    <TokenLogo
-                                        logo={token.logo}
-                                        name={token.symbol ?? ""}
-                                        filled={true}
-                                        logoSize="big"
-                                    />
-                                </div>
-                                <TokenSummary.TokenName>
-                                    {token.name}
-                                </TokenSummary.TokenName>
-                                <TokenSummary.TokenBalance
-                                    className="flex flex-row space-x-1"
-                                    title={`${formattedTokenBalance} ${token.symbol}`}
+            <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 pt-5 space-y-3 hide-scroll bg-white dark:bg-gray-900">
+                <div className="w-full">
+                    <TokenSummary className="p-5 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200">
+                        <TokenSummary.Balances className="!space-y-1">
+                            <div className="mb-4">
+                                <TokenLogo
+                                    logo={token.logo}
+                                    name={token.symbol ?? ""}
+                                    filled={true}
+                                    logoSize="big"
+                                />
+                            </div>
+                            <TokenSummary.TokenName>
+                                {token.name}
+                            </TokenSummary.TokenName>
+                            <TokenSummary.TokenBalance
+                                className="text-gray-900 dark:text-gray-100 text-2xl font-bold"
+                                title={`${formattedTokenBalance} ${token.symbol}`}
+                            >
+                                <span
+                                    className="truncate w-full max-w-xs"
+                                    style={{ maxWidth: "18rem" }}
                                 >
-                                    <span
-                                        className={cn("truncate w-full max-w-xs", themeColors.text.primary)}
-                                        style={{ maxWidth: "18rem" }}
-                                    >
-                                        {`${roundedTokenBalance} ${token.symbol}`}
-                                    </span>
-                                </TokenSummary.TokenBalance>
-                                <TokenSummary.ExchangeRateBalance>
-                                    {currencyFormatter.format(
-                                        balance,
-                                        token.symbol,
-                                        token.decimals,
-                                        isNative
-                                    )}
-                                </TokenSummary.ExchangeRateBalance>
-                            </TokenSummary.Balances>
-                        </TokenSummary>
+                                    {`${roundedTokenBalance} ${token.symbol}`}
+                                </span>
+                            </TokenSummary.TokenBalance>
+                            <TokenSummary.ExchangeRateBalance className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                {currencyFormatter.format(
+                                    balance,
+                                    token.symbol,
+                                    token.decimals,
+                                    isNative
+                                )}
+                            </TokenSummary.ExchangeRateBalance>
+                        </TokenSummary.Balances>
 
-                        {/* Action Buttons matching main page design */}
-                        <div className={cn("pt-4 border-t", themeColors.border.light)}>
+                        <TokenSummary.Actions className={cn("pt-4 border-t", themeColors.border.light)}>
                             <div className="flex justify-around w-full">
                                 <Link
                                     to={{
@@ -382,15 +375,9 @@ const AssetDetailsPage = () => {
                                     </Link>
                                 )}
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Activity & Allowances Section - maximized for content */}
-                <div className="flex-1 min-h-0 px-3 pb-3">
-                    <div className={cn(layouts.card, "w-full h-full flex flex-col overflow-hidden")}>
-                        <ActivityAllowancesView />
-                    </div>
+                        </TokenSummary.Actions>
+                    </TokenSummary>
+                    <ActivityAllowancesView />
                 </div>
             </div>
         </PopupLayout>

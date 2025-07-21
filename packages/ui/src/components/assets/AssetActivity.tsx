@@ -7,9 +7,19 @@ import { useBlankState } from "../../context/background/backgroundHooks"
 const AssetActivity = () => {
     const { isNetworkChanging } = useBlankState()!
     const history: any = useOnMountHistory()
-    const tokenAddress: string = history.location.state.address
+    const tokenAddress: string = history.location.state?.address
     const token = useGetAssetByTokenAddress(tokenAddress)?.token
     const tokenTransactions = useTokenTransactions(token)
+
+    if (!tokenAddress) {
+        return (
+            <div className="flex items-center justify-center flex-1 p-4">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                    Token address not found
+                </span>
+            </div>
+        )
+    }
 
     return (
         <div

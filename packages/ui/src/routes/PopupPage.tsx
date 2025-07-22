@@ -392,16 +392,17 @@ const PopupPage = () => {
                                 to="/send"
                                 draggable={false}
                                 className={classnames(
-                                    "flex flex-col items-center space-y-2 group transition-all duration-200 hover:scale-105",
-                                    disabledActions && "pointer-events-none"
+                                    "flex flex-col items-center group transition-all duration-200 hover:scale-105",
+                                    disabledActions && "pointer-events-none opacity-50"
                                 )}
+                                style={{ height: "57px", width: "32px" }}
                             >
                                 <div
                                     className={classnames(
-                                        "w-10 h-10 overflow-hidden transition-all duration-200 rounded-xl shadow-md group-hover:shadow-lg",
+                                        "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 overflow-hidden",
                                         disabledActions
                                             ? "bg-gray-300 dark:bg-gray-600"
-                                            : "bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-400"
+                                            : "bg-[#3742f7] hover:bg-[#2631e6] dark:bg-[#3742f7] dark:hover:bg-[#2631e6]"
                                     )}
                                     style={{ transform: "scaleY(-1)" }}
                                 >
@@ -418,7 +419,13 @@ const PopupPage = () => {
                                         <ArrowHoverAnimation />
                                     )}
                                 </div>
-                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
+                                <span
+                                    className="text-xs font-medium mt-1 text-gray-900 dark:text-gray-100"
+                                    style={{
+                                        height: "21px",
+                                        lineHeight: "21px"
+                                    }}
+                                >
                                     Send
                                 </span>
                             </Link>
@@ -427,16 +434,17 @@ const PopupPage = () => {
                                     to="/buy"
                                     draggable={false}
                                     className={classnames(
-                                        "flex flex-col items-center space-y-2 group transition-all duration-200 hover:scale-105",
-                                        disabledActions && "pointer-events-none"
+                                        "flex flex-col items-center group transition-all duration-200 hover:scale-105",
+                                        disabledActions && "pointer-events-none opacity-50"
                                     )}
+                                    style={{ height: "57px", width: "32px" }}
                                 >
                                     <div
                                         className={classnames(
-                                            "w-10 h-10 overflow-hidden transition-all duration-200 rounded-xl shadow-md group-hover:shadow-lg",
+                                            "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200",
                                             disabledActions
                                                 ? "bg-gray-300 dark:bg-gray-600"
-                                                : "bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-400"
+                                                : "bg-[#3742f7] hover:bg-[#2631e6] dark:bg-[#3742f7] dark:hover:bg-[#2631e6]"
                                         )}
                                     >
                                         {isLoading ? (
@@ -449,13 +457,21 @@ const PopupPage = () => {
                                                 />
                                             </div>
                                         ) : (
-                                            <AnimatedIcon
-                                                icon={AnimatedIconName.Wallet}
-                                                className="cursor-pointer"
-                                            />
+                                            <div className="w-6 h-6 flex items-center justify-center">
+                                                <AnimatedIcon
+                                                    icon={AnimatedIconName.Wallet}
+                                                    className="cursor-pointer"
+                                                />
+                                            </div>
                                         )}
                                     </div>
-                                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
+                                    <span
+                                        className="text-xs font-medium mt-1 text-gray-900 dark:text-gray-100"
+                                        style={{
+                                            height: "21px",
+                                            lineHeight: "21px"
+                                        }}
+                                    >
                                         Buy
                                     </span>
                                 </Link>
@@ -465,16 +481,17 @@ const PopupPage = () => {
                                     to="/swap"
                                     draggable={false}
                                     className={classnames(
-                                        "flex flex-col items-center space-y-2 group transition-all duration-200 hover:scale-105",
-                                        disabledActions && "pointer-events-none"
+                                        "flex flex-col items-center group transition-all duration-200 hover:scale-105",
+                                        disabledActions && "pointer-events-none opacity-50"
                                     )}
+                                    style={{ height: "57px", width: "35px" }}
                                 >
                                     <div
                                         className={classnames(
-                                            "w-10 h-10 overflow-hidden transition-all duration-200 rounded-xl shadow-md group-hover:shadow-lg",
+                                            "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 overflow-hidden",
                                             disabledActions
                                                 ? "bg-gray-300 dark:bg-gray-600"
-                                                : "bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-400"
+                                                : "bg-[#3742f7] hover:bg-[#2631e6] dark:bg-[#3742f7] dark:hover:bg-[#2631e6]"
                                         )}
                                         style={{ transform: "scaleY(-1)" }}
                                     >
@@ -491,7 +508,13 @@ const PopupPage = () => {
                                             <DoubleArrowHoverAnimation />
                                         )}
                                     </div>
-                                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
+                                    <span
+                                        className="text-xs font-medium mt-1 text-gray-900 dark:text-gray-100"
+                                        style={{
+                                            height: "21px",
+                                            lineHeight: "21px"
+                                        }}
+                                    >
                                         Swap
                                     </span>
                                 </Link>
@@ -499,9 +522,10 @@ const PopupPage = () => {
                             <Link
                                 to="/portfolio"
                                 draggable={false}
-                                className="flex flex-col items-center space-y-2 group transition-all duration-200 hover:scale-105"
+                                className="flex flex-col items-center group transition-all duration-200 hover:scale-105"
+                                style={{ height: "57px", width: "57px" }}
                             >
-                                <div className="w-10 h-10 overflow-hidden transition-all duration-200 rounded-xl shadow-md group-hover:shadow-lg bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-400">
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 bg-[#3742f7] hover:bg-[#2631e6] dark:bg-[#3742f7] dark:hover:bg-[#2631e6]">
                                     {isLoading ? (
                                         <div className="flex flex-row items-center justify-center w-full h-full">
                                             <AnimatedIcon
@@ -512,15 +536,21 @@ const PopupPage = () => {
                                             />
                                         </div>
                                     ) : (
-                                        <div className="flex items-center justify-center w-full h-full">
+                                        <div className="w-6 h-6 flex items-center justify-center">
                                             <AnimatedIcon
                                                 icon={AnimatedIconName.PortfolioAnalytics}
-                                                className="cursor-pointer w-5 h-5"
+                                                className="cursor-pointer"
                                             />
                                         </div>
                                     )}
                                 </div>
-                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
+                                <span
+                                    className="text-xs font-medium mt-1 text-gray-900 dark:text-gray-100"
+                                    style={{
+                                        height: "21px",
+                                        lineHeight: "21px"
+                                    }}
+                                >
                                     Portfolio
                                 </span>
                             </Link>
@@ -529,18 +559,18 @@ const PopupPage = () => {
                                     to="/bridge"
                                     draggable={false}
                                     className={classnames(
-                                        "flex flex-col items-center space-y-2 group transition-all duration-200 hover:scale-105",
-                                        disabledActions && "pointer-events-none"
+                                        "flex flex-col items-center group transition-all duration-200 hover:scale-105",
+                                        disabledActions && "pointer-events-none opacity-50"
                                     )}
+                                    style={{ height: "57px", width: "41px" }}
                                 >
                                     <div
                                         className={classnames(
-                                            "w-10 h-10 overflow-hidden transition-all duration-200 rounded-xl shadow-md group-hover:shadow-lg",
+                                            "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200",
                                             disabledActions
                                                 ? "bg-gray-300 dark:bg-gray-600"
-                                                : "bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-400"
+                                                : "bg-[#3742f7] hover:bg-[#2631e6] dark:bg-[#3742f7] dark:hover:bg-[#2631e6]"
                                         )}
-                                        style={{ transform: "scaleY(-1)" }}
                                     >
                                         {isLoading ? (
                                             <div className="flex flex-row items-center justify-center w-full h-full">
@@ -552,26 +582,33 @@ const PopupPage = () => {
                                                 />
                                             </div>
                                         ) : (
-                                            <>
+                                            <div className="w-6 h-6 flex items-center justify-center">
                                                 {disabledActions ? (
                                                     <Icon
                                                         name={
                                                             IconName.DISABLED_BRIDGE
                                                         }
-                                                        size="xl"
+                                                        size="lg"
+                                                        className="text-white"
                                                     />
                                                 ) : (
                                                     <AnimatedIcon
                                                         icon={
                                                             AnimatedIconName.Bridge
                                                         }
-                                                        className="cursor-pointer bg-blue-600 dark:bg-blue-500"
+                                                        className="cursor-pointer"
                                                     />
                                                 )}
-                                            </>
+                                            </div>
                                         )}
                                     </div>
-                                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
+                                    <span
+                                        className="text-xs font-medium mt-1 text-gray-900 dark:text-gray-100"
+                                        style={{
+                                            height: "21px",
+                                            lineHeight: "21px"
+                                        }}
+                                    >
                                         Bridge
                                     </span>
                                 </Link>

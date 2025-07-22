@@ -278,22 +278,29 @@ const AssetDetailsPage = () => {
                                     }}
                                     draggable={false}
                                     className={classnames(
-                                        "flex flex-col items-center space-y-2 group transition-all duration-200 hover:scale-105",
-                                        !isSendEnabled && "pointer-events-none"
+                                        "flex flex-col items-center group transition-all duration-200 hover:scale-105",
+                                        !isSendEnabled && "pointer-events-none opacity-50"
                                     )}
+                                    style={{ height: "57px", width: "32px" }}
                                 >
                                     <div
                                         className={classnames(
-                                            "w-10 h-10 overflow-hidden transition-all duration-200 rounded-xl shadow-md group-hover:shadow-lg",
+                                            "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 overflow-hidden",
                                             !isSendEnabled
                                                 ? "bg-gray-300 dark:bg-gray-600"
-                                                : "bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-400"
+                                                : "bg-[#3742f7] hover:bg-[#2631e6] dark:bg-[#3742f7] dark:hover:bg-[#2631e6]"
                                         )}
                                         style={{ transform: "scaleY(-1)" }}
                                     >
                                         <ArrowHoverAnimation />
                                     </div>
-                                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
+                                    <span
+                                        className="text-xs font-medium mt-1 text-gray-900 dark:text-gray-100"
+                                        style={{
+                                            height: "21px",
+                                            lineHeight: "21px"
+                                        }}
+                                    >
                                         Send
                                     </span>
                                 </Link>
@@ -311,22 +318,29 @@ const AssetDetailsPage = () => {
                                         }}
                                         draggable={false}
                                         className={classnames(
-                                            "flex flex-col items-center space-y-2 group transition-all duration-200 hover:scale-105",
-                                            disabledActions && "pointer-events-none"
+                                            "flex flex-col items-center group transition-all duration-200 hover:scale-105",
+                                            disabledActions && "pointer-events-none opacity-50"
                                         )}
+                                        style={{ height: "57px", width: "35px" }}
                                     >
                                         <div
                                             className={classnames(
-                                                "w-10 h-10 overflow-hidden transition-all duration-200 rounded-xl shadow-md group-hover:shadow-lg",
+                                                "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 overflow-hidden",
                                                 disabledActions
                                                     ? "bg-gray-300 dark:bg-gray-600"
-                                                    : "bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-400"
+                                                    : "bg-[#3742f7] hover:bg-[#2631e6] dark:bg-[#3742f7] dark:hover:bg-[#2631e6]"
                                             )}
                                             style={{ transform: "scaleY(-1)" }}
                                         >
                                             <DoubleArrowHoverAnimation />
                                         </div>
-                                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
+                                        <span
+                                            className="text-xs font-medium mt-1 text-gray-900 dark:text-gray-100"
+                                            style={{
+                                                height: "21px",
+                                                lineHeight: "21px"
+                                            }}
+                                        >
                                             Swap
                                         </span>
                                     </Link>
@@ -344,32 +358,41 @@ const AssetDetailsPage = () => {
                                         }}
                                         draggable={false}
                                         className={classnames(
-                                            "flex flex-col items-center space-y-2 group transition-all duration-200 hover:scale-105",
-                                            disabledActions && "pointer-events-none"
+                                            "flex flex-col items-center group transition-all duration-200 hover:scale-105",
+                                            disabledActions && "pointer-events-none opacity-50"
                                         )}
+                                        style={{ height: "57px", width: "41px" }}
                                     >
                                         <div
                                             className={classnames(
-                                                "w-10 h-10 overflow-hidden transition-all duration-200 rounded-xl shadow-md group-hover:shadow-lg",
+                                                "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200",
                                                 disabledActions
                                                     ? "bg-gray-300 dark:bg-gray-600"
-                                                    : "bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-400"
+                                                    : "bg-[#3742f7] hover:bg-[#2631e6] dark:bg-[#3742f7] dark:hover:bg-[#2631e6]"
                                             )}
-                                            style={{ transform: "scaleY(-1)" }}
                                         >
-                                            {disabledActions ? (
-                                                <Icon
-                                                    name={IconName.DISABLED_BRIDGE}
-                                                    size="xl"
-                                                />
-                                            ) : (
-                                                <AnimatedIcon
-                                                    icon={AnimatedIconName.Bridge}
-                                                    className="cursor-pointer bg-blue-600 dark:bg-blue-500"
-                                                />
-                                            )}
+                                            <div className="w-6 h-6 flex items-center justify-center">
+                                                {disabledActions ? (
+                                                    <Icon
+                                                        name={IconName.DISABLED_BRIDGE}
+                                                        size="lg"
+                                                        className="text-white"
+                                                    />
+                                                ) : (
+                                                    <AnimatedIcon
+                                                        icon={AnimatedIconName.Bridge}
+                                                        className="cursor-pointer"
+                                                    />
+                                                )}
+                                            </div>
                                         </div>
-                                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
+                                        <span
+                                            className="text-xs font-medium mt-1 text-gray-900 dark:text-gray-100"
+                                            style={{
+                                                height: "21px",
+                                                lineHeight: "21px"
+                                            }}
+                                        >
                                             Bridge
                                         </span>
                                     </Link>

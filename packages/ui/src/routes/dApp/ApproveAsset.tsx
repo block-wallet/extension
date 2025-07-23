@@ -139,7 +139,7 @@ const ApproveAssetPage = () => {
     if (
         !currentTx ||
         currentTx.transactionCategory !==
-            TransactionCategories.TOKEN_METHOD_APPROVE ||
+        TransactionCategories.TOKEN_METHOD_APPROVE ||
         currentTx.advancedData?.tokenId ||
         [
             TransactionStatus.CONFIRMED,
@@ -205,13 +205,13 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     )
 
     // Detect if the transaction was triggered using an address different to the active one
-    const checksumFromAddress = getAddress(params.from!)
+    const checksumFromAddress = params.from ? getAddress(params.from) : selectedAddress
     const differentAddress = checksumFromAddress !== selectedAddress
 
     // If differentAddress, fetch the balance of that address instead of the selected one.
-    const balance = differentAddress
+    const balance = differentAddress && accounts[checksumFromAddress]
         ? accounts[checksumFromAddress].balances[chainId].nativeTokenBalance ??
-          BigNumber.from("0")
+        BigNumber.from("0")
         : selectedAccountBalance
 
     // Local state
@@ -302,15 +302,15 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
         useTransactionWaitingDialog(
             transaction
                 ? {
-                      id: transactionId,
-                      status: transaction.status,
-                      error: transaction.error as Error,
-                      epochTime: transaction?.approveTime,
-                      qrParams: transaction?.qrParams,
-                  }
+                    id: transactionId,
+                    status: transaction.status,
+                    error: transaction.error as Error,
+                    epochTime: transaction?.approveTime,
+                    qrParams: transaction?.qrParams,
+                }
                 : undefined,
             HardwareWalletOpTypes.APPROVE_ALLOWANCE,
-            account.accountType,
+            account?.accountType,
             {
                 reject: useCallback(() => {
                     if (transactionId) {
@@ -343,7 +343,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
 
     useEffect(() => {
         setIsTokenLoading(true)
-        getTokenBalance(tokenAddress, account.address)
+        getTokenBalance(tokenAddress, account?.address || "")
             .then((fetchedBalance) => {
                 setAssetBalance(
                     formatRounded(
@@ -376,7 +376,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
             .finally(() => {
                 setIsNameLoading(false)
             })
-    }, [account.address, tokenAddress, tokenDecimals])
+    }, [account?.address, tokenAddress, tokenDecimals])
 
     const approve = async () => {
         try {
@@ -582,11 +582,10 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                                 className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                             />
                             <Tooltip
-                                content={`${transactionCount - 1} more ${
-                                    transactionCount > 2
-                                        ? "transactions"
-                                        : "transaction"
-                                }`}
+                                content={`${transactionCount - 1} more ${transactionCount > 2
+                                    ? "transactions"
+                                    : "transaction"
+                                    }`}
                                 className="-translate-x-2/3"
                             />
                         </div>
@@ -679,17 +678,17 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
             <div className="px-6 py-2 flex flex-row items-center">
                 <AccountIcon
                     className="w-10 h-10"
-                    fill={getAccountColor(account.address)}
+                    fill={getAccountColor(account?.address || "")}
                 />
                 <div className="relative flex flex-col group space-y-1 ml-4">
                     <span className="text-sm font-semibold">
-                        {formatName(account.name, 15)}
+                        {formatName(account?.name || "", 15)}
                     </span>
                     <span
                         className="text-xs text-primary-grey-dark truncate"
-                        title={account.address}
+                        title={account?.address || ""}
                     >
-                        {formatHash(account.address)}
+                        {formatHash(account?.address || "")}
                     </span>
                 </div>
                 <div className="ml-auto flex flex-col items-end space-x-1">
@@ -703,8 +702,8 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                         <img
                             src={tokenLogo || unknownTokenIcon}
                             onError={(e) => {
-                                ;(e.target as any).onerror = null
-                                ;(e.target as any).src = unknownTokenIcon
+                                ; (e.target as any).onerror = null
+                                    ; (e.target as any).src = unknownTokenIcon
                             }}
                             alt={tokenName}
                             width="14px"
@@ -738,8 +737,8 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                         <img
                             src={nativeToken.token.logo || unknownTokenIcon}
                             onError={(e) => {
-                                ;(e.target as any).onerror = null
-                                ;(e.target as any).src = unknownTokenIcon
+                                ; (e.target as any).onerror = null
+                                    ; (e.target as any).src = unknownTokenIcon
                             }}
                             alt={nativeToken.token.symbol}
                             width="14px"
@@ -754,8 +753,8 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
             <HardwareDeviceNotLinkedDialog
                 isOpen={isDeviceUnlinked}
                 onDone={resetDeviceLinkStatus}
-                vendor={getDeviceFromAccountType(account.accountType)}
-                address={account.address}
+                vendor={account?.accountType ? getDeviceFromAccountType(account?.accountType) : undefined}
+                address={account?.address || ""}
             />
         </PopupLayout>
     )

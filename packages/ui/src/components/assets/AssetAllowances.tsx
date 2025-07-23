@@ -30,7 +30,7 @@ const AssetAllowances = () => {
         : "You have no allowances for this token."
 
     return (
-        <div className="flex flex-col h-full bg-white dark:bg-gray-900 overflow-hidden">
+        <div className="flex flex-col h-full bg-white dark:bg-gray-900 overflow-hidden -mx-6">
             {tokenAllowances?.allowances?.length > 0 ? (
                 <>
                     <div className="flex-1 overflow-auto">
@@ -42,7 +42,11 @@ const AssetAllowances = () => {
                                         allowance.displayData.address
                                     }
                                 >
-                                    {index > 0 && <hr className="border-gray-200 dark:border-gray-700" />}
+                                    {index > 0 && (
+                                        <div className="px-6">
+                                            <hr className="border-gray-200 dark:border-gray-700" />
+                                        </div>
+                                    )}
                                     <AllowanceItem
                                         allowance={allowance.allowance}
                                         token={tokenAllowances?.groupBy}
@@ -54,13 +58,15 @@ const AssetAllowances = () => {
                             ))}
                         </div>
                     </div>
-                    <div className="flex-shrink-0 px-4 py-2 border-t border-gray-200 dark:border-gray-700">
-                        <ActionButton
-                            icon={<GearIcon />}
-                            label="Manage Allowances"
-                            to="/accounts/menu/allowances"
-                            className="!h-10 !p-3 !text-xs"
-                        />
+                    <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700">
+                        <div className="px-6 py-2">
+                            <ActionButton
+                                icon={<GearIcon />}
+                                label="Manage Allowances"
+                                to="/accounts/menu/allowances"
+                                className="!h-10 !p-3 !text-xs w-full"
+                            />
+                        </div>
                     </div>
                 </>
             ) : (
@@ -70,13 +76,15 @@ const AssetAllowances = () => {
                             {emptyMessage}
                         </span>
                     </div>
-                    <div className="flex-shrink-0 px-4 py-2 border-t border-gray-200 dark:border-gray-700">
-                        <ActionButton
-                            icon={<GearIcon />}
-                            label="Manage Allowances"
-                            to="/accounts/menu/allowances"
-                            className="!h-10 !p-3 !text-xs"
-                        />
+                    <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700">
+                        <div className="px-6 py-2">
+                            <ActionButton
+                                icon={<GearIcon />}
+                                label="Manage Allowances"
+                                to="/accounts/menu/allowances"
+                                className="!h-10 !p-3 !text-xs w-full"
+                            />
+                        </div>
                     </div>
                 </>
             )}

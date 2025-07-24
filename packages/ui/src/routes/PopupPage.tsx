@@ -310,7 +310,7 @@ const PopupPage = () => {
                                         ? netWorth
                                         : nativeTokenBalance
                                 }
-                                className="text-gray-900 dark:text-gray-100 text-2xl font-bold"
+                                className="text-gray-900 dark:text-gray-100 text-2xl font-bold whitespace-nowrap"
                             >
                                 {displayNetWorth
                                     ? netWorth

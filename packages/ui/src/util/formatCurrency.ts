@@ -60,5 +60,5 @@ export function formatCurrency(
         formattedValue = formatter.format(options?.minValue!)
     }
 
-    return `${prefix}${symbol}${formattedValue} ${showCurrency ? currency : ""}`
+    return `${prefix}${symbol}${formattedValue}${showCurrency ? `\u00A0${currency}` : ""}`
 }

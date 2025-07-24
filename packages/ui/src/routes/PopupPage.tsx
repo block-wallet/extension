@@ -392,10 +392,10 @@ const PopupPage = () => {
                                 to="/send"
                                 draggable={false}
                                 className={classnames(
-                                    "flex flex-col items-center group transition-all duration-200 hover:scale-105",
+                                    "flex flex-col items-center group transition-all duration-200 hover:scale-105 w-16",
                                     disabledActions && "pointer-events-none opacity-50"
                                 )}
-                                style={{ height: "57px", width: "32px" }}
+                                style={{ height: "57px" }}
                             >
                                 <div
                                     className={classnames(
@@ -434,10 +434,10 @@ const PopupPage = () => {
                                     to="/buy"
                                     draggable={false}
                                     className={classnames(
-                                        "flex flex-col items-center group transition-all duration-200 hover:scale-105",
+                                        "flex flex-col items-center group transition-all duration-200 hover:scale-105 w-16",
                                         disabledActions && "pointer-events-none opacity-50"
                                     )}
-                                    style={{ height: "57px", width: "32px" }}
+                                    style={{ height: "57px" }}
                                 >
                                     <div
                                         className={classnames(
@@ -481,10 +481,10 @@ const PopupPage = () => {
                                     to="/swap"
                                     draggable={false}
                                     className={classnames(
-                                        "flex flex-col items-center group transition-all duration-200 hover:scale-105",
+                                        "flex flex-col items-center group transition-all duration-200 hover:scale-105 w-16",
                                         disabledActions && "pointer-events-none opacity-50"
                                     )}
-                                    style={{ height: "57px", width: "35px" }}
+                                    style={{ height: "57px" }}
                                 >
                                     <div
                                         className={classnames(
@@ -522,8 +522,8 @@ const PopupPage = () => {
                             <Link
                                 to="/portfolio"
                                 draggable={false}
-                                className="flex flex-col items-center group transition-all duration-200 hover:scale-105"
-                                style={{ height: "57px", width: "57px" }}
+                                className="flex flex-col items-center group transition-all duration-200 hover:scale-105 w-16"
+                                style={{ height: "57px" }}
                             >
                                 <div className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 bg-[#3742f7] hover:bg-[#2631e6] dark:bg-[#3742f7] dark:hover:bg-[#2631e6]">
                                     {isLoading ? (
@@ -559,10 +559,10 @@ const PopupPage = () => {
                                     to="/bridge"
                                     draggable={false}
                                     className={classnames(
-                                        "flex flex-col items-center group transition-all duration-200 hover:scale-105",
+                                        "flex flex-col items-center group transition-all duration-200 hover:scale-105 w-16",
                                         disabledActions && "pointer-events-none opacity-50"
                                     )}
-                                    style={{ height: "57px", width: "41px" }}
+                                    style={{ height: "57px" }}
                                 >
                                     <div
                                         className={classnames(

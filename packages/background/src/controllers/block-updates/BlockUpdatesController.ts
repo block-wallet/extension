@@ -206,25 +206,13 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
         if (this.chromeAlarmsSetup) return;
 
         try {
-            // Create alarms for different monitoring intervals
-            // Active monitoring - every 5 seconds when extension is actively used
-            chrome.alarms.create('blockMonitor-active', {
-                periodInMinutes: 0.083 // 5 seconds
-            });
-
-            // Passive monitoring - every 10 seconds when extension is in background
+            // Use a single coarse-grained passive alarm for MV3 keep-alive purposes only
             chrome.alarms.create('blockMonitor-passive', {
-                periodInMinutes: 0.167 // 10 seconds
+                periodInMinutes: 1 // 60 seconds
             });
 
-            // Real-time check - every 3 seconds for immediate responsiveness
-            chrome.alarms.create('blockMonitor-realtime', {
-                periodInMinutes: 0.05 // 3 seconds
-            });
-
-            // Listen to all block monitoring alarms
             chrome.alarms.onAlarm.addListener((alarm) => {
-                if (alarm.name.startsWith('blockMonitor-')) {
+                if (alarm.name === 'blockMonitor-passive') {
                     this.handleChromeAlarmUpdate(alarm.name);
                 }
             });
@@ -240,29 +228,11 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
      * Handle Chrome Alarm triggered block updates
      */
     private handleChromeAlarmUpdate(alarmName: string): void {
-        const currentChainId = this._networkController.network.chainId;
-
-        // Determine update frequency based on alarm type and subscription status
-        let shouldUpdate = false;
-
-        switch (alarmName) {
-            case 'blockMonitor-realtime':
-                // Real-time updates only when actively subscribed
-                shouldUpdate = this.activeSubscriptions;
-                break;
-            case 'blockMonitor-active':
-                // Active updates when subscribed or recently active
-                shouldUpdate = this.activeSubscriptions;
-                break;
-            case 'blockMonitor-passive':
-                // Passive updates always run in background for basic sync
-                shouldUpdate = true;
-                break;
-        }
-
-        if (shouldUpdate) {
-            // Trigger a block number check
-            this._blockFetchController.getCurrentBlockNumber(currentChainId);
+        // Passive alarm intentionally does not trigger network calls.
+        // It allows the service worker to wake periodically while actual
+        // block updates are driven by provider/off-chain listeners.
+        if (alarmName === 'blockMonitor-passive') {
+            // no-op
         }
     }
 
@@ -271,9 +241,7 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
      */
     public cleanup(): void {
         if (this.chromeAlarmsSetup) {
-            chrome.alarms.clear('blockMonitor-active');
             chrome.alarms.clear('blockMonitor-passive');
-            chrome.alarms.clear('blockMonitor-realtime');
             this.chromeAlarmsSetup = false;
         }
     }

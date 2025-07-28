@@ -38,6 +38,8 @@ enum PendingWithdrawalStatus {
 }
 
 export class ActivityListController extends BaseController<IActivityListState> {
+    private updateScheduled = false;
+    private scheduledTimeout: NodeJS.Timeout | null = null;
     constructor(
         private readonly _transactionsController: TransactionController,
         private readonly _privacyController: PrivacyAsyncController,
@@ -78,6 +80,20 @@ export class ActivityListController extends BaseController<IActivityListState> {
      * Triggers on UI store update
      */
     private onStoreUpdate = () => {
+        // Coalesce multiple rapid updates into a single computation tick
+        if (this.updateScheduled) return;
+        this.updateScheduled = true;
+        if (this.scheduledTimeout) {
+            clearTimeout(this.scheduledTimeout);
+        }
+        this.scheduledTimeout = setTimeout(() => {
+            this.updateScheduled = false;
+            this.scheduledTimeout = null;
+            this._recomputeActivityList();
+        }, 0);
+    };
+
+    private _recomputeActivityList = () => {
         const { selectedAddress } =
             this._preferencesController.store.getState();
 

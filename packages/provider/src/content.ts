@@ -115,7 +115,7 @@ window.addEventListener('ethereum#initialized', (e: Event) => {
 injectProvider();
 
 // Keep-alive implementation with improved interval and error handling
-const SW_KEEP_ALIVE_INTERVAL = 10000; // Increased to 10 seconds to reduce resource usage
+const SW_KEEP_ALIVE_INTERVAL = 30000; // 30 seconds default to reduce resource usage
 let SW_ALIVE = false;
 let EXTENSION_CONTEXT_VALID = true;
 let portReinitialized = false;
@@ -222,6 +222,13 @@ function notifyPage(notification: Partial<SignalMessage>) {
  * based on consecutive failures
  */
 async function keepExtensionAlive() {
+    // Only top-level frame should run keep-alive to avoid duplicate pings
+    if (window !== window.top) {
+        return;
+    }
+
+    // If page is hidden, back off to reduce CPU/IO
+    const isHidden = typeof document !== 'undefined' && document.visibilityState === 'hidden';
     await swKeepAlive();
 
     if (EXTENSION_CONTEXT_VALID) {
@@ -240,6 +247,11 @@ async function keepExtensionAlive() {
             nextInterval = SW_KEEP_ALIVE_INTERVAL * backoffFactor;
         }
 
+        // If hidden, further increase interval to 60s to limit background churn
+        if (isHidden) {
+            nextInterval = Math.max(nextInterval, 60000);
+        }
+
         // If too many consecutive failures, notify the page
         if (consecutiveKeepAliveFailures >= MAX_CONSECUTIVE_FAILURES) {
             notifyPage({
@@ -254,7 +266,10 @@ async function keepExtensionAlive() {
 
 // Only use keep-alive in Manifest V3, and ensure cleanup on page unload
 if (isManifestV3()) {
-    keepExtensionAlive();
+    // Only start keep-alive in the top-level frame
+    if (window === window.top) {
+        keepExtensionAlive();
+    }
 
     // Cleanup on page unload to prevent memory leaks
     window.addEventListener('beforeunload', () => {

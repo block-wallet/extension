@@ -47,7 +47,10 @@ const plugins = [
                 from: path.resolve(__dirname, '../../../public'),
                 to: path.resolve(__dirname, '../../../dist'),
                 filter: (resourcePath) => {
-                    return !resourcePath.endsWith('/offscreen.js');
+                    // Exclude legacy manifest.json and exclude offscreen.js (built via separate config)
+                    const isLegacyManifest = resourcePath.endsWith('/manifest.json');
+                    const isOffscreen = resourcePath.endsWith('/offscreen.js');
+                    return !(isLegacyManifest || isOffscreen);
                 },
             },
         ],

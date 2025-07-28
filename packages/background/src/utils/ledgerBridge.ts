@@ -81,8 +81,8 @@ export class LedgerBridge {
                 // TypeScript definitions may not be up to date with Chrome's implementation
                 await chrome.offscreen.createDocument({
                     url: 'offscreen.html',
-                    reasons: ['USER_MEDIA'], // Using USER_MEDIA for hardware access
-                    justification: 'Hardware wallet connection requires access to WebHID APIs'
+                    reasons: ['IFRAME_SCRIPTING'],
+                    justification: 'Execute WebHID and messaging logic in an offscreen document (not possible in a service worker)'
                 });
 
                 // Wait for it to initialize

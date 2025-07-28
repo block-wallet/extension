@@ -1851,8 +1851,22 @@ export default class BlankController extends EventEmitter {
         );
     };
 
+    /**
+     * Determines whether the provider should be injected into the page.
+     * Current policy: inject when user enabled default browser wallet in settings.
+     * Defaults to true if the setting is missing.
+     */
     public shouldInject(): boolean {
-        return this.preferencesController.settings.defaultBrowserWallet;
+        try {
+            const settings = this.preferencesController.settings;
+            // If the setting exists, respect it; otherwise default to true
+            if (typeof settings?.defaultBrowserWallet === 'boolean') {
+                return settings.defaultBrowserWallet;
+            }
+            return true;
+        } catch {
+            return true;
+        }
     }
 
     /**

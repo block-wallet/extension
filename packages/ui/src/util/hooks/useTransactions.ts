@@ -8,6 +8,7 @@ import {
 } from "../../context/commTypes"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { flagQueuedTransactions } from "../transactionUtils"
+import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
 
 const failedStatuses = [
     TransactionStatus.FAILED,
@@ -16,8 +17,11 @@ const failedStatuses = [
     TransactionStatus.REJECTED,
 ]
 
-const useTransactions = () => {
-    const { confirmed, pending } = useBlankState()!.activityList
+const useTransactions = (
+    activityList?: { confirmed: TransactionMeta[]; pending: TransactionMeta[] }
+) => {
+    const blankState = useBlankState()!
+    const { confirmed, pending } = activityList ?? blankState.activityList
     const { nativeCurrency: networkNativeCurrency, defaultNetworkLogo } =
         useSelectedNetwork()
 

@@ -7,11 +7,13 @@ import {
     AccountBalances,
     AccountInfo,
     AccountTokenOrder,
+    AccountBalance,
 } from "@block-wallet/background/controllers/AccountTrackerController"
 import { isHiddenAccount } from "../../util/account"
 import { AssetsSortOptions, sortTokensByValue } from "../../util/tokenUtils"
-import { useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Rates } from "@block-wallet/background/controllers/ExchangeRatesController"
+import { subscribeExchangeRates, subscribeSelectedAccountChainBalance } from "../commActions"
 
 export type TokenWithBalance = { token: Token; balance: BigNumber }
 
@@ -77,11 +79,21 @@ const useGetAccountNetworkTokensBalances = (
 }
 
 export const useTokensList = (account?: AccountInfo): TokenListInfo => {
-    const { chainId, balances, nativeToken } =
-        useGetAccountNetworkTokensBalances(account)
+    const { chainId, balances, nativeToken } = useGetAccountNetworkTokensBalances(account)
+    const [chainBalance, setChainBalance] = useState<AccountBalance | null>(null)
+    useEffect(() => {
+        let mounted = true
+        subscribeSelectedAccountChainBalance((b) => {
+            if (mounted) setChainBalance(b)
+        })
+        return () => {
+            mounted = false
+        }
+    }, [])
 
-    if (chainId in balances) {
-        const { nativeTokenBalance, tokens } = balances[chainId]
+    const selectedChain = chainBalance ?? balances[chainId]
+    if (selectedChain) {
+        const { nativeTokenBalance, tokens } = selectedChain
 
         // Place tokens with balance on top
         const currentNetworkTokens = Object.values(tokens)
@@ -128,14 +140,37 @@ export const useTokenListWithNativeToken = (
         balances,
         nativeToken,
         accountTokensOrder,
-        exchangeRates,
+        exchangeRates: exchangeRatesFallback,
         networkNativeCurrencySymbol,
     } = useGetAccountNetworkTokensBalances(account)
 
+    const [exchangeRates, setExchangeRates] = useState<Rates | null>(null)
+    useEffect(() => {
+        let mounted = true
+        subscribeExchangeRates((rates) => {
+            if (mounted) setExchangeRates(rates)
+        })
+        return () => {
+            mounted = false
+        }
+    }, [])
+
+    const [chainBalance, setChainBalance] = useState<AccountBalance | null>(null)
+    useEffect(() => {
+        let mounted = true
+        subscribeSelectedAccountChainBalance((b) => {
+            if (mounted) setChainBalance(b)
+        })
+        return () => {
+            mounted = false
+        }
+    }, [])
+
     return useMemo(() => {
         let currentNetworkTokens: TokenWithBalance[] = []
-        if (chainId in balances) {
-            const { nativeTokenBalance, tokens } = balances[chainId]
+        const selectedChain = chainBalance ?? balances[chainId]
+        if (selectedChain) {
+            const { nativeTokenBalance, tokens } = selectedChain
 
             currentNetworkTokens = Object.values(tokens)
             currentNetworkTokens.push({
@@ -153,17 +188,19 @@ export const useTokenListWithNativeToken = (
             sortValue,
             currentNetworkTokens,
             accountTokensOrder,
-            exchangeRates,
+            exchangeRates ?? exchangeRatesFallback,
             hideSmallBalances,
             networkNativeCurrencySymbol
         )
     }, [
         chainId,
         balances,
+        chainBalance,
         sortValue,
         accountTokensOrder,
         nativeToken,
         exchangeRates,
+        exchangeRatesFallback,
         hideSmallBalances,
         networkNativeCurrencySymbol,
     ])

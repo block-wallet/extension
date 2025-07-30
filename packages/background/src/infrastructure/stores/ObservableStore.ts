@@ -5,8 +5,8 @@ import { cloneDeep } from 'lodash';
  */
 export interface IObservableStore<T> {
     getState(): T;
-    setState(newState: T): void;
-    updateState(partialState: Partial<T>): void;
+    setState(newState: T, action?: string, options?: { includeOldStateForListeners?: boolean }): void;
+    updateState(partialState: Partial<T>, actionName?: string): void;
     subscribe(handler: (s: T, oldState?: T) => void): void;
     unsubscribe(handler: (s: T) => void): void;
     notify(oldState?: T, action?: string): void;
@@ -47,11 +47,15 @@ export default class ObservableStore<T> implements IObservableStore<T> {
      *
      * @param newState The state to replace with
      */
-    public setState(newState: T, action?: string): void {
-        const oldState =
-            typeof this._state === 'object'
-                ? cloneDeep(this._state)
-                : this._state;
+    public setState(
+        newState: T,
+        action?: string,
+        options?: { includeOldStateForListeners?: boolean }
+    ): void {
+        const shouldIncludeOldState = options?.includeOldStateForListeners === true;
+        const oldState = shouldIncludeOldState && typeof this._state === 'object'
+            ? cloneDeep(this._state)
+            : undefined;
         this._state = newState;
         this.notify(oldState, action);
     }
@@ -71,7 +75,7 @@ export default class ObservableStore<T> implements IObservableStore<T> {
             );
         } else {
             // If partialState is a non-object primitive, replace
-            this.setState(partialState);
+            this.setState(partialState as unknown as T);
         }
     }
 

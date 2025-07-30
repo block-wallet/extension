@@ -70,6 +70,9 @@ import { SwapTxMeta } from "@block-wallet/background/utils/swaps/1inch"
 import {
     DiscoveredAccountInfo,
 } from "@block-wallet/background/utils/types/communication"
+import { PermissionsControllerState } from "@block-wallet/background/controllers/PermissionsController"
+import { Rates } from "@block-wallet/background/controllers/ExchangeRatesController"
+import { AccountBalance } from "@block-wallet/background/controllers/AccountTrackerController"
 
 let requestId = 0
 
@@ -968,6 +971,86 @@ export const subscribeState = async (
     cb: (state: StateSubscription) => void
 ): Promise<boolean> => {
     return sendMessage(Messages.STATE.SUBSCRIBE, undefined, cb)
+}
+
+/**
+ * Subscribes to only the activity list slice updates
+ */
+export const subscribeActivityList = async (
+    cb: (slice: { confirmed: TransactionMeta[]; pending: TransactionMeta[] }) => void
+): Promise<boolean> => {
+    // @ts-ignore message type mapping allows subscription payload
+    return sendMessage(Messages.STATE.SUBSCRIBE_ACTIVITY_LIST, undefined, cb)
+}
+
+/**
+ * Subscribes to TransactionController UI unapproved transactions slice
+ */
+export const subscribeUnapprovedTransactions = async (
+    cb: (slice: { [id: string]: TransactionMeta }) => void
+): Promise<boolean> => {
+    // @ts-ignore message type mapping allows subscription payload
+    return sendMessage(Messages.STATE.SUBSCRIBE_UNAPPROVED_TX, undefined, cb)
+}
+
+/**
+ * Subscribes to current gas price levels slice
+ */
+export const subscribeGasPriceLevels = async (
+    cb: (levels: GasPriceData['gasPricesLevels']) => void
+): Promise<boolean> => {
+    // @ts-ignore message type mapping allows subscription payload
+    return sendMessage(Messages.STATE.SUBSCRIBE_GAS_PRICE_LEVELS, undefined, cb)
+}
+
+/**
+ * Subscribes to permission requests slice
+ */
+export const subscribePermissionRequests = async (
+    cb: (slice: PermissionsControllerState['permissionRequests']) => void
+): Promise<boolean> => {
+    // @ts-ignore
+    return sendMessage(Messages.STATE.SUBSCRIBE_PERMISSION_REQUESTS, undefined, cb)
+}
+
+/**
+ * Subscribes to selected account native balance slice
+ */
+export const subscribeSelectedNativeBalance = async (
+    cb: (balance: BigNumber) => void
+): Promise<boolean> => {
+    // @ts-ignore
+    return sendMessage(Messages.STATE.SUBSCRIBE_SELECTED_NATIVE_BALANCE, undefined, cb)
+}
+
+/**
+ * Subscribes to selected account info slice
+ */
+export const subscribeSelectedAccountInfo = async (
+    cb: (account: AccountInfo) => void
+): Promise<boolean> => {
+    // @ts-ignore
+    return sendMessage(Messages.STATE.SUBSCRIBE_SELECTED_ACCOUNT_INFO, undefined, cb)
+}
+
+/**
+ * Subscribes to exchange rates slice
+ */
+export const subscribeExchangeRates = async (
+    cb: (rates: Rates) => void
+): Promise<boolean> => {
+    // @ts-ignore
+    return sendMessage(Messages.STATE.SUBSCRIBE_EXCHANGE_RATES, undefined, cb)
+}
+
+/**
+ * Subscribes to selected account/chain balance slice
+ */
+export const subscribeSelectedAccountChainBalance = async (
+    cb: (balance: AccountBalance) => void
+): Promise<boolean> => {
+    // @ts-ignore
+    return sendMessage(Messages.STATE.SUBSCRIBE_SELECTED_ACCOUNT_CHAIN_BALANCE, undefined, cb)
 }
 
 /**

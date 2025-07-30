@@ -66,6 +66,9 @@ import { RemoteConfigsControllerState } from '@block-wallet/background/controlle
 import { TypedTransaction } from '@ethereumjs/tx';
 import { GetOnRampCurrencies } from '@block-wallet/background/controllers/OnrampController';
 import { SwapTxMeta } from '../swaps/1inch';
+import { PermissionsControllerState } from '@block-wallet/background/controllers/PermissionsController'
+import { Rates } from '@block-wallet/background/controllers/ExchangeRatesController'
+import { AccountBalance } from '@block-wallet/background/controllers/AccountTrackerController'
 
 enum ACCOUNT {
     CREATE = 'CREATE_ACCOUNT',
@@ -183,6 +186,14 @@ enum PERMISSION {
 enum STATE {
     GET = 'GET_STATE',
     SUBSCRIBE = 'STATE_SUBSCRIBE',
+    SUBSCRIBE_ACTIVITY_LIST = 'STATE_SUBSCRIBE_ACTIVITY_LIST',
+    SUBSCRIBE_UNAPPROVED_TX = 'STATE_SUBSCRIBE_UNAPPROVED_TX',
+    SUBSCRIBE_GAS_PRICE_LEVELS = 'STATE_SUBSCRIBE_GAS_PRICE_LEVELS',
+    SUBSCRIBE_PERMISSION_REQUESTS = 'STATE_SUBSCRIBE_PERMISSION_REQUESTS',
+    SUBSCRIBE_SELECTED_NATIVE_BALANCE = 'STATE_SUBSCRIBE_SELECTED_NATIVE_BALANCE',
+    SUBSCRIBE_SELECTED_ACCOUNT_INFO = 'STATE_SUBSCRIBE_SELECTED_ACCOUNT_INFO',
+    SUBSCRIBE_EXCHANGE_RATES = 'STATE_SUBSCRIBE_EXCHANGE_RATES',
+    SUBSCRIBE_SELECTED_ACCOUNT_CHAIN_BALANCE = 'STATE_SUBSCRIBE_SELECTED_ACCOUNT_CHAIN_BALANCE',
     GET_REMOTE_CONFIG = 'GET_REMOTE_CONFIG',
 }
 
@@ -449,6 +460,14 @@ export interface RequestSignatures {
         boolean
     ];
     [Messages.STATE.GET]: [undefined, ResponseGetState];
+    [Messages.STATE.SUBSCRIBE_ACTIVITY_LIST]: [undefined, boolean, { confirmed: TransactionMeta[]; pending: TransactionMeta[] }];
+    [Messages.STATE.SUBSCRIBE_UNAPPROVED_TX]: [undefined, boolean, { [id: string]: TransactionMeta }];
+    [Messages.STATE.SUBSCRIBE_GAS_PRICE_LEVELS]: [undefined, boolean, GasPriceData['gasPricesLevels']];
+    [Messages.STATE.SUBSCRIBE_PERMISSION_REQUESTS]: [undefined, boolean, PermissionsControllerState['permissionRequests']];
+    [Messages.STATE.SUBSCRIBE_SELECTED_NATIVE_BALANCE]: [undefined, boolean, BigNumber];
+    [Messages.STATE.SUBSCRIBE_SELECTED_ACCOUNT_INFO]: [undefined, boolean, AccountInfo];
+    [Messages.STATE.SUBSCRIBE_EXCHANGE_RATES]: [undefined, boolean, Rates];
+    [Messages.STATE.SUBSCRIBE_SELECTED_ACCOUNT_CHAIN_BALANCE]: [undefined, boolean, AccountBalance];
     [Messages.ENS.RESOLVE_NAME]: [RequestEnsResolve, string | null];
     [Messages.ENS.LOOKUP_ADDRESS]: [RequestEnsLookup, string | null];
     [Messages.UD.RESOLVE_NAME]: [RequestUDResolve, string | null];

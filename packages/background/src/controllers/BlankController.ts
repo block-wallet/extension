@@ -1337,6 +1337,128 @@ export default class BlankController extends EventEmitter {
                 return this.refreshPortfolioAnalytics();
             case Messages.WALLET.SET_THEME_PREFERENCE:
                 return this.setThemePreference(request as RequestSetThemePreference);
+            case Messages.STATE.SUBSCRIBE_ACTIVITY_LIST: {
+                const send = this.createSubscription<typeof Messages.STATE.SUBSCRIBE_ACTIVITY_LIST>(
+                    id,
+                    port
+                );
+                const emit = () => {
+                    const { activityList } = this.activityListController.store.getState();
+                    send(activityList);
+                };
+                // Send initial slice and then subscribe to changes
+                emit();
+                this.activityListController.store.subscribe(() => emit());
+                return true as unknown as ResponseType<MessageTypes>;
+            }
+            case Messages.STATE.SUBSCRIBE_UNAPPROVED_TX: {
+                const send = this.createSubscription<typeof Messages.STATE.SUBSCRIBE_UNAPPROVED_TX>(
+                    id,
+                    port
+                );
+                const emit = () => {
+                    const { unapprovedTransactions } = this.transactionController.UIStore.getState();
+                    send(unapprovedTransactions);
+                };
+                emit();
+                this.transactionController.UIStore.subscribe(() => emit());
+                return true as unknown as ResponseType<MessageTypes>;
+            }
+            case Messages.STATE.SUBSCRIBE_GAS_PRICE_LEVELS: {
+                const send = this.createSubscription<typeof Messages.STATE.SUBSCRIBE_GAS_PRICE_LEVELS>(
+                    id,
+                    port
+                );
+                const emit = () => {
+                    const { gasPricesLevels } = this.gasPricesController.getState();
+                    send(gasPricesLevels);
+                };
+                emit();
+                this.gasPricesController.store.subscribe(() => emit());
+                return true as unknown as ResponseType<MessageTypes>;
+            }
+            case Messages.STATE.SUBSCRIBE_PERMISSION_REQUESTS: {
+                const send = this.createSubscription<typeof Messages.STATE.SUBSCRIBE_PERMISSION_REQUESTS>(
+                    id,
+                    port
+                );
+                const emit = () => {
+                    const { permissionRequests } = this.permissionsController.store.getState();
+                    send(permissionRequests);
+                };
+                emit();
+                this.permissionsController.store.subscribe(() => emit());
+                return true as unknown as ResponseType<MessageTypes>;
+            }
+            case Messages.STATE.SUBSCRIBE_SELECTED_NATIVE_BALANCE: {
+                const send = this.createSubscription<typeof Messages.STATE.SUBSCRIBE_SELECTED_NATIVE_BALANCE>(
+                    id,
+                    port
+                );
+                const emit = () => {
+                    const selectedAddress = this.preferencesController.getSelectedAddress();
+                    const chainId = this.networkController.network.chainId;
+                    const balance = this.accountTrackerController.getAccountNativeTokenBalance(
+                        selectedAddress,
+                        chainId
+                    );
+                    send(balance);
+                };
+                emit();
+                // Re-emit on relevant changes
+                this.accountTrackerController.store.subscribe(() => emit());
+                this.preferencesController.store.subscribe(() => emit());
+                this.networkController.on(NetworkEvents.NETWORK_CHANGE, () => emit());
+                return true as unknown as ResponseType<MessageTypes>;
+            }
+            case Messages.STATE.SUBSCRIBE_SELECTED_ACCOUNT_INFO: {
+                const send = this.createSubscription<typeof Messages.STATE.SUBSCRIBE_SELECTED_ACCOUNT_INFO>(
+                    id,
+                    port
+                );
+                const emit = () => {
+                    const selectedAddress = this.preferencesController.getSelectedAddress();
+                    const normalized = selectedAddress.toLowerCase();
+                    const { accounts } = this.accountTrackerController.store.getState();
+                    send(accounts[normalized]);
+                };
+                emit();
+                this.accountTrackerController.store.subscribe(() => emit());
+                this.preferencesController.store.subscribe(() => emit());
+                return true as unknown as ResponseType<MessageTypes>;
+            }
+            case Messages.STATE.SUBSCRIBE_EXCHANGE_RATES: {
+                const send = this.createSubscription<typeof Messages.STATE.SUBSCRIBE_EXCHANGE_RATES>(
+                    id,
+                    port
+                );
+                const emit = () => {
+                    const { exchangeRates } = this.exchangeRatesController.store.getState();
+                    send(exchangeRates);
+                };
+                emit();
+                this.exchangeRatesController.store.subscribe(() => emit());
+                return true as unknown as ResponseType<MessageTypes>;
+            }
+            case Messages.STATE.SUBSCRIBE_SELECTED_ACCOUNT_CHAIN_BALANCE: {
+                const send = this.createSubscription<typeof Messages.STATE.SUBSCRIBE_SELECTED_ACCOUNT_CHAIN_BALANCE>(
+                    id,
+                    port
+                );
+                const emit = () => {
+                    const selectedAddress = this.preferencesController.getSelectedAddress().toLowerCase();
+                    const chainId = this.networkController.network.chainId;
+                    const { accounts } = this.accountTrackerController.store.getState();
+                    const account = accounts[selectedAddress];
+                    const chainBalance = account?.balances?.[chainId] || { nativeTokenBalance: BigNumber.from(0), tokens: {} };
+                    send(chainBalance);
+                };
+                emit();
+                this.accountTrackerController.store.subscribe(() => emit());
+                this.preferencesController.store.subscribe(() => emit());
+                this.networkController.on(NetworkEvents.NETWORK_CHANGE, () => emit());
+                return true as unknown as ResponseType<MessageTypes>;
+            }
             default:
                 throw new Error(`Unable to handle message of type ${type}`);
         }

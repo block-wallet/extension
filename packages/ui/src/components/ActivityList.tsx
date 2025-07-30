@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import TransactionsList from "./transactions/TransactionsList"
 import { MdOutlineLabel } from "react-icons/md"
 
@@ -7,6 +7,7 @@ import { useSelectedAccount } from "../context/hooks/useSelectedAccount"
 
 import useTransactions from "../util/hooks/useTransactions"
 import { useBlankState } from "../context/background/backgroundHooks"
+import { subscribeActivityList } from "../context/commActions"
 import { RichedTransactionMeta } from "../util/transactionUtils"
 import SearchInput from "./input/SearchInput"
 
@@ -15,7 +16,19 @@ const ActivityList = () => {
     const { chainId } = useSelectedNetwork()
     const { address } = useSelectedAccount()
 
-    const { transactions } = useTransactions()
+    // Subscribe only to activity list slice to reduce re-renders
+    const [slice, setSlice] = useState<{ confirmed: any[]; pending: any[] } | null>(null)
+    useEffect(() => {
+        let mounted = true
+        subscribeActivityList((s) => {
+            if (mounted) setSlice(s)
+        })
+        return () => {
+            mounted = false
+        }
+    }, [])
+
+    const { transactions } = useTransactions(slice ?? undefined as any)
     const [filterText, setFilterText] = useState("")
     const [selectedLabel, setSelectedLabel] = useState<string | null>(null)
     const [searchKey, setSearchKey] = useState(0)

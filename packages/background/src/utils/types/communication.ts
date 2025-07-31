@@ -649,7 +649,7 @@ export interface RequestSignatures {
         void
     ];
     [Messages.WALLET.DISCOVER_ACCOUNTS_FROM_SEED]: [RequestDiscoverAccountsFromSeed, ResponseDiscoverAccountsFromSeed];
-    [Messages.PORTFOLIO.GET_ANALYTICS]: [undefined, any];
+    [Messages.PORTFOLIO.GET_ANALYTICS]: [undefined, import('../../controllers/PortfolioAnalyticsController').PortfolioMetrics];
     [Messages.PORTFOLIO.REFRESH_ANALYTICS]: [undefined, void];
 }
 

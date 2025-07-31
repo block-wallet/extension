@@ -2002,7 +2002,7 @@ export const discoverAccountsFromSeed = async (
 /**
  * Gets portfolio analytics data
  */
-export const getPortfolioAnalytics = async () => {
+export const getPortfolioAnalytics = async (): Promise<import("@block-wallet/background/controllers/PortfolioAnalyticsController").PortfolioMetrics> => {
     return sendMessage(Messages.PORTFOLIO.GET_ANALYTICS)
 }
 

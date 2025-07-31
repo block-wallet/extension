@@ -61,6 +61,7 @@ export class PortfolioAnalyticsController extends BaseController<PortfolioAnalyt
     private readonly DEFAULT_RETENTION_DAYS = 365;
     private readonly MAX_SNAPSHOTS = 8760;
     private cleanupIntervalId?: NodeJS.Timeout;
+    private _snapshotInFlight = false;
 
     constructor(
         private readonly _accountTrackerController: AccountTrackerController,
@@ -103,34 +104,39 @@ export class PortfolioAnalyticsController extends BaseController<PortfolioAnalyt
             if (!isTrackingEnabled) {
                 return null;
             }
+            if (this._snapshotInFlight) {
+                return null; // avoid concurrent snapshots
+            }
+            this._snapshotInFlight = true;
 
             const accountAddress = this._preferencesController.getSelectedAddress();
             const chainId = this._networkController.network.chainId;
-            const exchangeRates = this._exchangeRatesController.store.getState().exchangeRates;
-            const nativeCurrency = this._preferencesController.nativeCurrency;
+            const tokenRatesByAddress = this._exchangeRatesController.getCurrentTokenRatesByAddress();
+            const nativeRate = this._exchangeRatesController.getNativeRate();
 
             const accountTokens = this._accountTrackerController.getAccountTokens(accountAddress, chainId);
             const nativeBalance = this._accountTrackerController.getAccountNativeTokenBalance(accountAddress, chainId);
             const nativeSymbol = this._networkController.network.nativeCurrency.symbol;
+            const nativeDecimals = this._networkController.network.nativeCurrency.decimals;
 
             const assets: PortfolioSnapshot['assets'] = {};
             let totalValue = 0;
 
-            const nativePrice = exchangeRates[nativeSymbol] || 0;
-            const nativeValueNum = parseFloat(formatUnits(nativeBalance, 18)) * nativePrice;
+            const nativePrice = nativeRate || 0;
+            const nativeValueNum = parseFloat(formatUnits(nativeBalance, nativeDecimals)) * nativePrice;
 
             assets['native'] = {
                 symbol: nativeSymbol,
                 balance: nativeBalance.toString(),
                 price: nativePrice,
                 value: nativeValueNum,
-                decimals: 18,
+                decimals: nativeDecimals,
             };
             totalValue += nativeValueNum;
 
             Object.entries(accountTokens).forEach(([tokenAddress, { token, balance }]) => {
                 if (!isNativeTokenAddress(tokenAddress)) {
-                    const price = exchangeRates[token.symbol] || 0;
+                    const price = tokenRatesByAddress[tokenAddress.toLowerCase()] || 0;
                     const valueNum = parseFloat(formatUnits(balance, token.decimals)) * price;
 
                     assets[tokenAddress] = {
@@ -159,6 +165,8 @@ export class PortfolioAnalyticsController extends BaseController<PortfolioAnalyt
         } catch (error) {
             log.error('Error creating portfolio snapshot:', error);
             return null;
+        } finally {
+            this._snapshotInFlight = false;
         }
     }
 
@@ -184,9 +192,9 @@ export class PortfolioAnalyticsController extends BaseController<PortfolioAnalyt
         const hasMeaningful = currentValue >= 0.01;
 
         const now = Date.now();
-        const change24h = this._calculateChange(relevantSnapshots, now - 24 * 60 * 60 * 1000, currentValue);
-        const change7d = this._calculateChange(relevantSnapshots, now - 7 * 24 * 60 * 60 * 1000, currentValue);
-        const change30d = this._calculateChange(relevantSnapshots, now - 30 * 24 * 60 * 60 * 1000, currentValue);
+        const change24h = this._calculateChangeFrom(relevantSnapshots, now - 24 * 60 * 60 * 1000, currentValue);
+        const change7d = this._calculateChangeFrom(relevantSnapshots, now - 7 * 24 * 60 * 60 * 1000, currentValue);
+        const change30d = this._calculateChangeFrom(relevantSnapshots, now - 30 * 24 * 60 * 60 * 1000, currentValue);
 
         let changeAllTime = 0;
         if (relevantSnapshots.length > 1) {
@@ -198,33 +206,37 @@ export class PortfolioAnalyticsController extends BaseController<PortfolioAnalyt
             }
         }
 
-        const assetAllocation: PortfolioMetrics['assetAllocation'] = {};
+        // Aggregate allocation by symbol for display, but compute using address-based values
+        const allocationBySymbol: PortfolioMetrics['assetAllocation'] = {};
         if (hasMeaningful) {
-            Object.entries(latestSnapshot.assets).forEach(([address, asset]) => {
+            Object.values(latestSnapshot.assets).forEach((asset) => {
                 if (asset.value >= 0.001) {
                     const percentage = (asset.value / currentValue) * 100;
-                    assetAllocation[asset.symbol] = {
-                        value: asset.value,
-                        percentage,
+                    const prev = allocationBySymbol[asset.symbol] || { value: 0, percentage: 0 };
+                    allocationBySymbol[asset.symbol] = {
+                        value: prev.value + asset.value,
+                        percentage: prev.percentage + percentage,
                     };
                 }
             });
         }
 
-        const topPerformers = hasMeaningful ? this._calculateTopPerformers(relevantSnapshots) : [];
+        const topPerformers = hasMeaningful ? this._calculateTopPerformers24h(relevantSnapshots) : [];
 
-        const diversityScore = this._calculateDiversityScore(assetAllocation, hasMeaningful);
+        const diversityScore = this._calculateDiversityScore(allocationBySymbol, hasMeaningful);
 
-        return {
+        const metrics: PortfolioMetrics = {
             totalValue: currentValue,
             change24h,
             change7d,
             change30d,
             changeAllTime,
-            assetAllocation,
+            assetAllocation: allocationBySymbol,
             topPerformers,
             diversityScore,
         };
+        this.emit(PortfolioAnalyticsEvents.METRICS_UPDATED, metrics);
+        return metrics;
     }
 
     /**
@@ -298,32 +310,40 @@ export class PortfolioAnalyticsController extends BaseController<PortfolioAnalyt
         this.createSnapshot();
     }
 
-    private _calculateChange(snapshots: PortfolioSnapshot[], targetTime: number, currentValue: number): number {
+    // Calculates percentage change using the latest snapshot at or before targetTime
+    private _calculateChangeFrom(snapshots: PortfolioSnapshot[], targetTime: number, currentValue: number): number {
         if (snapshots.length === 0) return 0;
-
-        let closestSnapshot = snapshots[0];
-        let minDiff = Math.abs(snapshots[0].timestamp - targetTime);
-
-        for (const snapshot of snapshots) {
-            const diff = Math.abs(snapshot.timestamp - targetTime);
-            if (diff < minDiff) {
-                minDiff = diff;
-                closestSnapshot = snapshot;
+        // Find the last snapshot at or before targetTime; if none, return 0
+        let candidate: PortfolioSnapshot | undefined;
+        for (let i = snapshots.length - 1; i >= 0; i--) {
+            if (snapshots[i].timestamp <= targetTime) {
+                candidate = snapshots[i];
+                break;
             }
         }
-
-        if (closestSnapshot.totalValue === 0) return 0;
-        return ((currentValue - closestSnapshot.totalValue) / closestSnapshot.totalValue) * 100;
+        if (!candidate) return 0;
+        if (candidate.totalValue === 0) return 0;
+        return ((currentValue - candidate.totalValue) / candidate.totalValue) * 100;
     }
 
-    private _calculateTopPerformers(snapshots: PortfolioSnapshot[]): PortfolioMetrics['topPerformers'] {
+    // Calculates top performers over ~24h window if baseline exists, else falls back to last two snapshots
+    private _calculateTopPerformers24h(snapshots: PortfolioSnapshot[]): PortfolioMetrics['topPerformers'] {
         if (snapshots.length < 2) return [];
-
         const latest = snapshots[snapshots.length - 1];
-        const previous = snapshots[snapshots.length - 2];
+        const now = latest.timestamp;
+        const target = now - 24 * 60 * 60 * 1000;
+
+        // Find baseline snapshot at or before target time
+        let baselineIdx = -1;
+        for (let i = snapshots.length - 2; i >= 0; i--) {
+            if (snapshots[i].timestamp <= target) {
+                baselineIdx = i;
+                break;
+            }
+        }
+        const previous = baselineIdx >= 0 ? snapshots[baselineIdx] : snapshots[snapshots.length - 2];
 
         const performers: { symbol: string; change: number; value: number }[] = [];
-
         Object.entries(latest.assets).forEach(([address, latestAsset]) => {
             const previousAsset = previous.assets[address];
             if (previousAsset && previousAsset.value > 0) {

@@ -159,7 +159,7 @@ const PerformanceTab: React.FC<{
     return (
         <div className="p-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top Performers (24h)</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top Performers (~24h)</h3>
 
                 {metrics?.topPerformers && metrics.topPerformers.length > 0 ? (
                     <div className="space-y-2">

@@ -63,6 +63,8 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
     };
     private readonly _exchangeRateFetchIntervalController: ActionIntervalController;
     private _exchangeRateService: RateService;
+    // Cache of latest fetched token rates by contract address (lowercased) for the current chain
+    private _lastTokenRatesByAddress: { [lowerCaseAddress: string]: number } = {};
 
     constructor(
         initState: ExchangeRatesControllerState,
@@ -158,6 +160,21 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
     }
 
     /**
+     * Expose latest token rates by contract address (lowercased) for current chain
+     */
+    public getCurrentTokenRatesByAddress(): { [lowerCaseAddress: string]: number } {
+        return this._lastTokenRatesByAddress;
+    }
+
+    /**
+     * Expose current native currency rate for the active network
+     */
+    public getNativeRate(): number {
+        const symbol = this.networkNativeCurrency.symbol;
+        return this.store.getState().exchangeRates[symbol] ?? 0;
+    }
+
+    /**
      * Indicates whether the exchange rates is being changed after a network change
      */
     public get isRatesChangingAfterNetworkChange(): boolean {
@@ -186,6 +203,8 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
             symbol
         );
 
+        // Reset address-based rates cache on network change to avoid stale prices
+        this._lastTokenRatesByAddress = {};
         this.store.updateState({
             networkNativeCurrency: {
                 symbol,
@@ -235,6 +254,14 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
 
         // Get tokens exchange rates
         const tokenRatesQuery = await this._getTokenRates();
+
+        // Populate address-based cache for current chain
+        const latestByAddress: { [lowerCaseAddress: string]: number } = {};
+        Object.entries(tokenRatesQuery).forEach(([addr, currencyMap]) => {
+            latestByAddress[addr.toLowerCase()] =
+                currencyMap[this._preferencesController.nativeCurrency] ?? 0;
+        });
+        this._lastTokenRatesByAddress = latestByAddress;
 
         const tokens = { ...this.staticTokens, ...this.getTokens() };
 

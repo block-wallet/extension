@@ -36,6 +36,11 @@ const AssetAllocationChart: React.FC<AssetAllocationChartProps> = ({
         .sort(([, a], [, b]) => b.percentage - a.percentage)
         .slice(0, 8);
 
+    // Compute "Other" to cover the remaining percentage (if any)
+    const totalShownPercent = sortedAssets.reduce((sum, [, data]) => sum + data.percentage, 0);
+    const otherPercentage = Math.max(0, 100 - totalShownPercent);
+    const includeOther = otherPercentage > 0.05; // threshold to show as a wedge
+
     // Show only top 4 assets by default, with option to expand
     const displayAssets = showAllAssets ? sortedAssets : sortedAssets.slice(0, 4);
 
@@ -69,17 +74,25 @@ const AssetAllocationChart: React.FC<AssetAllocationChartProps> = ({
     }
 
     let cumulativePercentage = 0;
-    const gradientStops = sortedAssets.map(([symbol, data], index) => {
-        const start = cumulativePercentage;
-        cumulativePercentage += data.percentage;
-        const end = cumulativePercentage;
-        const color = colors[index % colors.length];
-        return `${color} ${start}% ${end}%`;
-    }).join(', ');
+    const gradientStops = [
+        ...sortedAssets.map(([symbol, data], index) => {
+            const start = cumulativePercentage;
+            cumulativePercentage += data.percentage;
+            const end = cumulativePercentage;
+            const color = colors[index % colors.length];
+            return `${color} ${start}% ${end}%`;
+        }),
+        ...(includeOther ? (() => {
+            const start = cumulativePercentage;
+            const end = 100;
+            const color = '#9CA3AF'; // gray for Other
+            return [`${color} ${start}% ${end}%`];
+        })() : []),
+    ].join(', ');
 
     const pieChartStyle = {
         background: `conic-gradient(${gradientStops})`,
-    };
+    } as React.CSSProperties;
 
     const handleAssetClick = (symbol: string) => {
         setSelectedAsset(selectedAsset === symbol ? null : symbol);
@@ -129,6 +142,25 @@ const AssetAllocationChart: React.FC<AssetAllocationChartProps> = ({
                         </div>
                     ))}
 
+                    {/* Other row */}
+                    {includeOther && (
+                        <div className="flex items-center justify-between p-3 rounded-lg border border-transparent text-gray-600 dark:text-gray-300">
+                            <div className="flex items-center flex-1 min-w-0">
+                                <div
+                                    className="w-3 h-3 rounded-full mr-3 flex-shrink-0"
+                                    style={{ backgroundColor: '#9CA3AF' }}
+                                ></div>
+                                <span className="font-medium text-sm truncate">Other</span>
+                            </div>
+                            <div className="text-right flex-shrink-0 ml-2">
+                                <div className="font-bold text-sm">
+                                    {otherPercentage.toFixed(1)}%
+                                </div>
+                                {/* No currency value for Other to avoid double counting */}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Show more/less toggle */}
                     {sortedAssets.length > 4 && (
                         <button
@@ -147,7 +179,7 @@ const AssetAllocationChart: React.FC<AssetAllocationChartProps> = ({
                 <div className="w-full grid grid-cols-2 gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                     <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 text-center transition-colors duration-200">
                         <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Total Assets</div>
-                        <div className="text-sm font-bold text-gray-900 dark:text-white">{sortedAssets.length}</div>
+                        <div className="text-sm font-bold text-gray-900 dark:text-white">{sortedAssets.length + (includeOther ? 1 : 0)}</div>
                     </div>
                     <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 text-center transition-colors duration-200">
                         <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Top Asset</div>

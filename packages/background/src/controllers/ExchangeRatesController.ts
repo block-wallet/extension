@@ -300,6 +300,35 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
     };
 
     /**
+     * Gets the exchange rate for an explicit set of token contract addresses (current chain platform)
+     * Returns a map of lowercased address to price in user's native currency
+     */
+    public async getRatesForTokenAddresses(addresses: string[]): Promise<{ [lowerCaseAddress: string]: number }> {
+        if (!addresses || addresses.length === 0) {
+            return {};
+        }
+        const service = getCoingeckoService();
+        // Coalesce and lowercase
+        const unique = Array.from(new Set(addresses.map((a) => a.toLowerCase())));
+        const ratesByAddr = await service.getTokensRates(
+            this.networkNativeCurrency.coingeckoPlatformId,
+            unique,
+            this._preferencesController.nativeCurrency
+        );
+        // Merge into cache
+        const merged: { [lowerCaseAddress: string]: number } = { ...this._lastTokenRatesByAddress };
+        unique.forEach((addr) => {
+            const price = ratesByAddr[addr]?.[this._preferencesController.nativeCurrency] ?? 0;
+            merged[addr] = price;
+        });
+        this._lastTokenRatesByAddress = merged;
+        return unique.reduce((acc, addr) => {
+            acc[addr] = merged[addr] ?? 0;
+            return acc;
+        }, {} as { [lowerCaseAddress: string]: number });
+    }
+
+    /**
      * Returns the current network native currency Coingecko id
      */
     public get networkNativeCurrency(): {

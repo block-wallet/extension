@@ -303,6 +303,9 @@ enum FILTERS {
 enum PORTFOLIO {
     GET_ANALYTICS = 'GET_PORTFOLIO_ANALYTICS',
     REFRESH_ANALYTICS = 'REFRESH_PORTFOLIO_ANALYTICS',
+    SET_SCOPE = 'SET_PORTFOLIO_SCOPE',
+    SET_RETENTION = 'SET_PORTFOLIO_RETENTION',
+    SUBSCRIBE_METRICS = 'SUBSCRIBE_PORTFOLIO_METRICS',
 }
 
 export enum ProviderType {
@@ -651,6 +654,9 @@ export interface RequestSignatures {
     [Messages.WALLET.DISCOVER_ACCOUNTS_FROM_SEED]: [RequestDiscoverAccountsFromSeed, ResponseDiscoverAccountsFromSeed];
     [Messages.PORTFOLIO.GET_ANALYTICS]: [undefined, import('../../controllers/PortfolioAnalyticsController').PortfolioMetrics];
     [Messages.PORTFOLIO.REFRESH_ANALYTICS]: [undefined, void];
+    [Messages.PORTFOLIO.SET_SCOPE]: [RequestSetPortfolioScope, void];
+    [Messages.PORTFOLIO.SET_RETENTION]: [RequestSetPortfolioRetention, void];
+    [Messages.PORTFOLIO.SUBSCRIBE_METRICS]: [undefined, boolean, import('../../controllers/PortfolioAnalyticsController').PortfolioMetrics];
 }
 
 export type MessageTypes = keyof RequestSignatures;
@@ -1202,6 +1208,15 @@ export interface RequestSetAccountFilters {
 
 export interface RequestGenerateOnDemandReleaseNotes {
     version: string;
+}
+
+export interface RequestSetPortfolioScope {
+    scope: import('../../controllers/PortfolioAnalyticsController').PortfolioScope;
+}
+
+export interface RequestSetPortfolioRetention {
+    retentionDays?: number;
+    recentHourlyDays?: number;
 }
 
 export type ResponseTypes = {

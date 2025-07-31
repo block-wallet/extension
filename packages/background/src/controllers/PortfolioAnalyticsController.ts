@@ -8,10 +8,12 @@ import { isNativeTokenAddress } from '../utils/token';
 import { formatUnits } from '@ethersproject/units';
 import log from 'loglevel';
 
+export type PortfolioScope = 'SELECTED_ACCOUNT' | 'ALL_ACCOUNTS_CURRENT_CHAIN';
+
 export interface PortfolioSnapshot {
     timestamp: number;
     totalValue: number;
-    accountAddress: string;
+    accountAddress: string; // for ALL_ACCOUNTS, this will be 'ALL'
     chainId: number;
     assets: {
         [tokenAddress: string]: {
@@ -49,6 +51,8 @@ export interface PortfolioAnalyticsState {
     lastSnapshotTime: number;
     isTrackingEnabled: boolean;
     retentionDays: number;
+    recentHourlyDays: number; // keep hourly snapshots for this many days; older will be daily rollups
+    scope: PortfolioScope;
 }
 
 export enum PortfolioAnalyticsEvents {
@@ -59,6 +63,7 @@ export enum PortfolioAnalyticsEvents {
 export class PortfolioAnalyticsController extends BaseController<PortfolioAnalyticsState> {
     private readonly SNAPSHOT_INTERVAL = 60 * 60 * 1000;
     private readonly DEFAULT_RETENTION_DAYS = 365;
+    private readonly DEFAULT_RECENT_HOURLY_DAYS = 14;
     private readonly MAX_SNAPSHOTS = 8760;
     private cleanupIntervalId?: NodeJS.Timeout;
     private _snapshotInFlight = false;
@@ -73,6 +78,8 @@ export class PortfolioAnalyticsController extends BaseController<PortfolioAnalyt
             lastSnapshotTime: 0,
             isTrackingEnabled: true,
             retentionDays: 365,
+            recentHourlyDays: 14,
+            scope: 'SELECTED_ACCOUNT',
         }
     ) {
         super(initialState);
@@ -95,65 +102,109 @@ export class PortfolioAnalyticsController extends BaseController<PortfolioAnalyt
         this._scheduleCleanup();
     }
 
+    /** Public configuration setters **/
+    public setScope(scope: PortfolioScope) {
+        this.store.updateState({ scope });
+    }
+    public setRetentionConfig({ retentionDays, recentHourlyDays }: { retentionDays?: number; recentHourlyDays?: number }) {
+        const next: Partial<PortfolioAnalyticsState> = {};
+        if (typeof retentionDays === 'number') next.retentionDays = retentionDays;
+        if (typeof recentHourlyDays === 'number') next.recentHourlyDays = recentHourlyDays;
+        this.store.updateState(next as PortfolioAnalyticsState);
+        this._cleanupOldSnapshots();
+    }
+
     /**
-     * Creates a portfolio snapshot for the current account and network
+     * Creates a portfolio snapshot for current config
      */
     public async createSnapshot(): Promise<PortfolioSnapshot | null> {
         try {
-            const { isTrackingEnabled } = this.store.getState();
-            if (!isTrackingEnabled) {
-                return null;
-            }
-            if (this._snapshotInFlight) {
-                return null; // avoid concurrent snapshots
-            }
+            const { isTrackingEnabled, scope } = this.store.getState();
+            if (!isTrackingEnabled) return null;
+            if (this._snapshotInFlight) return null;
             this._snapshotInFlight = true;
 
-            const accountAddress = this._preferencesController.getSelectedAddress();
             const chainId = this._networkController.network.chainId;
-            const tokenRatesByAddress = this._exchangeRatesController.getCurrentTokenRatesByAddress();
-            const nativeRate = this._exchangeRatesController.getNativeRate();
-
-            const accountTokens = this._accountTrackerController.getAccountTokens(accountAddress, chainId);
-            const nativeBalance = this._accountTrackerController.getAccountNativeTokenBalance(accountAddress, chainId);
             const nativeSymbol = this._networkController.network.nativeCurrency.symbol;
             const nativeDecimals = this._networkController.network.nativeCurrency.decimals;
 
-            const assets: PortfolioSnapshot['assets'] = {};
+            let accountAddresses: string[] = [];
+            if (scope === 'SELECTED_ACCOUNT') {
+                accountAddresses = [this._preferencesController.getSelectedAddress()];
+            } else {
+                accountAddresses = this._accountTrackerController.getAllAccountAddresses();
+            }
+
+            // Collect token addresses across accounts on this chain to prefetch rates
+            const tokenAddressSet = new Set<string>();
+            const nativeBalances: BigNumber[] = [];
+            const nativeRate = this._exchangeRatesController.getNativeRate();
             let totalValue = 0;
+            const assets: PortfolioSnapshot['assets'] = {};
 
+            // Walk all accounts to aggregate
+            for (const acct of accountAddresses) {
+                const tokens = this._accountTrackerController.getAccountTokens(acct, chainId);
+                const nativeBal = this._accountTrackerController.getAccountNativeTokenBalance(acct, chainId);
+                nativeBalances.push(nativeBal);
+                Object.keys(tokens).forEach((addr) => {
+                    if (!isNativeTokenAddress(addr)) tokenAddressSet.add(addr.toLowerCase());
+                });
+            }
+
+            // Prefetch token rates
+            let tokenRatesByAddr = this._exchangeRatesController.getCurrentTokenRatesByAddress();
+            const missing = Array.from(tokenAddressSet).filter((a) => tokenRatesByAddr[a] === undefined);
+            if (missing.length > 0) {
+                const fetched = await this._exchangeRatesController.getRatesForTokenAddresses(missing);
+                tokenRatesByAddr = { ...tokenRatesByAddr, ...fetched };
+            }
+
+            // Aggregate native value
             const nativePrice = nativeRate || 0;
-            const nativeValueNum = parseFloat(formatUnits(nativeBalance, nativeDecimals)) * nativePrice;
+            const totalNativeValue = nativeBalances.reduce((sum, bal) => sum + parseFloat(formatUnits(bal, nativeDecimals)) * nativePrice, 0);
+            if (totalNativeValue) {
+                // Represent aggregated native as one line
+                assets['native'] = {
+                    symbol: nativeSymbol,
+                    balance: nativeBalances.reduce((s, b) => BigNumber.from(s).add(b).toString(), '0'),
+                    price: nativePrice,
+                    value: totalNativeValue,
+                    decimals: nativeDecimals,
+                };
+            }
+            totalValue += totalNativeValue;
 
-            assets['native'] = {
-                symbol: nativeSymbol,
-                balance: nativeBalance.toString(),
-                price: nativePrice,
-                value: nativeValueNum,
-                decimals: nativeDecimals,
-            };
-            totalValue += nativeValueNum;
-
-            Object.entries(accountTokens).forEach(([tokenAddress, { token, balance }]) => {
-                if (!isNativeTokenAddress(tokenAddress)) {
-                    const price = tokenRatesByAddress[tokenAddress.toLowerCase()] || 0;
-                    const valueNum = parseFloat(formatUnits(balance, token.decimals)) * price;
-
-                    assets[tokenAddress] = {
-                        symbol: token.symbol,
-                        balance: balance.toString(),
-                        price,
-                        value: valueNum,
-                        decimals: token.decimals,
-                    };
-                    totalValue += valueNum;
-                }
+            // Aggregate tokens by address across accounts
+            const tokenValueAcc: { [addr: string]: { symbol: string; balance: BigNumber; decimals: number; price: number; } } = {};
+            for (const acct of accountAddresses) {
+                const tokens = this._accountTrackerController.getAccountTokens(acct, chainId);
+                Object.entries(tokens).forEach(([tokenAddress, { token, balance }]) => {
+                    if (isNativeTokenAddress(tokenAddress)) return;
+                    const addr = tokenAddress.toLowerCase();
+                    const price = tokenRatesByAddr[addr] || 0;
+                    if (!tokenValueAcc[addr]) {
+                        tokenValueAcc[addr] = { symbol: token.symbol, balance: BigNumber.from(0), decimals: token.decimals, price };
+                    }
+                    tokenValueAcc[addr].balance = tokenValueAcc[addr].balance.add(balance);
+                });
+            }
+            Object.entries(tokenValueAcc).forEach(([addr, info]) => {
+                const valueNum = parseFloat(formatUnits(info.balance, info.decimals)) * (info.price || 0);
+                assets[addr] = {
+                    symbol: info.symbol,
+                    balance: info.balance.toString(),
+                    price: info.price || 0,
+                    value: valueNum,
+                    decimals: info.decimals,
+                };
+                totalValue += valueNum;
             });
 
             const snapshot: PortfolioSnapshot = {
                 timestamp: Date.now(),
                 totalValue,
-                accountAddress,
+                accountAddress: scope === 'SELECTED_ACCOUNT' ? this._preferencesController.getSelectedAddress() : 'ALL',
                 chainId,
                 assets,
             };
@@ -174,12 +225,13 @@ export class PortfolioAnalyticsController extends BaseController<PortfolioAnalyt
      * Calculates portfolio metrics based on historical snapshots
      */
     public calculateMetrics(): PortfolioMetrics {
-        const { snapshots } = this.store.getState();
+        const { snapshots, scope } = this.store.getState();
         const accountAddress = this._preferencesController.getSelectedAddress();
         const chainId = this._networkController.network.chainId;
 
+        const acctKey = scope === 'SELECTED_ACCOUNT' ? accountAddress.toLowerCase() : 'all';
         const relevantSnapshots = snapshots
-            .filter(s => s.accountAddress.toLowerCase() === accountAddress.toLowerCase() && s.chainId === chainId)
+            .filter(s => (scope === 'SELECTED_ACCOUNT' ? s.accountAddress.toLowerCase() === acctKey : s.accountAddress === 'ALL') && s.chainId === chainId)
             .sort((a, b) => a.timestamp - b.timestamp);
 
         if (relevantSnapshots.length === 0) {
@@ -206,7 +258,6 @@ export class PortfolioAnalyticsController extends BaseController<PortfolioAnalyt
             }
         }
 
-        // Aggregate allocation by symbol for display, but compute using address-based values
         const allocationBySymbol: PortfolioMetrics['assetAllocation'] = {};
         if (hasMeaningful) {
             Object.values(latestSnapshot.assets).forEach((asset) => {
@@ -222,7 +273,6 @@ export class PortfolioAnalyticsController extends BaseController<PortfolioAnalyt
         }
 
         const topPerformers = hasMeaningful ? this._calculateTopPerformers24h(relevantSnapshots) : [];
-
         const diversityScore = this._calculateDiversityScore(allocationBySymbol, hasMeaningful);
 
         const metrics: PortfolioMetrics = {
@@ -384,13 +434,42 @@ export class PortfolioAnalyticsController extends BaseController<PortfolioAnalyt
     }
 
     private _cleanupOldSnapshots(): void {
-        const { snapshots, retentionDays } = this.store.getState();
-        const cutoffTime = Date.now() - (retentionDays * 24 * 60 * 60 * 1000);
+        const { snapshots, retentionDays, recentHourlyDays } = this.store.getState();
+        const now = Date.now();
+        const cutoffTime = now - (retentionDays * 24 * 60 * 60 * 1000);
+        const recentHourlyCut = now - (recentHourlyDays * 24 * 60 * 60 * 1000);
 
-        const filteredSnapshots = snapshots.filter(s => s.timestamp >= cutoffTime);
+        // First, drop anything older than retentionDays
+        const filtered = snapshots.filter(s => s.timestamp >= cutoffTime);
 
-        if (filteredSnapshots.length !== snapshots.length) {
-            this.store.updateState({ snapshots: filteredSnapshots });
+        // Then, for entries older than recentHourlyDays, keep only one per day (closest to midday)
+        const dailyMap = new Map<string, PortfolioSnapshot>();
+        const result: PortfolioSnapshot[] = [];
+        for (const s of filtered) {
+            if (s.timestamp >= recentHourlyCut) {
+                result.push(s);
+            } else {
+                const d = new Date(s.timestamp);
+                const key = `${s.accountAddress}|${s.chainId}|${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+                const current = dailyMap.get(key);
+                if (!current) {
+                    dailyMap.set(key, s);
+                } else {
+                    // keep the one closer to 12:00 UTC
+                    const noon = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12, 0, 0);
+                    const curDiff = Math.abs(current.timestamp - noon);
+                    const newDiff = Math.abs(s.timestamp - noon);
+                    if (newDiff < curDiff) dailyMap.set(key, s);
+                }
+            }
+        }
+        // Append daily
+        dailyMap.forEach((snap) => result.push(snap));
+        // Sort by time again
+        result.sort((a, b) => a.timestamp - b.timestamp);
+
+        if (result.length !== snapshots.length) {
+            this.store.updateState({ snapshots: result });
         }
     }
 

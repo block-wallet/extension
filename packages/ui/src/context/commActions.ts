@@ -2012,3 +2012,27 @@ export const getPortfolioAnalytics = async (): Promise<import("@block-wallet/bac
 export const refreshPortfolioAnalytics = async (): Promise<void> => {
     return sendMessage(Messages.PORTFOLIO.REFRESH_ANALYTICS)
 }
+
+/**
+ * Sets portfolio analytics scope
+ */
+export const setPortfolioScope = async (scope: import('@block-wallet/background/controllers/PortfolioAnalyticsController').PortfolioScope): Promise<void> => {
+    return sendMessage(Messages.PORTFOLIO.SET_SCOPE, { scope })
+}
+
+/**
+ * Sets portfolio analytics retention configuration
+ */
+export const setPortfolioRetention = async (retentionDays?: number, recentHourlyDays?: number): Promise<void> => {
+    return sendMessage(Messages.PORTFOLIO.SET_RETENTION, { retentionDays, recentHourlyDays })
+}
+
+/**
+ * Subscribes to portfolio metrics updates
+ */
+export const subscribePortfolioMetrics = async (
+    cb: (metrics: import('@block-wallet/background/controllers/PortfolioAnalyticsController').PortfolioMetrics) => void
+): Promise<boolean> => {
+    // @ts-ignore message type mapping allows subscription payload
+    return sendMessage(Messages.PORTFOLIO.SUBSCRIBE_METRICS, undefined, cb)
+}

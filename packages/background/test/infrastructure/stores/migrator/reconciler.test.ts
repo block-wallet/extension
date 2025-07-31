@@ -333,6 +333,8 @@ const initialState: newBlankAppState = {
         lastSnapshotTime: 0,
         isTrackingEnabled: true,
         retentionDays: 365,
+        recentHourlyDays: 14,
+        scope: 'SELECTED_ACCOUNT',
     },
 };
 
@@ -539,6 +541,8 @@ describe('State reconciler', () => {
                 lastSnapshotTime: 0,
                 isTrackingEnabled: true,
                 retentionDays: 365,
+                recentHourlyDays: 14,
+                scope: 'SELECTED_ACCOUNT',
             },
         } as newBlankAppState);
     });

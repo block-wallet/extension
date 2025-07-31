@@ -275,6 +275,8 @@ const initialState: BlankAppState = {
         lastSnapshotTime: 0,
         isTrackingEnabled: true,
         retentionDays: 365,
+        recentHourlyDays: 14,
+        scope: 'SELECTED_ACCOUNT',
     },
 };
 

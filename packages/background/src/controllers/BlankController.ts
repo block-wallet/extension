@@ -130,6 +130,8 @@ import {
     DiscoveredAccountInfo,
     RequestGetValidCurrencies,
     RequestSetThemePreference,
+    RequestSetPortfolioScope,
+    RequestSetPortfolioRetention,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -1331,10 +1333,6 @@ export default class BlankController extends EventEmitter {
                 return this.discoverAccountsFromSeed(
                     request as RequestDiscoverAccountsFromSeed
                 );
-            case Messages.PORTFOLIO.GET_ANALYTICS:
-                return this.getPortfolioAnalytics();
-            case Messages.PORTFOLIO.REFRESH_ANALYTICS:
-                return this.refreshPortfolioAnalytics();
             case Messages.WALLET.SET_THEME_PREFERENCE:
                 return this.setThemePreference(request as RequestSetThemePreference);
             case Messages.STATE.SUBSCRIBE_ACTIVITY_LIST: {
@@ -1457,6 +1455,35 @@ export default class BlankController extends EventEmitter {
                 this.accountTrackerController.store.subscribe(() => emit());
                 this.preferencesController.store.subscribe(() => emit());
                 this.networkController.on(NetworkEvents.NETWORK_CHANGE, () => emit());
+                return true as unknown as ResponseType<MessageTypes>;
+            }
+
+            case Messages.PORTFOLIO.GET_ANALYTICS:
+                return this.getPortfolioAnalytics();
+            case Messages.PORTFOLIO.REFRESH_ANALYTICS:
+                return this.refreshPortfolioAnalytics();
+            case Messages.PORTFOLIO.SET_SCOPE:
+                return this.setPortfolioScope(request as RequestSetPortfolioScope);
+            case Messages.PORTFOLIO.SET_RETENTION:
+                return this.setPortfolioRetention(request as RequestSetPortfolioRetention);
+            case Messages.PORTFOLIO.SUBSCRIBE_METRICS: {
+                const send = this.createSubscription<typeof Messages.PORTFOLIO.SUBSCRIBE_METRICS>(
+                    id,
+                    port
+                );
+                const emit = () => {
+                    const metrics = this.portfolioAnalyticsController.getAnalytics();
+                    send(metrics);
+                };
+                // initial push
+                emit();
+                // subscribe to metrics updates
+                const handler = (m: any) => send(m);
+                this.portfolioAnalyticsController.on(PortfolioAnalyticsEvents.METRICS_UPDATED, handler);
+                port.onDisconnect.addListener(() => {
+                    this.unsubscribe(id);
+                    this.portfolioAnalyticsController.off(PortfolioAnalyticsEvents.METRICS_UPDATED, handler);
+                });
                 return true as unknown as ResponseType<MessageTypes>;
             }
             default:
@@ -4045,5 +4072,13 @@ export default class BlankController extends EventEmitter {
      */
     private async setThemePreference({ theme }: RequestSetThemePreference): Promise<void> {
         this.preferencesController.updateThemePreference(theme);
+    }
+
+    private async setPortfolioScope({ scope }: RequestSetPortfolioScope): Promise<void> {
+        this.portfolioAnalyticsController.setScope(scope);
+    }
+
+    private async setPortfolioRetention({ retentionDays, recentHourlyDays }: RequestSetPortfolioRetention): Promise<void> {
+        this.portfolioAnalyticsController.setRetentionConfig({ retentionDays, recentHourlyDays });
     }
 }

@@ -7,6 +7,8 @@ import AssetAllocationChart from '../../components/portfolio/AssetAllocationChar
 import PopupLayout from '../../components/popup/PopupLayout';
 import PopupHeader from '../../components/popup/PopupHeader';
 import HorizontalSelect from '../../components/input/HorizontalSelect';
+import Dialog from '../../components/dialog/Dialog';
+import { IoSettingsSharp, IoChevronDown } from 'react-icons/io5';
 
 interface PortfolioMetrics {
     totalValue: number;
@@ -221,6 +223,7 @@ const PortfolioAnalyticsPage: React.FC = () => {
     const [scope, setScopeState] = useState<'SELECTED_ACCOUNT' | 'ALL_ACCOUNTS_CURRENT_CHAIN'>('SELECTED_ACCOUNT');
     const [retentionDays, setRetentionDays] = useState<number>(365);
     const [recentHourlyDays, setRecentHourlyDays] = useState<number>(14);
+    const [settingsOpen, setSettingsOpen] = useState(false);
 
     const TabComponent = activeTab.component;
 
@@ -283,6 +286,7 @@ const PortfolioAnalyticsPage: React.FC = () => {
         await setPortfolioRetention(retentionDays, recentHourlyDays);
         const analyticsData = await getPortfolioAnalytics();
         setMetrics(analyticsData);
+        setSettingsOpen(false);
     };
 
     if (error) {
@@ -316,44 +320,13 @@ const PortfolioAnalyticsPage: React.FC = () => {
                     onBack={() => history.push("/")}
                 >
                     <div className="flex items-center gap-2 ml-auto mr-2">
-                        {/* Scope selector */}
-                        <select
-                            value={scope}
-                            onChange={handleScopeChange}
-                            className="text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1"
-                            title="Analytics Scope"
+                        <button
+                            onClick={() => setSettingsOpen(true)}
+                            className="p-2 rounded-full hover:bg-primary-grey-default dark:hover:bg-gray-700"
+                            title="Settings"
                         >
-                            <option value="SELECTED_ACCOUNT">Selected account</option>
-                            <option value="ALL_ACCOUNTS_CURRENT_CHAIN">All accounts (current chain)</option>
-                        </select>
-                        {/* Retention controls */}
-                        <div className="flex items-center gap-1">
-                            <input
-                                type="number"
-                                min={7}
-                                max={1095}
-                                value={retentionDays}
-                                onChange={(e) => setRetentionDays(Number(e.target.value))}
-                                className="w-16 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1"
-                                title="Retention days"
-                            />
-                            <input
-                                type="number"
-                                min={1}
-                                max={90}
-                                value={recentHourlyDays}
-                                onChange={(e) => setRecentHourlyDays(Number(e.target.value))}
-                                className="w-16 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1"
-                                title="Recent hourly days"
-                            />
-                            <button
-                                onClick={applyRetention}
-                                className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600"
-                                title="Apply retention"
-                            >
-                                Apply
-                            </button>
-                        </div>
+                            <IoSettingsSharp size={18} />
+                        </button>
                         <button
                             onClick={handleRefresh}
                             disabled={isLoading}
@@ -396,6 +369,66 @@ const PortfolioAnalyticsPage: React.FC = () => {
                     />
                 </div>
             </div>
+
+            {/* Settings Dialog */}
+            <Dialog open={settingsOpen} onClickOutside={() => setSettingsOpen(false)}>
+                <div className="px-4">
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Analytics Settings</h3>
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-start gap-2">
+                            <label className="text-sm text-gray-700 dark:text-gray-300">Scope</label>
+                            <div className="relative">
+                                <select
+                                    value={scope}
+                                    onChange={handleScopeChange}
+                                    style={{ backgroundImage: 'none' }}
+                                    className="appearance-none text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 pr-8 py-1 text-gray-900 dark:text-gray-100"
+                                >
+                                    <option value="SELECTED_ACCOUNT">Selected account</option>
+                                    <option value="ALL_ACCOUNTS_CURRENT_CHAIN">All accounts (current chain)</option>
+                                </select>
+                                <IoChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-300" />
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <label className="text-sm text-gray-700 dark:text-gray-300 mr-2">Retention (days)</label>
+                            <input
+                                type="number"
+                                min={7}
+                                max={1095}
+                                value={retentionDays}
+                                onChange={(e) => setRetentionDays(Number(e.target.value))}
+                                className="w-20 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1 text-gray-900 dark:text-gray-100"
+                            />
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <label className="text-sm text-gray-700 dark:text-gray-300 mr-2">Hourly window (days)</label>
+                            <input
+                                type="number"
+                                min={1}
+                                max={90}
+                                value={recentHourlyDays}
+                                onChange={(e) => setRecentHourlyDays(Number(e.target.value))}
+                                className="w-20 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1 text-gray-900 dark:text-gray-100"
+                            />
+                        </div>
+                        <div className="flex items-center justify-end gap-2 pt-2">
+                            <button
+                                className="text-sm px-3 py-1 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                                onClick={() => setSettingsOpen(false)}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="text-sm px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-600"
+                                onClick={applyRetention}
+                            >
+                                Apply
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Dialog>
         </PopupLayout>
     );
 };

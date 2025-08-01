@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MdRefresh } from 'react-icons/md';
 import { useBlankState } from '../../context/background/backgroundHooks';
 import { useOnMountHistory } from '../../context/hooks/useOnMount';
-import { getPortfolioAnalytics, refreshPortfolioAnalytics } from '../../context/commActions';
+import { getPortfolioAnalytics, refreshPortfolioAnalytics, subscribePortfolioMetrics, setPortfolioScope, setPortfolioRetention } from '../../context/commActions';
 import AssetAllocationChart from '../../components/portfolio/AssetAllocationChart';
 import PopupLayout from '../../components/popup/PopupLayout';
 import PopupHeader from '../../components/popup/PopupHeader';
@@ -218,6 +218,9 @@ const PortfolioAnalyticsPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState(portfolioTabs[0]);
+    const [scope, setScopeState] = useState<'SELECTED_ACCOUNT' | 'ALL_ACCOUNTS_CURRENT_CHAIN'>('SELECTED_ACCOUNT');
+    const [retentionDays, setRetentionDays] = useState<number>(365);
+    const [recentHourlyDays, setRecentHourlyDays] = useState<number>(14);
 
     const TabComponent = activeTab.component;
 
@@ -238,6 +241,13 @@ const PortfolioAnalyticsPage: React.FC = () => {
         };
 
         loadPortfolioData();
+
+        // subscribe live updates
+        let unsubscribed = false;
+        subscribePortfolioMetrics((m) => {
+            if (!unsubscribed) setMetrics(m as any);
+        });
+        return () => { unsubscribed = true; };
     }, []);
 
     const handleRefresh = async () => {
@@ -258,6 +268,21 @@ const PortfolioAnalyticsPage: React.FC = () => {
 
     const onTabChange = (value: { label: string; component: any }) => {
         setActiveTab(value);
+    };
+
+    const handleScopeChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const val = e.target.value as 'SELECTED_ACCOUNT' | 'ALL_ACCOUNTS_CURRENT_CHAIN';
+        setScopeState(val);
+        await setPortfolioScope(val);
+        // fetch fresh metrics after scope change
+        const analyticsData = await getPortfolioAnalytics();
+        setMetrics(analyticsData);
+    };
+
+    const applyRetention = async () => {
+        await setPortfolioRetention(retentionDays, recentHourlyDays);
+        const analyticsData = await getPortfolioAnalytics();
+        setMetrics(analyticsData);
     };
 
     if (error) {
@@ -290,7 +315,45 @@ const PortfolioAnalyticsPage: React.FC = () => {
                     title="Portfolio Analytics"
                     onBack={() => history.push("/")}
                 >
-                    <div className="ml-auto mr-2">
+                    <div className="flex items-center gap-2 ml-auto mr-2">
+                        {/* Scope selector */}
+                        <select
+                            value={scope}
+                            onChange={handleScopeChange}
+                            className="text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1"
+                            title="Analytics Scope"
+                        >
+                            <option value="SELECTED_ACCOUNT">Selected account</option>
+                            <option value="ALL_ACCOUNTS_CURRENT_CHAIN">All accounts (current chain)</option>
+                        </select>
+                        {/* Retention controls */}
+                        <div className="flex items-center gap-1">
+                            <input
+                                type="number"
+                                min={7}
+                                max={1095}
+                                value={retentionDays}
+                                onChange={(e) => setRetentionDays(Number(e.target.value))}
+                                className="w-16 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1"
+                                title="Retention days"
+                            />
+                            <input
+                                type="number"
+                                min={1}
+                                max={90}
+                                value={recentHourlyDays}
+                                onChange={(e) => setRecentHourlyDays(Number(e.target.value))}
+                                className="w-16 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1"
+                                title="Recent hourly days"
+                            />
+                            <button
+                                onClick={applyRetention}
+                                className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                title="Apply retention"
+                            >
+                                Apply
+                            </button>
+                        </div>
                         <button
                             onClick={handleRefresh}
                             disabled={isLoading}
@@ -298,7 +361,8 @@ const PortfolioAnalyticsPage: React.FC = () => {
                             title={isLoading ? 'Refreshing...' : 'Refresh portfolio data'}
                         >
                             <MdRefresh
-                                className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`}
+                                className={`${isLoading ? 'animate-spin' : ''}`}
+                                size={20}
                             />
                         </button>
                     </div>

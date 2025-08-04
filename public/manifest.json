@@ -82,8 +82,8 @@
             "description": "Start the extension"
         }
     },
-    "version": "1.9.1",
-    "version_name": "1.9.1",
+    "version": "1.9.2",
+    "version_name": "1.9.2",
     "web_accessible_resources": [
         {
             "resources": [

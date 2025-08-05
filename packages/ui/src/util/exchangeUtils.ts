@@ -98,3 +98,35 @@ export function calculatePricePercentageImpact(
 
     return priceImpact
 }
+
+/**
+ * Calculates the USD value difference between the input and output of a swap.
+ * Returns both percentage and absolute delta (USD), where negative means loss.
+ */
+export function calculateUsdValueDiff(
+    exchangeRates: Rates,
+    fromToken: { token: BasicToken; amount: BigNumber },
+    toToken: { token: BasicToken; amount: BigNumber }
+): { percent: number | undefined; absolute: number | undefined } {
+    const fromRate = getValueByKey(exchangeRates, fromToken.token.symbol, 0)
+    const toRate = getValueByKey(exchangeRates, toToken.token.symbol, 0)
+
+    if (fromRate === 0 || toRate === 0) {
+        return { percent: undefined, absolute: undefined }
+    }
+
+    const usdIn = toCurrencyAmount(
+        fromToken.amount || BigNumber.from(0),
+        fromRate,
+        fromToken.token.decimals
+    )
+    const usdOut = toCurrencyAmount(
+        toToken.amount || BigNumber.from(0),
+        toRate,
+        toToken.token.decimals
+    )
+
+    const absolute = usdOut - usdIn
+    const percent = usdIn === 0 ? 0 : absolute / usdIn
+    return { percent, absolute }
+}

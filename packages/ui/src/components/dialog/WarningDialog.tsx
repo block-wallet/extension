@@ -17,6 +17,7 @@ const WarningDialog: FunctionComponent<{
     fullScreen?: boolean
     cancelButton?: boolean
     onCancel?: () => void
+    cancelLabel?: string
 }> = ({
     open,
     title,
@@ -29,6 +30,7 @@ const WarningDialog: FunctionComponent<{
     fullScreen = false,
     cancelButton = false,
     onCancel,
+    cancelLabel,
 }) => {
     return (
         <MessageDialog
@@ -59,7 +61,7 @@ const WarningDialog: FunctionComponent<{
                                 )}
                                 onClick={onCancel}
                             >
-                                Cancel
+                                {cancelLabel || "Cancel"}
                             </button>
                         )}
                         <button

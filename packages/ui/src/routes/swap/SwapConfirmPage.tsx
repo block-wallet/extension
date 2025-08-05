@@ -41,6 +41,7 @@ import {
     DEFAULT_EXCHANGE_TYPE,
     calcExchangeRate,
     calculatePricePercentageImpact,
+    calculateUsdValueDiff,
     isSwapNativeTokenAddress,
     populateExchangeTransaction,
 } from "../../util/exchangeUtils"
@@ -80,6 +81,8 @@ import WaitingAllowanceTransactionDialog from "../../components/dialog/WaitingAl
 import ErrorMessage from "../../components/error/ErrorMessage"
 import Alert from "../../components/ui/Alert"
 import PriceImpactDialog from "../../components/swaps/PriceImpactDialog"
+import WarningDialog from "../../components/dialog/WarningDialog"
+import { formatCurrency } from "../../util/formatCurrency"
 
 export interface SwapConfirmPageLocalState {
     fromToken: Token
@@ -100,6 +103,7 @@ const NOT_ENOUGH_BALANCE_ERROR =
 // 15s
 const QUOTE_REFRESH_TIMEOUT = 1000 * 15
 const PRICE_IMPACT_THRESHOLD = 0.1
+const VALUE_DIFF_WARN_THRESHOLD = -0.05 // -5%
 
 const SwapPageConfirm: FC<{}> = () => {
     const history = useOnMountHistory()
@@ -109,6 +113,8 @@ const SwapPageConfirm: FC<{}> = () => {
         [history.location.state]
     )
     const [isPriceImpactDialogOpened, setIsPriceImpactDialogOpened] =
+        useState<boolean>(false)
+    const [isPriceDiffDialogOpened, setIsPriceDiffDialogOpened] =
         useState<boolean>(false)
     const [timeoutStart, setTimeoutStart] = useState<number | undefined>(
         undefined
@@ -234,6 +240,30 @@ const SwapPageConfirm: FC<{}> = () => {
         return undefined
     }, [swapParameters, exchangeRates])
 
+    const usdValueDiff = useMemo(() => {
+        const fromT = swapParameters
+            ? {
+                token: swapParameters.fromToken,
+                amount: BigNumber.from(swapParameters.fromTokenAmount ?? 0),
+            }
+            : {
+                token: swapQuote.fromToken,
+                amount: BigNumber.from(swapQuote.fromTokenAmount ?? 0),
+            }
+
+        const toT = swapParameters
+            ? {
+                token: swapParameters.toToken,
+                amount: BigNumber.from(swapParameters.toTokenAmount ?? 0),
+            }
+            : {
+                token: swapQuote.toToken,
+                amount: BigNumber.from(swapQuote.toTokenAmount ?? 0),
+            }
+
+        return calculateUsdValueDiff(exchangeRates, fromT, toT)
+    }, [swapParameters, swapQuote, exchangeRates])
+
     // Gas
     const [defaultGas, setDefaultGas] = useState<{
         gasPrice: BigNumber
@@ -300,6 +330,13 @@ const SwapPageConfirm: FC<{}> = () => {
         ),
         toToken.decimals
     )
+
+    const shouldWarnPriceDiff = useMemo(() => {
+        return (
+            usdValueDiff.percent !== undefined &&
+            usdValueDiff.percent <= VALUE_DIFF_WARN_THRESHOLD
+        )
+    }, [usdValueDiff])
 
     const onSubmit = async () => {
         if (error || !swapParameters || !hasBalance) return
@@ -556,6 +593,24 @@ const SwapPageConfirm: FC<{}> = () => {
                     nonce={advancedSettings.customNonce}
                 />
             )}
+            {/* Risk detail dialog for large price difference */}
+            {shouldWarnPriceDiff && (
+                <WarningDialog
+                    open={isPriceDiffDialogOpened}
+                    title={"Risk detail"}
+                    message={
+                        <div className="text-left">
+                            <div className="font-semibold mb-1">Warning</div>
+                            <div>Price difference is too big.</div>
+                        </div>
+                    }
+                    onDone={() => setIsPriceDiffDialogOpened(false)}
+                    buttonLabel="Ignore the risk alert"
+                    cancelButton
+                    cancelLabel="Back"
+                    onCancel={() => setIsPriceDiffDialogOpened(false)}
+                />
+            )}
             <HardwareDeviceNotLinkedDialog
                 onDone={resetDeviceLinkStatus}
                 isOpen={isDeviceUnlinked}
@@ -620,6 +675,20 @@ const SwapPageConfirm: FC<{}> = () => {
                         formatRounded(exchangeRate.toFixed(10), 8),
                         10
                     )} ${toToken.symbol}`}
+                </p>
+                {/* Value diff (USD) */}
+                <p
+                    className="text-[13px] pb-1 pt-0.5 text-gray-700 dark:text-gray-300 text-center cursor-pointer"
+                    onClick={() => {
+                        if (shouldWarnPriceDiff) setIsPriceDiffDialogOpened(true)
+                    }}
+                    title={shouldWarnPriceDiff ? "Price difference is too big" : undefined}
+                >
+                    Value diff {usdValueDiff.percent !== undefined
+                        ? `${(usdValueDiff.percent * 100).toFixed(2)}%`
+                        : "–"} {usdValueDiff.absolute !== undefined
+                            ? `(${formatCurrency(Math.abs(usdValueDiff.absolute), { showSymbol: true, showCurrency: false })})`
+                            : ""}
                 </p>
 
                 {/* Gas */}
@@ -720,9 +789,7 @@ const SwapPageConfirm: FC<{}> = () => {
                                         "cursor-pointer hover:opacity-50",
                                         "text-left"
                                     )}
-                                    onClick={() =>
-                                        setIsPriceImpactDialogOpened(true)
-                                    }
+                                    onClick={() => setIsPriceImpactDialogOpened(true)}
                                 >
                                     <span>
                                         {pricePercentageImpact ? (
@@ -740,6 +807,19 @@ const SwapPageConfirm: FC<{}> = () => {
                                             </span>
                                         )}
                                     </span>
+                                </Alert>
+                            ) : shouldWarnPriceDiff ? (
+                                <Alert
+                                    type="warn"
+                                    className={classnames(
+                                        "p-2",
+                                        "font-semibold",
+                                        "cursor-pointer hover:opacity-50",
+                                        "text-left"
+                                    )}
+                                    onClick={() => setIsPriceDiffDialogOpened(true)}
+                                >
+                                    <span>Price difference is too big</span>
                                 </Alert>
                             ) : null}
                             {remainingSuffix && (

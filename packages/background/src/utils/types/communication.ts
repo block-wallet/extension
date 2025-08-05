@@ -69,6 +69,7 @@ import { SwapTxMeta } from '../swaps/1inch';
 import { PermissionsControllerState } from '@block-wallet/background/controllers/PermissionsController'
 import { Rates } from '@block-wallet/background/controllers/ExchangeRatesController'
 import { AccountBalance } from '@block-wallet/background/controllers/AccountTrackerController'
+import { SimulationResult } from '@block-wallet/background/controllers/SimulationController'
 
 enum ACCOUNT {
     CREATE = 'CREATE_ACCOUNT',
@@ -228,6 +229,7 @@ enum TRANSACTION {
     GET_CANCEL_GAS_PRICE = 'GET_CANCEL_GAS_PRICE',
     GET_NEXT_NONCE = 'GET_NEXT_NONCE',
     REJECT_REPLACEMENT_TRANSACTION = 'REJECT_REPLACEMENT_TRANSACTION',
+    SIMULATE = 'SIMULATE_TRANSACTION',
 }
 
 enum WALLET {
@@ -534,6 +536,7 @@ export interface RequestSignatures {
         GasPriceValue | FeeMarketEIP1559Values
     ];
     [Messages.TRANSACTION.GET_NEXT_NONCE]: [RequestNextNonce, number];
+    [Messages.TRANSACTION.SIMULATE]: [RequestSimulateTransaction, SimulationResult];
     [Messages.WALLET.CREATE]: [RequestWalletCreate, void];
     [Messages.WALLET.IMPORT]: [RequestWalletImport, boolean];
     [Messages.WALLET.VERIFY_SEED_PHRASE]: [RequestVerifySeedPhrase, boolean];
@@ -1142,6 +1145,10 @@ export interface RequestRejectTransaction {
 export interface RequestUpdateTransactionStatus {
     transactionId: string;
     status: TransactionStatus;
+}
+
+export interface RequestSimulateTransaction {
+    tx: import('./ethereum').TransactionRequest;
 }
 
 export interface RequestAddressBookClear { }

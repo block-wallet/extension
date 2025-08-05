@@ -127,11 +127,10 @@ import {
     // NEW: Import new request/response types
     RequestDiscoverAccountsFromSeed,
     ResponseDiscoverAccountsFromSeed,
-    DiscoveredAccountInfo,
-    RequestGetValidCurrencies,
     RequestSetThemePreference,
     RequestSetPortfolioScope,
     RequestSetPortfolioRetention,
+    RequestSimulateTransaction,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -218,7 +217,6 @@ import {
     getVersion,
     getCurrentWindowId,
 } from '../utils/window';
-import log from 'loglevel';
 import BlockUpdatesController from './block-updates/BlockUpdatesController';
 
 import ComposedStore from '../infrastructure/stores/ComposedStore';
@@ -263,6 +261,7 @@ import { KeyringTypes } from './KeyringControllerDerivated';
 import { PortfolioAnalyticsController, PortfolioAnalyticsEvents } from './PortfolioAnalyticsController';
 import { RealtimeManager } from '../infrastructure/realtime/RealtimeManager';
 import { NetworkEvents } from './NetworkController';
+import SimulationController from './SimulationController';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -308,6 +307,7 @@ export default class BlankController extends EventEmitter {
     private readonly onrampController: OnrampController;
     private readonly portfolioAnalyticsController: PortfolioAnalyticsController;
     private readonly realtimeManager: RealtimeManager;
+    private readonly simulationController: SimulationController;
 
     // Stores
     private readonly store: ComposedStore<BlankAppState>;
@@ -463,6 +463,9 @@ export default class BlankController extends EventEmitter {
             this.blockUpdatesController,
             this.gasPricesController
         );
+
+        // Initialize simulation controller (eth_call based)
+        this.simulationController = new SimulationController(this.networkController);
 
         this.tokenAllowanceController = new TokenAllowanceController(
             this.networkController,
@@ -1154,6 +1157,10 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.TRANSACTION.GET_NEXT_NONCE:
                 return this.getNextNonce(request as RequestNextNonce);
+            case Messages.TRANSACTION.SIMULATE:
+                return this.simulationController.simulateTransaction(
+                    (request as RequestSimulateTransaction).tx
+                ) as unknown as ResponseType<MessageTypes>;
             case Messages.WALLET.CREATE:
                 return this.walletCreate(request as RequestWalletCreate);
             case Messages.WALLET.IMPORT:
@@ -3917,7 +3924,6 @@ export default class BlankController extends EventEmitter {
 
     private async hardwareQrSubmitSignature({
         requestId,
-        ur,
     }: SubmitQRHardwareSignatureMessage): Promise<boolean> {
         return true;
         /*

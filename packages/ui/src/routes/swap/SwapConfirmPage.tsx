@@ -83,6 +83,7 @@ import Alert from "../../components/ui/Alert"
 import PriceImpactDialog from "../../components/swaps/PriceImpactDialog"
 import WarningDialog from "../../components/dialog/WarningDialog"
 import { formatCurrency } from "../../util/formatCurrency"
+import { simulateTransaction } from "../../context/commActions"
 
 export interface SwapConfirmPageLocalState {
     fromToken: Token
@@ -337,6 +338,35 @@ const SwapPageConfirm: FC<{}> = () => {
             usdValueDiff.percent <= VALUE_DIFF_WARN_THRESHOLD
         )
     }, [usdValueDiff])
+
+    const [simulationError, setSimulationError] = useState<string | undefined>(
+        undefined
+    )
+    useEffect(() => {
+        const run = async () => {
+            if (!swapParameters) return
+            try {
+                const res = await simulateTransaction({
+                    from: swapParameters.tx.from,
+                    to: swapParameters.tx.to,
+                    data: swapParameters.tx.data,
+                    value: swapParameters.tx.value,
+                    gasLimit: BigNumber.from(swapParameters.tx.gas || 0),
+                    gasPrice: swapParameters.tx.gasPrice
+                        ? BigNumber.from(swapParameters.tx.gasPrice)
+                        : undefined,
+                } as any)
+                if (!res.success) {
+                    setSimulationError(res.revertReason || res.errorMessage)
+                } else {
+                    setSimulationError(undefined)
+                }
+            } catch (e: any) {
+                setSimulationError(e?.message || "Simulation error")
+            }
+        }
+        run()
+    }, [swapParameters])
 
     const onSubmit = async () => {
         if (error || !swapParameters || !hasBalance) return
@@ -690,6 +720,11 @@ const SwapPageConfirm: FC<{}> = () => {
                             ? `(${formatCurrency(Math.abs(usdValueDiff.absolute), { showSymbol: true, showCurrency: false })})`
                             : ""}
                 </p>
+                {simulationError && (
+                    <p className="text-[12px] text-center text-red-600 dark:text-red-400">
+                        Simulation failed: {simulationError}
+                    </p>
+                )}
 
                 {/* Gas */}
                 <p className="text-[13px] font-medium pb-1 pt-0.5 text-gray-700 dark:text-gray-300">

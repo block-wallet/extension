@@ -1787,6 +1787,16 @@ export const executeExchange = async (
 }
 
 /**
+ * Simulate a transaction (eth_call revert detection)
+ */
+export const simulateTransaction = async (
+    tx: import("@block-wallet/background/utils/types/ethereum").TransactionRequest
+): Promise<import("@block-wallet/background/controllers/SimulationController").SimulationResult> => {
+    // @ts-ignore - message type defined in communication.ts
+    return sendMessage(Messages.TRANSACTION.SIMULATE, { tx })
+}
+
+/**
  * Sets the user's current network status
  *
  * @param networkStatus The current network status

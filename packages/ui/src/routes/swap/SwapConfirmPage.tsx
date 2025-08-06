@@ -342,9 +342,15 @@ const SwapPageConfirm: FC<{}> = () => {
     const [simulationError, setSimulationError] = useState<string | undefined>(
         undefined
     )
+    const { settings } = useBlankState()!
+
     useEffect(() => {
         const run = async () => {
             if (!swapParameters) return
+            if (!settings.enableTransactionSimulation) {
+                setSimulationError(undefined)
+                return
+            }
             try {
                 const res = await simulateTransaction({
                     from: swapParameters.tx.from,
@@ -366,7 +372,7 @@ const SwapPageConfirm: FC<{}> = () => {
             }
         }
         run()
-    }, [swapParameters])
+    }, [swapParameters, settings.enableTransactionSimulation])
 
     const onSubmit = async () => {
         if (error || !swapParameters || !hasBalance) return

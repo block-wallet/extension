@@ -171,6 +171,7 @@ const initialState: BlankAppState = {
             hideEstimatedGasExceedsThresholdWarning: false, // Shown by default,
             hideDepositsExternalAccountsWarning: false,
             hideBridgeInsufficientNativeTokenWarning: false, // Shown by default
+            enableTransactionSimulation: true,
             displayNetWorth: true,
             theme: 'system', // Default theme preference
         },

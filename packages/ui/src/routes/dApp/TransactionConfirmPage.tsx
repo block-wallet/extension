@@ -451,6 +451,10 @@ const TransactionConfirm: React.FC<{
                     setSimulationError(undefined)
                     return
                 }
+                if (!settings.enableTransactionSimulation) {
+                    setSimulationError(undefined)
+                    return
+                }
                 const res = await simulateTransaction({
                     from: params.from,
                     to: params.to,

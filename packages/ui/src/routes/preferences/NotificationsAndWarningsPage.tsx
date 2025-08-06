@@ -20,6 +20,7 @@ interface State {
     hideSendToNullWarning: boolean
     hideEstimatedGasExceedsThresholdWarning: boolean
     hideBridgeInsufficientNativeTokenWarning: boolean
+    enableTransactionSimulation: boolean
 }
 
 const NotificationsAndWarningsPage = () => {
@@ -36,6 +37,7 @@ const NotificationsAndWarningsPage = () => {
             settings.hideEstimatedGasExceedsThresholdWarning,
         hideBridgeInsufficientNativeTokenWarning:
             settings.hideBridgeInsufficientNativeTokenWarning,
+        enableTransactionSimulation: settings.enableTransactionSimulation,
     })
 
     const [preferencesConfig, setPreferencesConfig] = useReducer(
@@ -57,6 +59,8 @@ const NotificationsAndWarningsPage = () => {
                     preferencesConfig.hideEstimatedGasExceedsThresholdWarning,
                 hideBridgeInsufficientNativeTokenWarning:
                     preferencesConfig.hideBridgeInsufficientNativeTokenWarning,
+                enableTransactionSimulation:
+                    preferencesConfig.enableTransactionSimulation,
             })
         )
     }
@@ -148,6 +152,30 @@ const NotificationsAndWarningsPage = () => {
                                     Security warnings help prevent accidental loss of funds by alerting you
                                     to potentially risky transaction patterns.
                                 </p>
+                            </div>
+                        </div>
+
+                        {/* Transaction Simulation */}
+                        <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+                            <div className="space-y-3">
+                                <div>
+                                    <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                                        Transaction Simulation
+                                    </h4>
+                                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                                        Previews transactions before signing to catch potential errors. Disable if you prefer not to pre-simulate.
+                                    </p>
+                                </div>
+                                <ToggleButton
+                                    id="txSimulation"
+                                    label="Enable Transaction Simulation"
+                                    defaultChecked={preferencesConfig.enableTransactionSimulation}
+                                    onToggle={(value) =>
+                                        setPreferencesConfig({
+                                            enableTransactionSimulation: value,
+                                        })
+                                    }
+                                />
                             </div>
                         </div>
 

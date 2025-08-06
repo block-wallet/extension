@@ -27,6 +27,7 @@ import { AdvancedSettings } from "../../components/transactions/AdvancedSettings
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
 import GenericTooltip from "../../components/label/GenericTooltip"
 import ClickableText from "../../components/button/ClickableText"
+import Alert from "../../components/ui/Alert"
 
 // Asset
 import arrowRight from "../../assets/images/icons/arrow_right_black.svg"
@@ -49,6 +50,7 @@ import {
     rejectTransaction,
     setUserSettings,
 } from "../../context/commActions"
+import { simulateTransaction } from "../../context/commActions"
 
 // Utils
 import { formatName } from "../../util/formatAccount"
@@ -186,6 +188,9 @@ const TransactionConfirm: React.FC<{
         maxPriorityFeePerGas: params.maxPriorityFeePerGas,
         maxFeePerGas: params.maxFeePerGas,
     })
+    const [simulationError, setSimulationError] = useState<string | undefined>(
+        undefined
+    )
     // const [error, setError] = useState<string>("")
     const [transactionAdvancedData, setTransactionAdvancedData] =
         useState<TransactionAdvancedData>({})
@@ -439,6 +444,36 @@ const TransactionConfirm: React.FC<{
         !settings.hideEstimatedGasExceedsThresholdWarning &&
         gasPriceThresholdWarning.dialogOpen
 
+    useEffect(() => {
+        const run = async () => {
+            try {
+                if (!params?.to && !params?.data) {
+                    setSimulationError(undefined)
+                    return
+                }
+                const res = await simulateTransaction({
+                    from: params.from,
+                    to: params.to,
+                    data: params.data,
+                    value: params.value,
+                    gasLimit: params.gasLimit,
+                    gasPrice: params.gasPrice,
+                    maxFeePerGas: params.maxFeePerGas,
+                    maxPriorityFeePerGas: params.maxPriorityFeePerGas,
+                } as any)
+                if (!res.success) {
+                    setSimulationError(res.revertReason || res.errorMessage)
+                } else {
+                    setSimulationError(undefined)
+                }
+            } catch (e: any) {
+                setSimulationError(e?.message || 'Simulation error')
+            }
+        }
+        run()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [params?.to, params?.data, params?.value, params?.gasLimit, params?.gasPrice, params?.maxFeePerGas, params?.maxPriorityFeePerGas])
+
     return (
         <PopupLayout
             header={
@@ -633,6 +668,11 @@ const TransactionConfirm: React.FC<{
                         )}
                     </div>
                 </div>
+                {simulationError && (
+                    <Alert type="error" className="p-2">
+                        Simulation failed: {simulationError}
+                    </Alert>
+                )}
                 {transactionValues()}
 
                 <div className="flex flex-col">

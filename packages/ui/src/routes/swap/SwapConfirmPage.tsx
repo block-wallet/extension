@@ -765,6 +765,11 @@ const SwapPageConfirm: FC<{}> = () => {
                         Simulation failed: {simulationError}
                     </p>
                 )}
+                {!simulationError && (
+                    <p className="text-[12px] text-center text-gray-500 dark:text-gray-400">
+                        Simulation passed
+                    </p>
+                )}
 
                 {/* Gas */}
                 <p className="text-[13px] font-medium pb-1 pt-0.5 text-gray-700 dark:text-gray-300">

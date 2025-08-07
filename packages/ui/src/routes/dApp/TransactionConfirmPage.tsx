@@ -28,6 +28,7 @@ import { GasPriceSelector } from "../../components/transactions/GasPriceSelector
 import GenericTooltip from "../../components/label/GenericTooltip"
 import ClickableText from "../../components/button/ClickableText"
 import Alert from "../../components/ui/Alert"
+import WarningDialog from "../../components/dialog/WarningDialog"
 
 // Asset
 import arrowRight from "../../assets/images/icons/arrow_right_black.svg"
@@ -191,6 +192,8 @@ const TransactionConfirm: React.FC<{
     const [simulationError, setSimulationError] = useState<string | undefined>(
         undefined
     )
+    const [overrideSimulationWarning, setOverrideSimulationWarning] = useState<boolean>(false)
+    const [isSimFailDialogOpened, setIsSimFailDialogOpened] = useState<boolean>(false)
     // const [error, setError] = useState<string>("")
     const [transactionAdvancedData, setTransactionAdvancedData] =
         useState<TransactionAdvancedData>({})
@@ -348,6 +351,14 @@ const TransactionConfirm: React.FC<{
     // Functions
     const confirm = async () => {
         try {
+            if (
+                settings.enableTransactionSimulation &&
+                simulationError &&
+                !overrideSimulationWarning
+            ) {
+                setIsSimFailDialogOpened(true)
+                return
+            }
             dispatch({ type: "open", payload: { status: "loading" } })
             const isLinked = await checkDeviceIsLinked()
             if (!isLinked) {
@@ -528,6 +539,31 @@ const TransactionConfirm: React.FC<{
                 hideButton
                 showCloseButton
             />
+            {/* Simulation failure override dialog */}
+            {simulationError && (
+                <WarningDialog
+                    open={isSimFailDialogOpened}
+                    title={"Transaction may fail"}
+                    message={
+                        <div className="text-left">
+                            <div className="font-semibold mb-1">Warning</div>
+                            <div>Pre-sign simulation indicates a revert:</div>
+                            <div className="mt-1 break-words text-xs">
+                                {simulationError}
+                            </div>
+                        </div>
+                    }
+                    onDone={() => {
+                        setOverrideSimulationWarning(true)
+                        setIsSimFailDialogOpened(false)
+                        confirm()
+                    }}
+                    buttonLabel="Continue anyway"
+                    cancelButton
+                    cancelLabel="Back"
+                    onCancel={() => setIsSimFailDialogOpened(false)}
+                />
+            )}
             <TransactionDetails
                 transaction={transaction}
                 open={hasDetails}

@@ -108,13 +108,15 @@ const VALUE_DIFF_WARN_THRESHOLD = -0.05 // -5%
 
 const SwapPageConfirm: FC<{}> = () => {
     const history = useOnMountHistory()
-    const { exchangeRates } = useBlankState()!
+    const { exchangeRates, settings } = useBlankState()!
     const { fromToken, swapQuote, toToken, allowanceTransactionId } = useMemo(
         () => history.location.state as SwapConfirmPageLocalState,
         [history.location.state]
     )
     const [isPriceImpactDialogOpened, setIsPriceImpactDialogOpened] =
         useState<boolean>(false)
+    const [isSimFailDialogOpened, setIsSimFailDialogOpened] = useState<boolean>(false)
+    const [overrideSimulationWarning, setOverrideSimulationWarning] = useState<boolean>(false)
     const [isPriceDiffDialogOpened, setIsPriceDiffDialogOpened] =
         useState<boolean>(false)
     const [timeoutStart, setTimeoutStart] = useState<number | undefined>(
@@ -342,7 +344,6 @@ const SwapPageConfirm: FC<{}> = () => {
     const [simulationError, setSimulationError] = useState<string | undefined>(
         undefined
     )
-    const { settings } = useBlankState()!
 
     useEffect(() => {
         const run = async () => {
@@ -376,6 +377,14 @@ const SwapPageConfirm: FC<{}> = () => {
 
     const onSubmit = async () => {
         if (error || !swapParameters || !hasBalance) return
+        if (
+            settings.enableTransactionSimulation &&
+            simulationError &&
+            !overrideSimulationWarning
+        ) {
+            setIsSimFailDialogOpened(true)
+            return
+        }
 
         dispatch({ type: "open", payload: { status: "loading" } })
         const isLinked = await checkDeviceIsLinked()
@@ -645,6 +654,31 @@ const SwapPageConfirm: FC<{}> = () => {
                     cancelButton
                     cancelLabel="Back"
                     onCancel={() => setIsPriceDiffDialogOpened(false)}
+                />
+            )}
+            {/* Simulation failure override dialog */}
+            {simulationError && (
+                <WarningDialog
+                    open={isSimFailDialogOpened}
+                    title={"Transaction may fail"}
+                    message={
+                        <div className="text-left">
+                            <div className="font-semibold mb-1">Warning</div>
+                            <div>Pre-sign simulation indicates a revert:</div>
+                            <div className="mt-1 break-words text-xs">
+                                {simulationError}
+                            </div>
+                        </div>
+                    }
+                    onDone={() => {
+                        setOverrideSimulationWarning(true)
+                        setIsSimFailDialogOpened(false)
+                        onSubmit()
+                    }}
+                    buttonLabel="Continue anyway"
+                    cancelButton
+                    cancelLabel="Back"
+                    onCancel={() => setIsSimFailDialogOpened(false)}
                 />
             )}
             <HardwareDeviceNotLinkedDialog

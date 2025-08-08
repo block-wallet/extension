@@ -30,7 +30,6 @@ export default class SimulationController {
         tx: TransactionRequest
     ): Promise<SimulationResult> {
         try {
-            // Use call to detect straight reverts quickly
             await this.provider.call({
                 to: tx.to,
                 from: tx.from,
@@ -43,7 +42,6 @@ export default class SimulationController {
             if (enriched) return { success: true, ...enriched }
             return { success: true }
         } catch (err: any) {
-            // Try to extract meaningful revert reason
             const revertReason = this.extractRevertReason(err)
             const message = err?.message || 'Simulation failed'
             return { success: false, errorMessage: message, revertReason }

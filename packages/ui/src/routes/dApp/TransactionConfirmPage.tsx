@@ -29,6 +29,7 @@ import GenericTooltip from "../../components/label/GenericTooltip"
 import ClickableText from "../../components/button/ClickableText"
 import Alert from "../../components/ui/Alert"
 import WarningDialog from "../../components/dialog/WarningDialog"
+import { SimulationResult } from "@block-wallet/background/controllers/SimulationController"
 
 // Asset
 import arrowRight from "../../assets/images/icons/arrow_right_black.svg"
@@ -190,6 +191,9 @@ const TransactionConfirm: React.FC<{
         maxFeePerGas: params.maxFeePerGas,
     })
     const [simulationError, setSimulationError] = useState<string | undefined>(
+        undefined
+    )
+    const [simulation, setSimulation] = useState<SimulationResult | undefined>(
         undefined
     )
     const [overrideSimulationWarning, setOverrideSimulationWarning] = useState<boolean>(false)
@@ -478,11 +482,14 @@ const TransactionConfirm: React.FC<{
                 } as any)
                 if (!res.success) {
                     setSimulationError(res.revertReason || res.errorMessage)
+                    setSimulation(undefined)
                 } else {
                     setSimulationError(undefined)
+                    setSimulation(res)
                 }
             } catch (e: any) {
                 setSimulationError(e?.message || 'Simulation error')
+                setSimulation(undefined)
             }
         }
         run()
@@ -640,6 +647,25 @@ const TransactionConfirm: React.FC<{
                         </div>
                     )}
                 </div>
+                {simulation && simulation.success && (
+                    <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded-md border border-gray-200 dark:border-gray-700">
+                        <div className="text-xs font-semibold mb-1">Simulation results</div>
+                        {simulation.nativeBalanceDelta && simulation.nativeBalanceDelta !== '0' && (
+                            <div className="text-xs">Native delta: {simulation.nativeBalanceDelta}</div>
+                        )}
+                        {simulation.erc20Transfers && simulation.erc20Transfers.length > 0 && (
+                            <ul className="text-xs list-disc pl-4 mt-1 max-h-24 overflow-auto">
+                                {simulation.erc20Transfers.slice(0, 4).map((t, i) => (
+                                    <li key={i} className="break-all">{t.value} @ {t.token} → {t.to}</li>
+                                ))}
+                                {simulation.erc20Transfers.length > 4 && <li>…</li>}
+                            </ul>
+                        )}
+                        {!simulation.nativeBalanceDelta && (!simulation.erc20Transfers || simulation.erc20Transfers.length === 0) && (
+                            <div className="text-xs text-gray-500">No deltas detected</div>
+                        )}
+                    </div>
+                )}
 
                 <div className="flex flex-row items-center justify-center w-1/5 relative">
                     <div className="w-8 border rounded-full bg-white z-10">

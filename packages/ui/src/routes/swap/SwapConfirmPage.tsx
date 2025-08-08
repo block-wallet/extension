@@ -84,6 +84,7 @@ import PriceImpactDialog from "../../components/swaps/PriceImpactDialog"
 import WarningDialog from "../../components/dialog/WarningDialog"
 import { formatCurrency } from "../../util/formatCurrency"
 import { simulateTransaction } from "../../context/commActions"
+import { SimulationResult } from "@block-wallet/background/controllers/SimulationController"
 
 export interface SwapConfirmPageLocalState {
     fromToken: Token
@@ -344,6 +345,9 @@ const SwapPageConfirm: FC<{}> = () => {
     const [simulationError, setSimulationError] = useState<string | undefined>(
         undefined
     )
+    const [simulation, setSimulation] = useState<SimulationResult | undefined>(
+        undefined
+    )
 
     useEffect(() => {
         const run = async () => {
@@ -365,11 +369,14 @@ const SwapPageConfirm: FC<{}> = () => {
                 } as any)
                 if (!res.success) {
                     setSimulationError(res.revertReason || res.errorMessage)
+                    setSimulation(undefined)
                 } else {
                     setSimulationError(undefined)
+                    setSimulation(res)
                 }
             } catch (e: any) {
                 setSimulationError(e?.message || "Simulation error")
+                setSimulation(undefined)
             }
         }
         run()
@@ -769,6 +776,32 @@ const SwapPageConfirm: FC<{}> = () => {
                     <p className="text-[12px] text-center text-gray-500 dark:text-gray-400">
                         Simulation passed
                     </p>
+                )}
+
+                {/* Simulation Results (basic) */}
+                {simulation && simulation.success && (
+                    <div className="mt-1 text-[12px] text-gray-700 dark:text-gray-300">
+                        {simulation.nativeBalanceDelta && simulation.nativeBalanceDelta !== '0' && (
+                            <div className="text-center">
+                                Native delta: {simulation.nativeBalanceDelta}
+                            </div>
+                        )}
+                        {simulation.erc20Transfers && simulation.erc20Transfers.length > 0 && (
+                            <div className="mt-1">
+                                <div className="text-center font-medium">Token transfers detected</div>
+                                <ul className="max-h-20 overflow-auto text-xs mt-1 space-y-1">
+                                    {simulation.erc20Transfers.slice(0, 4).map((t, idx) => (
+                                        <li key={idx} className="text-center break-all">
+                                            {t.value} @ {t.token} → {t.to}
+                                        </li>
+                                    ))}
+                                    {simulation.erc20Transfers.length > 4 && (
+                                        <li className="text-center">…</li>
+                                    )}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
                 )}
 
                 {/* Gas */}

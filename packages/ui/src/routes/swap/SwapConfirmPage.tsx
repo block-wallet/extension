@@ -85,6 +85,7 @@ import WarningDialog from "../../components/dialog/WarningDialog"
 import { formatCurrency } from "../../util/formatCurrency"
 import { simulateTransaction } from "../../context/commActions"
 import { SimulationResult } from "@block-wallet/background/controllers/SimulationController"
+import { toCurrencyAmount } from "../../util/formatCurrency"
 
 export interface SwapConfirmPageLocalState {
     fromToken: Token
@@ -781,6 +782,47 @@ const SwapPageConfirm: FC<{}> = () => {
                 {/* Simulation Results (basic) */}
                 {simulation && simulation.success && (
                     <div className="mt-1 text-[12px] text-gray-700 dark:text-gray-300">
+                        {/* Net USD delta */}
+                        {(() => {
+                            try {
+                                let usdDelta = 0
+                                if (simulation.nativeBalanceDelta && nativeToken) {
+                                    const r = exchangeRates[nativeToken.token.symbol]
+                                    if (r) {
+                                        const amt = BigNumber.from(simulation.nativeBalanceDelta.startsWith('-') ? simulation.nativeBalanceDelta.slice(1) : simulation.nativeBalanceDelta)
+                                        const sign = simulation.nativeBalanceDelta.startsWith('-') ? -1 : 1
+                                        usdDelta += sign * toCurrencyAmount(amt, r, nativeToken.token.decimals)
+                                    }
+                                }
+                                if (simulation.erc20Transfers && simulation.erc20Transfers.length > 0) {
+                                    simulation.erc20Transfers.slice(0, 6).forEach(t => {
+                                        const symbol = t.token?.toLowerCase() === fromToken.address?.toLowerCase() ? fromToken.symbol : (t.token?.toLowerCase() === toToken.address?.toLowerCase() ? toToken.symbol : undefined)
+                                        const decimals = t.token?.toLowerCase() === fromToken.address?.toLowerCase() ? fromToken.decimals : (t.token?.toLowerCase() === toToken.address?.toLowerCase() ? toToken.decimals : undefined)
+                                        if (symbol && typeof decimals === 'number') {
+                                            const rate = exchangeRates[symbol]
+                                            if (rate) {
+                                                const val = BigNumber.from(t.value)
+                                                const isToUser = t.to?.toLowerCase() === selectedAccount.address.toLowerCase()
+                                                const isFromUser = t.from?.toLowerCase() === selectedAccount.address.toLowerCase()
+                                                if (isToUser || isFromUser) {
+                                                    const delta = toCurrencyAmount(val, rate, decimals) * (isToUser ? 1 : -1)
+                                                    usdDelta += delta
+                                                }
+                                            }
+                                        }
+                                    })
+                                }
+                                const sign = usdDelta >= 0 ? '' : '-'
+                                const absUsd = Math.abs(usdDelta)
+                                return (
+                                    <div className="text-center font-medium">
+                                        Net USD delta: {sign}{formatCurrency(absUsd, { showSymbol: true, showCurrency: false })}
+                                    </div>
+                                )
+                            } catch {
+                                return null
+                            }
+                        })()}
                         {simulation.nativeBalanceDelta && simulation.nativeBalanceDelta !== '0' && (
                             <div className="text-center">
                                 Native delta: {simulation.nativeBalanceDelta}

@@ -60,6 +60,7 @@ describe('userPreferences tests', () => {
                             hideEstimatedGasExceedsThresholdWarning: false,
                             hideDepositsExternalAccountsWarning: false,
                             hideBridgeInsufficientNativeTokenWarning: false,
+                            enableTransactionSimulation: true,
                             displayNetWorth: true,
                             theme: 'system'
                         },
@@ -88,6 +89,7 @@ describe('userPreferences tests', () => {
                             hideEstimatedGasExceedsThresholdWarning: false,
                             hideDepositsExternalAccountsWarning: false,
                             hideBridgeInsufficientNativeTokenWarning: false,
+                            enableTransactionSimulation: true,
                             displayNetWorth: true,
                             theme: 'system'
                         },
@@ -120,6 +122,7 @@ describe('userPreferences tests', () => {
                             hideEstimatedGasExceedsThresholdWarning: false,
                             hideDepositsExternalAccountsWarning: false,
                             hideBridgeInsufficientNativeTokenWarning: false,
+                            enableTransactionSimulation: true,
                             displayNetWorth: true,
                             theme: 'system'
                         },

@@ -72,7 +72,12 @@ export default class SimulationController {
                 data: tx.data,
                 value: tx.value?._hex || tx.value,
             }
-            const trace = await (this.provider as any).send('debug_traceCall', [call, 'latest', { tracer: 'callTracer' }])
+            let trace: any
+            try {
+                trace = await this.sendWithTimeout('debug_traceCall', [call, 'latest', { tracer: 'callTracer' }], 2000)
+            } catch {
+                return undefined
+            }
             if (!trace) return undefined
 
             const transfers: Array<{ token: string; from: string; to: string; value: string }> = []
@@ -115,6 +120,23 @@ export default class SimulationController {
         } catch {
             return undefined
         }
+    }
+
+    private async sendWithTimeout(method: string, params: any[], timeoutMs = 2000): Promise<any> {
+        const provider: any = this.provider
+        return new Promise((resolve, reject) => {
+            const t = setTimeout(() => reject(new Error('trace timeout')), timeoutMs)
+            provider
+                .send(method, params)
+                .then((res: any) => {
+                    clearTimeout(t)
+                    resolve(res)
+                })
+                .catch((e: any) => {
+                    clearTimeout(t)
+                    reject(e)
+                })
+        })
     }
 
     private add(a: string, b: string): string {

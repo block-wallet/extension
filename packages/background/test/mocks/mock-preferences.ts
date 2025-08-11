@@ -36,6 +36,7 @@ testInitState = {
         hideEstimatedGasExceedsThresholdWarning: false,
         hideDepositsExternalAccountsWarning: false,
         hideBridgeInsufficientNativeTokenWarning: false,
+        enableTransactionSimulation: true,
         displayNetWorth: true,
         theme: 'system',
     },

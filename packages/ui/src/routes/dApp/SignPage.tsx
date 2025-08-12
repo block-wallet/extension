@@ -3,11 +3,11 @@ import {
     PropsWithChildren,
     useCallback,
     useState,
+    useMemo,
 } from "react"
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupLayout from "../../components/popup/PopupLayout"
 import { Classes } from "../../styles/classes"
-import Divider from "../../components/Divider"
 import { formatHash, formatName } from "../../util/formatAccount"
 import { formatUnits } from "@ethersproject/units"
 import { getAddress } from "@ethersproject/address"
@@ -51,7 +51,6 @@ import { isHardwareWallet } from "../../util/account"
 import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionWaitingDialog"
 import { AccountType, HardwareWalletOpTypes } from "../../context/commTypes"
 import DAppPopupHeader from "../../components/dApp/DAppPopupHeader"
-import DAppOrigin from "../../components/dApp/DAppOrigin"
 import { getNetworkNameFromChainId } from "../../util/getExplorer"
 import CodeBlock from "../../components/ui/CodeBlock"
 
@@ -93,7 +92,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
     const { method, params: dappReqParams } =
         dappReqData as DappRequestParams[DappReq.SIGNING]
 
-    const websiteIcon = siteMetadata.iconURL
+    // const websiteIcon = siteMetadata.iconURL
     const { address, data, rawData } = dappReqParams
 
     const targetAddressKey = (address || selectedAddress).toLowerCase()
@@ -169,6 +168,22 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
         setCopied(false)
     }
 
+    const jsonViewStyle = useMemo(() => ({
+        ...defaultStyles,
+        container: "",
+        basicChildStyle: "text-xs text-gray-800 dark:text-gray-200",
+        label: "text-gray-700 dark:text-gray-300 font-medium",
+        punctuation: "text-gray-500 dark:text-gray-400",
+        expander: "text-gray-500 dark:text-gray-400",
+        pointer: "cursor-pointer",
+        stringValue: "text-green-700 dark:text-green-400",
+        numberValue: "text-blue-700 dark:text-blue-400",
+        booleanValue: "text-purple-700 dark:text-purple-400",
+        nullValue: "text-gray-500 dark:text-gray-400 italic",
+        undefinedValue: "text-gray-500 dark:text-gray-400 italic",
+        otherValue: "text-gray-700 dark:text-gray-300",
+    }), [])
+
     const formatTypedDomain = (domain: EIP712Domain) => {
         const displayOrder: EIP712DomainKey[] = [
             "name",
@@ -211,10 +226,10 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
             if (param) {
                 return (
                     <>
-                        <span className="font-semibold pt-1">
+                        <span className="font-semibold pt-1 text-gray-900 dark:text-gray-100">
                             {formattedDomainKeyNames[displayOrder[i]]}
                         </span>
-                        <span className="text-primary-grey-dark allow-select-all">
+                        <span className="text-primary-grey-dark dark:text-gray-300 allow-select-all">
                             {param}
                         </span>
                     </>
@@ -243,12 +258,12 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                         iconColor="text-red-500"
                         wideMargins={false}
                     />
-                    <div className="w-full px-3 py-3 text-sm text-red-500 bg-red-100 rounded">
+                    <div className="w-full px-3 py-3 text-sm text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded">
                         <strong className="font-semibold">Warning: </strong>
                         {`Make sure you trust ${origin}. Signing this could grant complete control of your assets`}
                     </div>
-                    <span className="font-semibold py-2">Message</span>
-                    <CodeBlock className="max-h-56">
+                    <span className="font-semibold py-2 text-gray-900 dark:text-gray-100">Message</span>
+                    <CodeBlock className="max-h-56 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">
                         <>{rawData ?? data}</>
                     </CodeBlock>
                 </>
@@ -258,8 +273,8 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
         if (method === "personal_sign") {
             return (
                 <>
-                    <span className="font-semibold py-2">Message</span>
-                    <CodeBlock className="max-h-56">
+                    <span className="font-semibold py-2 text-gray-900 dark:text-gray-100">Message</span>
+                    <CodeBlock className="max-h-56 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">
                         <>{rawData ?? data}</>
                     </CodeBlock>
                 </>
@@ -273,10 +288,10 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                     {v1Data.map((param: V1TypedData) => {
                         return (
                             <>
-                                <span className="font-semibold pt-1">
+                                <span className="font-semibold pt-1 text-gray-900 dark:text-gray-100">
                                     {param.name}
                                 </span>
-                                <span className="text-primary-grey-dark allow-select-all">
+                                <span className="text-primary-grey-dark dark:text-gray-300 allow-select-all">
                                     {`${param.value}`}
                                 </span>
                             </>
@@ -290,12 +305,14 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
         return (
             <>
                 {formatTypedDomain(v4Data.domain)}
-                <span className="font-semibold py-1">Message</span>
-                <JsonView
-                    data={v4Data.message}
-                    style={{ ...defaultStyles, container: "" }}
-                    shouldInitiallyExpand={allExpanded}
-                />
+                <span className="font-semibold py-1 text-gray-900 dark:text-gray-100">Message</span>
+                <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md p-2">
+                    <JsonView
+                        data={v4Data.message}
+                        style={jsonViewStyle}
+                        shouldInitiallyExpand={allExpanded}
+                    />
+                </div>
             </>
         )
     }
@@ -375,13 +392,12 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                 showCheckbox
                 checkboxText="Don't show this warning again"
             />
-            <DAppOrigin name={origin} iconURL={websiteIcon} />
-            <Divider />
-            <span className="font-semibold px-6 py-3 text-sm text-gray-800">
+            {/* Origin display removed per updated UX */}
+            <span className="font-semibold px-6 py-3 text-sm text-gray-800 dark:text-gray-100">
                 Signing Account
             </span>
             <div className="flex flex-col px-6">
-                <div className="flex flex-row items-center space-x-4">
+                <div className="flex flex-row items-center space-x-4 p-3 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                     <AccountIcon
                         className="w-10 h-10"
                         fill={getAccountColor(accountData.address)}
@@ -391,7 +407,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                         className="relative flex flex-col group space-y-1"
                         onClick={copy}
                     >
-                        <span className="text-sm font-semibold">
+                        <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                             {formatName(accountData.name, 15)}
                             {" ("}
                             {formatNumberLength(
@@ -403,14 +419,14 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                             )}
                             {` ${nativeToken.token.symbol})`}
                         </span>
-                        <span className="text-xs text-primary-grey-dark">
+                        <span className="text-xs text-gray-600 dark:text-gray-400">
                             {formatHash(accountData.address)}
                         </span>
                         <CopyTooltip copied={copied} />
                     </button>
                 </div>
             </div>
-            <div className="flex flex-col px-6 py-3 space-y-0.5 text-sm text-gray-800 break-words">
+            <div className="flex flex-col px-6 py-3 space-y-0.5 text-sm text-gray-800 dark:text-gray-100 break-words">
                 {formatSignatureData(method, data, rawData)}
             </div>
             <HardwareDeviceNotLinkedDialog

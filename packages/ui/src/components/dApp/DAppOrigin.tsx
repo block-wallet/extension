@@ -12,13 +12,13 @@ export const DAppOrigin = ({
             <div className="flex flex-row items-center justify-center w-10 h-10 rounded-full bg-primary-grey-default">
                 {iconURL && <img key={iconURL} alt="icon" src={iconURL} />}
             </div>
-            <div className="flex flex-col text-sm font-semibold ml-4">
+            <div className="flex flex-col text-sm font-semibold ml-4 text-gray-800 dark:text-gray-100">
                 {formatUrl(name)}
             </div>
         </div>
     ) : (
         <div
-            className="pr-6 py-2 flex flex-row items-center text-sm font-semibold ml-4"
+            className="pr-6 py-2 flex flex-row items-center text-sm font-semibold ml-4 text-gray-800 dark:text-gray-100"
             style={{ lineBreak: "anywhere" }}
         >
             {formatUrl(name)}

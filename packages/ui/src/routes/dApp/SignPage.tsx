@@ -47,8 +47,9 @@ import useCheckAccountDeviceLinked from "../../util/hooks/useCheckAccountDeviceL
 import WaitingDialog from "../../components/dialog/WaitingDialog"
 import { DAPP_FEEDBACK_WINDOW_TIMEOUT } from "../../util/constants"
 import { getDeviceFromAccountType } from "../../util/hardwareDevice"
+import { isHardwareWallet } from "../../util/account"
 import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionWaitingDialog"
-import { HardwareWalletOpTypes } from "../../context/commTypes"
+import { AccountType, HardwareWalletOpTypes } from "../../context/commTypes"
 import DAppPopupHeader from "../../components/dApp/DAppPopupHeader"
 import DAppOrigin from "../../components/dApp/DAppOrigin"
 import { getNetworkNameFromChainId } from "../../util/getExplorer"
@@ -85,8 +86,9 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
     const [copied, setCopied] = useState(false)
     const [accountWarningClosed, setAccountWarningClosed] = useState(false)
     const [isEthSignWarningOpen, setIsEthSignWarningOpen] = useState(true)
-    const { isDeviceUnlinked, checkDeviceIsLinked, resetDeviceLinkStatus } =
-        useCheckAccountDeviceLinked()
+    let isDeviceUnlinked = false
+    let checkDeviceIsLinked = async () => true
+    let resetDeviceLinkStatus = () => {}
 
     const { method, params: dappReqParams } =
         dappReqData as DappRequestParams[DappReq.SIGNING]
@@ -94,9 +96,13 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
     const websiteIcon = siteMetadata.iconURL
     const { address, data, rawData } = dappReqParams
 
-    const accountData = accounts[address]
+    const targetAddressKey = (address || selectedAddress).toLowerCase()
+    const accountData =
+        accounts[targetAddressKey] || accounts[selectedAddress.toLowerCase()]
 
-    // Detect if the transaction was triggered using an address different to the active one
+    ;({ isDeviceUnlinked, checkDeviceIsLinked, resetDeviceLinkStatus } =
+        useCheckAccountDeviceLinked(accountData?.address))
+
     const checksumFromAddress = getAddress(address)
     const differentAddress = checksumFromAddress !== selectedAddress
 
@@ -110,7 +116,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                 qrParams,
             },
             HardwareWalletOpTypes.SIGN_MESSAGE,
-            accountData.accountType,
+            accountData?.accountType ?? AccountType.HD_ACCOUNT,
             {
                 reject: useCallback(() => {
                     if (requestId) {
@@ -122,7 +128,8 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
 
     const sign = async () => {
         dispatch({ type: "open", payload: { status: "loading" } })
-        const isLinked = await checkDeviceIsLinked()
+        const isHw = accountData?.accountType && isHardwareWallet(accountData.accountType as any)
+        const isLinked = isHw ? await checkDeviceIsLinked() : true
         if (!isLinked) {
             closeDialog()
             return
@@ -181,9 +188,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
 
         let parsedDomain = []
 
-        // Arrayifi(lol) domain following the display order
         for (let i = 0; i < displayOrder.length; i++) {
-            // Check existing properties on the domain
             if (
                 typeof domain[displayOrder[i]] === "string" ||
                 typeof domain[displayOrder[i]] === "number"
@@ -194,7 +199,6 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
             }
         }
 
-        // Add chain id name if it exists
         if (domain.chainId) {
             const networkName = getNetworkNameFromChainId(
                 availableNetworks,
@@ -203,7 +207,6 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
             parsedDomain[2] += ` (${networkName})`
         }
 
-        // Display them
         return parsedDomain.map((param: string | null, i: number) => {
             if (param) {
                 return (

@@ -3,30 +3,30 @@ import { useBlankState } from "../../context/background/backgroundHooks"
 import { isAccountDeviceLinked } from "../../context/commActions"
 import log from "loglevel"
 
-const useCheckAccountDeviceLinked = () => {
+const useCheckAccountDeviceLinked = (addressOverride?: string) => {
     const [isDeviceUnlinked, setIsDeviceUnlinked] = useState<boolean>(false)
     const { selectedAddress } = useBlankState()!
+    const addressToCheck = (addressOverride || selectedAddress)
 
     const check = async () => {
         try {
-            log.debug(`Checking hardware device link for ${selectedAddress}`)
+            log.debug(`Checking hardware device link for ${addressToCheck}`)
 
-            // Only perform the hardware check if device isn't already known to be unlinked
             if (!isDeviceUnlinked) {
-                const deviceLinked = await isAccountDeviceLinked(selectedAddress)
-                log.debug(`Device linked check result for ${selectedAddress}: ${deviceLinked}`)
+                const deviceLinked = await isAccountDeviceLinked(addressToCheck)
+                log.debug(`Device linked check result for ${addressToCheck}: ${deviceLinked}`)
 
                 if (!deviceLinked) {
-                    log.warn(`Hardware device not linked for address ${selectedAddress}`)
+                    log.warn(`Hardware device not linked for address ${addressToCheck}`)
                     setIsDeviceUnlinked(true)
                     return false
                 }
             } else {
-                log.debug(`Device already known to be unlinked for ${selectedAddress}, skipping check`)
+                log.debug(`Device already known to be unlinked for ${addressToCheck}, skipping check`)
                 return false
             }
         } catch (e) {
-            log.error(`Error checking device link status for ${selectedAddress}:`, e)
+            log.error(`Error checking device link status for ${addressToCheck}:`, e)
             return false
         }
         return true
@@ -36,8 +36,6 @@ const useCheckAccountDeviceLinked = () => {
         isDeviceUnlinked,
         checkDeviceIsLinked: check,
         resetDeviceLinkStatus: () => setIsDeviceUnlinked(false),
-        //Wraps a function and checks whether the device is linked or not.
-        //If the device is linked, executes the wrapped function. If not, then the function ins not executed.
         checkDeviceIsLinkedWrapper: (
             wrappedFn: (...args: any) => any
         ) => async (...args: any) => {

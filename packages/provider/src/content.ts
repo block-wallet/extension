@@ -24,6 +24,7 @@ const EXTENSION_CONTEXT_INVALIDATED_CHROMIUM_ERROR =
     'Extension context invalidated.';
 
 let providerOverridden = false;
+let fallbackInjected = false;
 
 // Track provider injection errors for debugging
 const providerInjectionErrors: Array<{
@@ -59,23 +60,38 @@ function injectProvider() {
             container.insertBefore(script, container.children[0]);
             container.removeChild(script);
         } else {
-            // Manifest v3 - provider should already be injected via MAIN world content script
-            // Just ensure the provider is available
             const checkProvider = () => {
-                return window.ethereum && window.ethereum.isBlockWallet;
+                return window.ethereum && (window.ethereum as any).isBlockWallet;
             };
 
-            // If provider isn't immediately available, wait for it to load
+            const fallbackInjectMainWorldProvider = () => {
+                if (fallbackInjected || window !== window.top) return;
+                try {
+                    const container = document.head || document.documentElement;
+                    const script = document.createElement('script');
+                    script.type = 'text/javascript';
+                    script.async = false;
+                    script.src = chrome.runtime.getURL('blankProvider.js');
+                    container.insertBefore(script, container.children[0]);
+                    fallbackInjected = true;
+                    console.warn('BlockWallet: Fallback injected blankProvider.js into MAIN world');
+                } catch (e) {
+                    console.error('BlockWallet: Fallback injection failed', e);
+                }
+            };
+
             if (!checkProvider()) {
                 let attempts = 0;
-                const maxAttempts = 50; // 5 seconds max wait
+                const maxAttempts = 100;
                 const checkInterval = setInterval(() => {
                     attempts++;
-                    if (checkProvider() || attempts >= maxAttempts) {
+                    if (checkProvider()) {
                         clearInterval(checkInterval);
-                        if (attempts >= maxAttempts) {
-                            console.warn('BlockWallet: Provider not found after waiting, may indicate injection failure');
-                        }
+                        return;
+                    }
+                    if (attempts >= maxAttempts) {
+                        clearInterval(checkInterval);
+                        fallbackInjectMainWorldProvider();
                     }
                 }, 100);
             }
@@ -117,7 +133,6 @@ injectProvider();
 // Keep-alive implementation with improved interval and error handling
 const SW_KEEP_ALIVE_INTERVAL = 30000; // 30 seconds default to reduce resource usage
 let SW_ALIVE = false;
-let EXTENSION_CONTEXT_VALID = true;
 let portReinitialized = false;
 let timeoutRef: NodeJS.Timeout;
 
@@ -170,7 +185,6 @@ function swKeepAlive() {
         } catch (e) {
             let message = `BlockWallet: ${e}`;
             if (e.message === EXTENSION_CONTEXT_INVALIDATED_CHROMIUM_ERROR) {
-                EXTENSION_CONTEXT_VALID = false;
                 message = `BlockWallet: Please refresh the page. ${e}`;
                 // Notify page about extension context invalidation
                 notifyPage({
@@ -231,37 +245,29 @@ async function keepExtensionAlive() {
     const isHidden = typeof document !== 'undefined' && document.visibilityState === 'hidden';
     await swKeepAlive();
 
-    if (EXTENSION_CONTEXT_VALID) {
-        // Clear any existing timeout to prevent multiple timers
-        if (timeoutRef) {
-            clearTimeout(timeoutRef);
-        }
-
-        // Adjust timing based on failure status
-        let nextInterval = SW_KEEP_ALIVE_INTERVAL;
-
-        // Implement exponential backoff for repeated failures
-        if (consecutiveKeepAliveFailures > 0) {
-            // Cap at a reasonable maximum (30 seconds)
-            const backoffFactor = Math.min(Math.pow(1.5, consecutiveKeepAliveFailures), 3);
-            nextInterval = SW_KEEP_ALIVE_INTERVAL * backoffFactor;
-        }
-
-        // If hidden, further increase interval to 60s to limit background churn
-        if (isHidden) {
-            nextInterval = Math.max(nextInterval, 60000);
-        }
-
-        // If too many consecutive failures, notify the page
-        if (consecutiveKeepAliveFailures >= MAX_CONSECUTIVE_FAILURES) {
-            notifyPage({
-                signal: Signals.SW_CONSECUTIVE_FAILURES,
-                message: 'Connection to extension is unstable. You may need to refresh the page.'
-            });
-        }
-
-        timeoutRef = setTimeout(keepExtensionAlive, nextInterval);
+    if (timeoutRef) {
+        clearTimeout(timeoutRef);
     }
+
+    let nextInterval = SW_KEEP_ALIVE_INTERVAL;
+
+    if (consecutiveKeepAliveFailures > 0) {
+        const backoffFactor = Math.min(Math.pow(1.5, consecutiveKeepAliveFailures), 3);
+        nextInterval = SW_KEEP_ALIVE_INTERVAL * backoffFactor;
+    }
+
+    if (isHidden) {
+        nextInterval = Math.max(nextInterval, 60000);
+    }
+
+    if (consecutiveKeepAliveFailures >= MAX_CONSECUTIVE_FAILURES) {
+        notifyPage({
+            signal: Signals.SW_CONSECUTIVE_FAILURES,
+            message: 'Connection to extension is unstable. You may need to refresh the page.'
+        });
+    }
+
+    timeoutRef = setTimeout(keepExtensionAlive, nextInterval);
 }
 
 // Only use keep-alive in Manifest V3, and ensure cleanup on page unload
@@ -342,7 +348,7 @@ const windowListener = async ({
         data: WindowTransportRequestMessage,
         retryCount = 0
     ): Promise<void> => {
-        const MAX_RETRIES = 5;
+        const MAX_RETRIES = 10;
         const message =
             data && typeof data !== undefined
                 ? JSON.parse(JSON.stringify(data))
@@ -368,8 +374,15 @@ const windowListener = async ({
 
             console.log(`Retry attempt ${retryCount + 1}/${MAX_RETRIES} for message:`, message.message);
 
-            // Exponential backoff for retries
-            const backoffDelay = 30 * Math.pow(2, retryCount);
+            if (!SW_ALIVE || !port) {
+                try {
+                    init();
+                } catch (e) {
+                    // ignore reinit errors; retry loop will handle
+                }
+            }
+
+            const backoffDelay = 100 * Math.pow(2, retryCount);
             await sleep(backoffDelay);
 
             return postMessage(message, retryCount + 1);
@@ -389,15 +402,16 @@ window.addEventListener('message', (message) => {
 /**
  * Handles DOM operations safely
  */
-function safeDOMOperation(operation: () => void): boolean {
-    try {
-        operation();
-        return true;
-    } catch (error) {
-        console.warn('DOM operation failed:', error);
-        return false;
-    }
-}
+// Note: helper currently unused, retained for future safe DOM operations
+// function safeDOMOperation(operation: () => void): boolean {
+//     try {
+//         operation();
+//         return true;
+//     } catch (error) {
+//         console.warn('DOM operation failed:', error);
+//         return false;
+//     }
+// }
 
 // Init function with improved connection resilience and state management
 const init = () => {

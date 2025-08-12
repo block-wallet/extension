@@ -845,6 +845,12 @@ export default class BlankController extends EventEmitter {
             if (error) {
                 console.error(error);
             }
+            try {
+                this.blankProviderController.cancelPendingDAppRequests();
+                this.blankProviderController.rejectUnlocks();
+            } catch (e) {
+                // Swallow errors from cleanup to avoid noisy logs during disconnects
+            }
         });
 
         const promise = this.handle(id, message, request, port, portId);
@@ -876,8 +882,22 @@ export default class BlankController extends EventEmitter {
                 const safeError = toError(error);
 
                 console.error('[err]', source, safeError.message);
-                this.blankProviderController.cancelPendingDAppRequests();
-                // only send message back to port if it's still connected
+
+                const msg = (safeError?.message || '').toLowerCase();
+                const isTransportDisconnect =
+                    !isPortConnected ||
+                    msg.includes('port has been disconnected') ||
+                    msg.includes('attempting to use a disconnected port object');
+
+                if (isTransportDisconnect) {
+                    try {
+                        this.blankProviderController.cancelPendingDAppRequests();
+                        this.blankProviderController.rejectUnlocks();
+                    } catch (_ignored) {
+                        void 0; // no-op
+                    }
+                }
+
                 if (isPortConnected) {
                     port.postMessage({
                         error: JSON.stringify(

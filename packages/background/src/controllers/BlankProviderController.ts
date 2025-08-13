@@ -417,6 +417,11 @@ export default class BlankProviderController extends BaseController<BlankProvide
                     params as Record<string, unknown>[],
                     portId
                 );
+            case JSONRPCMethod.wallet_revokePermissions:
+                return this._handleWalletRevokePermissions(
+                    params as Record<string, unknown>[],
+                    portId
+                );
             case JSONRPCMethod.wallet_switchEthereumChain:
                 return this._handleSwitchEthereumChain(
                     params as [SwitchEthereumChainParameters],
@@ -803,9 +808,11 @@ export default class BlankProviderController extends BaseController<BlankProvide
         const accounts = this._accountsRequest(portId, true);
 
         if (accounts.length < 1) {
+            const { origin } = providerInstances[portId];
             return { invoker: origin };
         }
 
+        const { origin } = providerInstances[portId];
         return {
             invoker: origin,
             parentCapability: 'eth_accounts',
@@ -822,6 +829,36 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 },
             ],
         };
+    };
+
+    /**
+     * Handles wallet_revokePermissions (EIP-2255 complement used by some dapps)
+     * Supports revoking eth_accounts permission for the requesting origin.
+     * If params is empty or contains eth_accounts: {} it revokes all account access.
+     */
+    private _handleWalletRevokePermissions = (
+        params: Record<string, unknown>[],
+        portId: string
+    ) => {
+        const { origin } = providerInstances[portId];
+        // We only handle eth_accounts capability
+        const wantsRevokeEthAccounts = !params ||
+            params.length === 0 ||
+            (params[0] && Object.prototype.hasOwnProperty.call(params[0], JSONRPCMethod.eth_accounts));
+
+        if (!wantsRevokeEthAccounts) {
+            // For any other capability, report unsupported
+            throw new Error(ProviderError.UNSUPPORTED_METHOD);
+        }
+
+        // Remove all accounts for this origin
+        this._permissionsController.updateSite(origin, null);
+
+        // Emit accounts changed (empty) for connected dapps
+        this.emitAccountsChanged();
+
+        // EIP-2255 revoke typically returns null/empty array
+        return null;
     };
 
     //=============================================================================

@@ -479,6 +479,7 @@ export enum JSONRPCMethod {
     wallet_switchEthereumChain = 'wallet_switchEthereumChain',
     wallet_getPermissions = 'wallet_getPermissions',
     wallet_requestPermissions = 'wallet_requestPermissions',
+    wallet_revokePermissions = 'wallet_revokePermissions',
     wallet_watchAsset = 'wallet_watchAsset',
     wallet_getCapabilities = 'wallet_getCapabilities',
     web3_clientVersion = 'web3_clientVersion',

@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { useHistory } from "react-router-dom"
 
-import PopupFooter from "../components/popup/PopupFooter"
 import PopupHeader from "../components/popup/PopupHeader"
 import PopupLayout from "../components/popup/PopupLayout"
 import PasswordInput from "../components/input/PasswordInput"
@@ -123,7 +122,11 @@ const UnlockPage = () => {
                                     className="pl-2 text-gray-500 dark:text-gray-400 cursor-pointer hover:text-primary-blue-default dark:hover:text-primary-blue-400 transition-colors duration-200"
                                 />
                                 <Tooltip
-                                    className="!w-52 !break-word !whitespace-normal !-translate-x-44 !-mb-4"
+                                    placement="bottom"
+                                    align="center"
+                                    autoFlip
+                                    wrap
+                                    className="!w-56"
                                     content="Locked too soon? Click to learn how to increase the lock timeout."
                                 />
                             </a>
@@ -132,14 +135,14 @@ const UnlockPage = () => {
                 </PopupHeader>
             }
             footer={
-                <PopupFooter>
+                <div className="flex flex-row w-full items-center space-x-4 py-3 px-6 mt-auto">
                     <ButtonWithLoading
                         label="Unlock Wallet"
                         isLoading={isLoading}
                         onClick={onSubmit}
                         disabled={!!errors.password}
                     />
-                </PopupFooter>
+                </div>
             }
             submitOnEnter={{
                 onSubmit,
@@ -156,39 +159,39 @@ const UnlockPage = () => {
 
             <div className="flex flex-col h-full">
                 {/* Main Content */}
-                <div className="flex-1 flex flex-col justify-center px-6 py-4 space-y-5">
+                <div className="flex-1 flex flex-col justify-center px-5 py-3 space-y-3">
                     {/* Logo and Title Section */}
-                    <div className="flex flex-col items-center space-y-4">
+                    <div className="flex flex-col items-center space-y-3">
                         <div className="relative">
-                            <div className="absolute inset-0 bg-gradient-to-r from-primary-blue-default/20 to-purple-500/20 rounded-full blur-lg"></div>
-                            <div className="relative bg-white dark:bg-gray-800 rounded-full p-3 shadow-lg border border-gray-200 dark:border-gray-700">
+                            <div className="absolute inset-0 bg-gradient-to-r from-primary-blue-default/15 to-purple-500/15 rounded-full blur-md"></div>
+                            <div className="relative bg-white dark:bg-gray-800 rounded-full p-2.5 shadow-md border border-gray-200 dark:border-gray-700">
                                 <img
                                     src={logo}
                                     alt="BlockWallet logo"
-                                    className="w-10 h-10"
+                                    className="w-9 h-9"
                                 />
                             </div>
                         </div>
 
-                        <div className="text-center space-y-1">
+                        <div className="text-center space-y-0.5">
                             <h1 className="text-lg font-bold text-gray-900 dark:text-white">
                                 Welcome Back
                             </h1>
-                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                            <p className="text-[11px] text-gray-600 dark:text-gray-400">
                                 Enter your password to unlock your wallet
                             </p>
                         </div>
                     </div>
 
                     {/* Security Info Banner */}
-                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-2.5 border border-blue-200 dark:border-blue-800">
                         <div className="flex items-center space-x-2">
                             <BiShield className="text-blue-600 dark:text-blue-400 w-4 h-4 flex-shrink-0" />
                             <div>
-                                <p className="text-xs font-medium text-blue-800 dark:text-blue-200">
+                                <p className="text-[11px] font-medium text-blue-800 dark:text-blue-200">
                                     Secure Access
                                 </p>
-                                <p className="text-xs text-blue-600 dark:text-blue-300">
+                                <p className="text-[11px] text-blue-600 dark:text-blue-300">
                                     Your wallet is protected with end-to-end encryption
                                 </p>
                             </div>
@@ -196,8 +199,8 @@ const UnlockPage = () => {
                     </div>
 
                     {/* Password Input Section */}
-                    <div className="space-y-3">
-                        <div className="space-y-2">
+                    <div className="space-y-2.5">
+                        <div className="space-y-1.5">
                             <PasswordInput
                                 label="Password"
                                 placeholder="Enter your password"
@@ -209,7 +212,7 @@ const UnlockPage = () => {
 
                         {/* Reset Option */}
                         <div className="text-center">
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                            <div className="text-[11px] text-gray-500 dark:text-gray-400">
                                 Forgot your password?{" "}
                                 <ClickableText
                                     onClick={() => setHasDialog(true)}
@@ -222,7 +225,7 @@ const UnlockPage = () => {
 
                         {/* Anti-Phishing Section */}
                         {settings.useAntiPhishingProtection && (
-                            <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                            <div className="pt-1.5 border-t border-gray-200 dark:border-gray-700">
                                 <div className="flex justify-center">
                                     <AntiPhishing image={antiPhishingImage} size="sm" />
                                 </div>

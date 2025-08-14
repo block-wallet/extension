@@ -8,8 +8,8 @@ const SIZES = {
 }
 
 const TRANSLATE = {
-    sm: "!-translate-y-20 !translate-x-1/4",
-    normal: "!-translate-y-40 !translate-x-3/4",
+    sm: "",
+    normal: "",
 }
 
 const AntiPhishing: FunctionComponent<{
@@ -33,15 +33,18 @@ const AntiPhishing: FunctionComponent<{
                         <img
                             src={image}
                             className="rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary-blue-default dark:hover:border-primary-blue-400 shadow-sm hover:shadow-md transition-all duration-200"
-                            alt="Anti-phishing protection image"
+                            alt="Anti-phishing protection"
                             width={imgSize}
                             height={imgSize}
                         />
                     </a>
                     <Tooltip
+                        placement="top"
+                        align="center"
+                        autoFlip
                         className={translateTooltip}
                         content={
-                            <div className="flex flex-col items-start text-xs text-white font-semibold p-1">
+                            <div className="flex flex-col items-start text-xs font-semibold p-1">
                                 <div className="flex flex-row items-end space-x-7">
                                     <span>Phishing Protection</span>{" "}
                                 </div>

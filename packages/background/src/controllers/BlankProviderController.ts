@@ -787,15 +787,18 @@ export default class BlankProviderController extends BaseController<BlankProvide
      * @param params Request params
      * @param portId Request origin port id
      */
-    private _handleWalletRequestPermissions = (
+    private _handleWalletRequestPermissions = async (
         params: Record<string, unknown>[],
         portId: string
-    ) => {
+    ): Promise<unknown> => {
         // We only grant permissions for the eth_accounts method
         // We only check on the first element of the array
         if (params && JSONRPCMethod.eth_accounts in params[0]) {
-            return this._connectionRequest(portId);
+            await this._connectionRequest(portId);
+            // Return current permissions in EIP-2255 shape (array)
+            return this._handleGetPermissions(portId);
         }
+        throw new Error(ProviderError.UNSUPPORTED_METHOD);
     };
 
     /**
@@ -807,28 +810,27 @@ export default class BlankProviderController extends BaseController<BlankProvide
     private _handleGetPermissions = (portId: string) => {
         const accounts = this._accountsRequest(portId, true);
 
-        if (accounts.length < 1) {
-            const { origin } = providerInstances[portId];
-            return { invoker: origin };
-        }
-
         const { origin } = providerInstances[portId];
-        return {
+        const permission = {
             invoker: origin,
             parentCapability: 'eth_accounts',
-            caveats: [
-                {
-                    type: 'limitResponseLength',
-                    value: 1,
-                    name: 'primaryAccountOnly',
-                },
-                {
-                    type: 'filterResponse',
-                    value: accounts,
-                    name: 'exposedAccounts',
-                },
-            ],
+            caveats: accounts.length
+                ? [
+                      {
+                          type: 'limitResponseLength',
+                          value: 1,
+                          name: 'primaryAccountOnly',
+                      },
+                      {
+                          type: 'filterResponse',
+                          value: accounts,
+                          name: 'exposedAccounts',
+                      },
+                  ]
+                : [],
         };
+
+        return accounts.length ? [permission] : [];
     };
 
     /**

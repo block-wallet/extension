@@ -589,7 +589,7 @@ const TransactionItem: React.FC<{
                                     {labels.length}
                                 </span>
                             </div>
-                            <Tooltip content={labels.join(", ")} />
+                            <Tooltip content={labels.join(", ")} placement="top" align="center" autoFlip />
                         </div>
                     )}
                 </div>
@@ -663,6 +663,9 @@ const TransactionItem: React.FC<{
                                             />
                                         </a>
                                         <Tooltip
+                                            placement="top"
+                                            align="center"
+                                            autoFlip
                                             content={
                                                 <div className="flex flex-col font-normal items-start text-xs text-white-500">
                                                     <div className="flex flex-row items-end space-x-7">

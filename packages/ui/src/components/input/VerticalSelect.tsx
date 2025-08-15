@@ -67,7 +67,10 @@ const VerticalSelect: FunctionComponent<{
                 </button>
                 {tooltipOptions && option.label in tooltipOptions ? (
                     <Tooltip
-                        className="-translate-y-10 !translate-x-1"
+                        placement="right"
+                        align="center"
+                        autoFlip
+                        wrap
                         content={
                             <div>
                                 <span className="font-normal">

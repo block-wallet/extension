@@ -99,7 +99,7 @@ const FormField = ({
             {tooltip && (
                 <span className="ml-1 group relative">
                     <AiFillInfoCircle className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                    <Tooltip content={tooltip} />
+                    <Tooltip content={<span>{tooltip}</span>} placement="top" align="center" autoFlip />
                 </span>
             )}
         </label>

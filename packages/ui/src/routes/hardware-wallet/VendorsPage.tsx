@@ -118,7 +118,10 @@ const HardwareWalletVendorsPage = () => {
                         </button>
                         {browser === Browsers.FIREFOX && (
                             <Tooltip
-                                className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-3 !translate-y-full p-2 rounded-md text-xs font-medium bg-red-600 dark:bg-red-700 text-white"
+                                placement="bottom"
+                                align="center"
+                                autoFlip
+                                className="!w-64"
                                 content={
                                     <div className="flex items-center space-x-2">
                                         <HiExclamationCircle size={16} />

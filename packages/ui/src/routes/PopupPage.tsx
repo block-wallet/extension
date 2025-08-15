@@ -225,7 +225,9 @@ const PopupPage = () => {
                                     />
                                 </Link>
                                 <Tooltip
-                                    className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-0 !translate-y-full p-2 rounded-md text-xs font-medium bg-gray-900 dark:bg-gray-800 text-white border border-gray-700 dark:border-gray-600 shadow-lg"
+                                    placement="bottom"
+                                    align="center"
+                                    autoFlip
                                     content={<span>My Accounts</span>}
                                 />
                             </div>
@@ -247,7 +249,9 @@ const PopupPage = () => {
                                     <QRIcon />
                                 </Link>
                                 <Tooltip
-                                    className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-0 !translate-y-full p-2 rounded-md text-xs font-medium bg-gray-900 dark:bg-gray-800 text-white border border-gray-700 dark:border-gray-600 shadow-lg"
+                                    placement="bottom"
+                                    align="center"
+                                    autoFlip
                                     content={<span>Receive</span>}
                                 />
                             </div>
@@ -331,8 +335,11 @@ const PopupPage = () => {
                                         />
 
                                         <Tooltip
+                                            placement="bottom"
+                                            align="center"
+                                            autoFlip
                                             content={
-                                                <div className="flex flex-col font-normal items-start text-xs text-white">
+                                                <div className="flex flex-col font-normal items-start text-xs">
                                                     <div className="flex flex-row items-end space-x-7">
                                                         {displayNetWorth ? (
                                                             <span>

@@ -217,8 +217,11 @@ const GasPricesInfo: FC = () => {
                                 <AiFillInfoCircle className="w-5 h-5 text-gray-600 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-150" />
                             </a>
                             <Tooltip
+                                placement="bottom"
+                                align="center"
+                                autoFlip
                                 content={
-                                    <div className="flex flex-col font-normal items-start text-xs text-white space-y-1">
+                                    <div className="flex flex-col font-normal items-start text-xs space-y-1">
                                         <span>Gas is used to operate on the network.</span>
                                         <span>Click on this icon to learn more.</span>
                                     </div>

@@ -159,8 +159,11 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
                             className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                         />
                         <Tooltip
+                            placement="bottom"
+                            align="center"
+                            autoFlip
+                            wrap
                             content={tooltip.content}
-                            className="-mb-4 translate-y-[90%] -translate-x-[39%]"
                         />
                     </a>
                 </div>

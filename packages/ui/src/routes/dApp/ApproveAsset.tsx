@@ -582,11 +582,13 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                                 className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                             />
                             <Tooltip
+                                placement="bottom"
+                                align="center"
+                                autoFlip
                                 content={`${transactionCount - 1} more ${transactionCount > 2
                                     ? "transactions"
                                     : "transaction"
                                     }`}
-                                className="-translate-x-2/3"
                             />
                         </div>
                     )}

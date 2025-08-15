@@ -36,7 +36,7 @@ const AccountsPage = () => {
                     tooltip={{
                         link: "https://blockwallet.io/docs/accounts",
                         content: (
-                            <div className="font-normal text-xs text-white dark:text-gray-200">
+                            <div className="font-normal text-xs">
                                 Manage your wallet accounts, create new ones, and switch between them.
                             </div>
                         ),

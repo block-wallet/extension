@@ -643,7 +643,7 @@ const TransactionConfirm: React.FC<{
                                 size={20}
                                 className="pl-2 text-yellow-600 cursor-pointer hover:text-yellow-700"
                             />
-                            <Tooltip content="Account differs from the selected in your wallet" />
+                            <Tooltip content="Account differs from the selected in your wallet" placement="top" align="center" autoFlip />
                         </div>
                     )}
                 </div>

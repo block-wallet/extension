@@ -307,7 +307,11 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                                 <span className="flex flex-row items-center text-xxs group relative z-0">
                                     <CgDanger className="w-4 h-4 text-red-700 z-20" />
                                     <Tooltip
-                                        className="!translate-x-6 !w-40 !break-word !whitespace-normal"
+                                        placement="right"
+                                        align="center"
+                                        autoFlip
+                                        wrap
+                                        className="!w-40"
                                         content="Network name already in use."
                                     />
                                 </span>

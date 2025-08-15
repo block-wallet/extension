@@ -321,6 +321,9 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
                                 className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                             />
                             <Tooltip
+                                placement="bottom"
+                                align="center"
+                                autoFlip
                                 content={`${transactionCount - 1} more ${
                                     transactionCount > 2
                                         ? "transactions"

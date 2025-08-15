@@ -105,7 +105,11 @@ const HardwareDeviceNotLinkedDialog: React.FC<{
                                                     className="pl-2 text-gray-500 dark:text-gray-400 cursor-pointer hover:text-primary-blue-default dark:hover:text-primary-blue-400 transition-colors duration-200"
                                                 />
                                                 <Tooltip
-                                                    className="!-translate-x-48 !w-60 !break-word !whitespace-normal"
+                                                    placement="bottom"
+                                                    align="center"
+                                                    autoFlip
+                                                    wrap
+                                                    className="!w-60"
                                                     content={
                                                         <span className="text-gray-700 dark:text-gray-300">
                                                             {step.info}

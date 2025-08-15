@@ -401,6 +401,9 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                                     <div className="group relative">
                                         <AiFillInfoCircle className="w-4 h-4 text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 cursor-help" />
                                         <Tooltip
+                                            placement="top"
+                                            align="center"
+                                            autoFlip
                                             content={
                                                 <div className="text-xs text-center">
                                                     <p>Maximum price movement you're willing to accept.</p>
@@ -459,6 +462,9 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                                     <div className="group relative">
                                         <AiFillInfoCircle className="w-4 h-4 text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 cursor-help" />
                                         <Tooltip
+                                            placement="top"
+                                            align="center"
+                                            autoFlip
                                             content={
                                                 <div className="text-xs text-center">
                                                     <p>Transaction sequence number.</p>
@@ -506,6 +512,9 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                                         <div className="group relative">
                                             <AiFillInfoCircle className="w-4 h-4 text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 cursor-help" />
                                             <Tooltip
+                                                placement="top"
+                                                align="center"
+                                                autoFlip
                                                 content={
                                                     <div className="text-xs text-center">
                                                         <p>Protects against MEV attacks by sending</p>

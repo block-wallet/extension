@@ -69,7 +69,8 @@
         "unlimitedStorage",
         "alarms",
         "scripting",
-        "offscreen"
+        "offscreen",
+        "tabs"
     ],
     "optional_permissions": [
         "activeTab",

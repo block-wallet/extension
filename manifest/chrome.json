@@ -47,6 +47,7 @@
         "storage",
         "alarms",
         "scripting",
+        "tabs",
         "offscreen"
     ],
     "web_accessible_resources": [

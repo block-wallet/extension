@@ -15,6 +15,7 @@ import { useForm } from "react-hook-form"
 import { useOnClickOutside } from "../../util/useOnClickOutside"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { yupResolver } from "@hookform/resolvers/yup"
+import OutlinedButton from "../ui/OutlinedButton"
 
 export interface AdvancedSettingsDisplay {
     nonce: boolean
@@ -32,6 +33,7 @@ export interface AdvancedSettingsProps {
     transactionGasLimit?: BigNumber
     buttonDisplay?: boolean
     transactionId?: string
+    buttonClassName?: string
 }
 
 export const defaultAdvancedSettings: Required<TransactionAdvancedData> = {
@@ -114,6 +116,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
     transactionGasLimit = BigNumber.from(21000),
     buttonDisplay = true,
     transactionId,
+    buttonClassName = "",
 }) => {
     const { chainId } = useSelectedNetwork()
     const isFlashbotsAvailable = chainId === 1
@@ -340,22 +343,13 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
     return (
         <>
             {buttonDisplay ? (
-                <button
+                <OutlinedButton
                     onClick={() => setIsOpen(true)}
-                    className="group w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all duration-200 shadow-sm hover:shadow-md"
+                    className={classnames("!w-full space-x-2 p-4", buttonClassName)}
                 >
-                    <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 flex items-center justify-center transition-colors duration-200">
-                            <svg className="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
-                            </svg>
-                        </div>
-                        <span className="font-medium text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
-                            {label}
-                        </span>
-                    </div>
-                    <Icon name={IconName.RIGHT_CHEVRON} size="sm" className="text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors duration-200" />
-                </button>
+                    <span className="font-semibold text-sm">{label}</span>
+                    <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
+                </OutlinedButton>
             ) : (
                 <div className="flex flex-col items-end">
                     <button

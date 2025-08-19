@@ -103,10 +103,9 @@ interface SwapConfirmPagePersistedState {
 const NOT_ENOUGH_BALANCE_ERROR =
     "Balance too low to cover swap and gas cost. Please review gas configuration."
 
-// 15s
 const QUOTE_REFRESH_TIMEOUT = 1000 * 15
 const PRICE_IMPACT_THRESHOLD = 0.1
-const VALUE_DIFF_WARN_THRESHOLD = -0.05 // -5%
+const VALUE_DIFF_WARN_THRESHOLD = -0.05
 
 const SwapPageConfirm: FC<{}> = () => {
     const history = useOnMountHistory()
@@ -159,11 +158,9 @@ const SwapPageConfirm: FC<{}> = () => {
                 }))
             }
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [inProgressTransaction?.id])
 
     useLayoutEffect(() => {
-        // Redirect to homepage if there is no pending transaction
         if (
             !inProgressTransaction?.id &&
             persistedData.submitted &&
@@ -171,7 +168,6 @@ const SwapPageConfirm: FC<{}> = () => {
         ) {
             history.push("/")
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const { gasPricesLevels } = useGasPriceData()
@@ -269,7 +265,6 @@ const SwapPageConfirm: FC<{}> = () => {
         return calculateUsdValueDiff(exchangeRates, fromT, toT)
     }, [swapParameters, swapQuote, exchangeRates])
 
-    // Gas
     const [defaultGas, setDefaultGas] = useState<{
         gasPrice: BigNumber
         gasLimit: BigNumber
@@ -294,7 +289,6 @@ const SwapPageConfirm: FC<{}> = () => {
     const shouldFetchSwapParams = status !== "loading" && status !== "success"
     const isGasInitialized = useRef<boolean>(false)
 
-    // Balance check
     const feePerGas = isEIP1559Compatible
         ? selectedFees.maxFeePerGas
         : selectedGasPrice
@@ -452,7 +446,6 @@ const SwapPageConfirm: FC<{}> = () => {
             setTimeoutStart(new Date().getTime())
             setIsFetchingSwaps(false)
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         selectedAccount.address,
         advancedSettings.slippage,
@@ -461,7 +454,6 @@ const SwapPageConfirm: FC<{}> = () => {
         swapQuote.toToken.address,
     ])
 
-    // Initialize gas
     useEffect(() => {
         const setGas = async () => {
             if ((!swapParameters && error) || !hasBalance) {
@@ -497,7 +489,6 @@ const SwapPageConfirm: FC<{}> = () => {
 
         setGas()
 
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [swapParameters, error, hasBalance])
 
     useEffect(() => {
@@ -515,7 +506,6 @@ const SwapPageConfirm: FC<{}> = () => {
 
         fetchParams()
 
-        // Cleanup timer
         return () => {
             timeoutRef && clearTimeout(timeoutRef)
         }
@@ -537,7 +527,6 @@ const SwapPageConfirm: FC<{}> = () => {
 
     let errMessage = error
 
-    //Override to custom error.
     if (!hasBalance && swapParameters) {
         errMessage = NOT_ENOUGH_BALANCE_ERROR
     }
@@ -553,7 +542,6 @@ const SwapPageConfirm: FC<{}> = () => {
                 <PopupHeader
                     title="Confirm Swap"
                     onBack={() => {
-                        //avoid returning to the "approve page".
                         history.push({
                             pathname: "/swap",
                             state: history.location.state,
@@ -646,7 +634,6 @@ const SwapPageConfirm: FC<{}> = () => {
                     nonce={advancedSettings.customNonce}
                 />
             )}
-            {/* Risk detail dialog for large price difference */}
             {shouldWarnPriceDiff && (
                 <WarningDialog
                     open={isPriceDiffDialogOpened}
@@ -664,7 +651,6 @@ const SwapPageConfirm: FC<{}> = () => {
                     onCancel={() => setIsPriceDiffDialogOpened(false)}
                 />
             )}
-            {/* Simulation failure override dialog */}
             {simulationError && (
                 <WarningDialog
                     open={isSimFailDialogOpened}
@@ -718,7 +704,6 @@ const SwapPageConfirm: FC<{}> = () => {
             )}
 
             <div className="flex flex-col px-6 py-3 h-full">
-                {/* From Token */}
                 <AssetAmountDisplay
                     asset={fromToken}
                     amount={BigNumber.from(
@@ -727,7 +712,6 @@ const SwapPageConfirm: FC<{}> = () => {
                     )}
                 />
 
-                {/* Divider */}
                 <div className="pt-5">
                     <hr className="-mx-5" />
                     <div className="flex -translate-y-2/4 justify-center items-center mx-auto rounded-full w-8 h-8 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 z-10">
@@ -739,7 +723,6 @@ const SwapPageConfirm: FC<{}> = () => {
                     </div>
                 </div>
 
-                {/* To Token */}
                 <AssetAmountDisplay
                     asset={toToken}
                     amount={BigNumber.from(
@@ -747,14 +730,12 @@ const SwapPageConfirm: FC<{}> = () => {
                     )}
                 />
 
-                {/* Rates */}
                 <p className="text-sm py-1 leading-loose text-gray-600 dark:text-gray-400 uppercase text-center w-full">
                     {`1 ${fromToken.symbol} = ${formatNumberLength(
                         formatRounded(exchangeRate.toFixed(10), 8),
                         10
                     )} ${toToken.symbol}`}
                 </p>
-                {/* Value diff (USD) */}
                 <p
                     className="text-[13px] pb-1 pt-0.5 text-gray-700 dark:text-gray-300 text-center cursor-pointer"
                     onClick={() => {
@@ -779,10 +760,8 @@ const SwapPageConfirm: FC<{}> = () => {
                     </p>
                 )}
 
-                {/* Simulation Results (basic) */}
                 {simulation && simulation.success && (
                     <div className="mt-1 text-[12px] text-gray-700 dark:text-gray-300">
-                        {/* Net USD delta */}
                         {(() => {
                             try {
                                 let usdDelta = 0
@@ -846,7 +825,6 @@ const SwapPageConfirm: FC<{}> = () => {
                     </div>
                 )}
 
-                {/* Gas */}
                 <p className="text-[13px] font-medium pb-1 pt-0.5 text-gray-700 dark:text-gray-300">
                     Gas Price
                 </p>
@@ -890,43 +868,46 @@ const SwapPageConfirm: FC<{}> = () => {
                 )}
 
                 <div className="flex flex-row items-center py-3">
-                    {/* Settings */}
-                    <AdvancedSettings
-                        address={selectedAccount.address}
-                        advancedSettings={advancedSettings}
-                        display={{
-                            nonce: true,
-                            flashbots: true,
-                            slippage: true,
-                        }}
-                        transactionGasLimit={selectedGasLimit}
-                        setAdvancedSettings={(
-                            newSettings: TransactionAdvancedData
-                        ) => {
-                            setAdvancedSettings({
-                                ...newSettings,
-                                slippage:
-                                    newSettings.slippage !== undefined
-                                        ? newSettings.slippage
-                                        : defaultAdvancedSettings.slippage,
-                            })
-                        }}
-                        label={"Settings"}
-                    />
-                    {/* Swap Details */}
-                    <OutlinedButton
-                        onClick={() => {
-                            swapParameters && setShowDetails(true)
-                        }}
-                        className={classnames(
-                            "!w-full ml-2 h-12 space-x-2 p-4 ",
-                            !swapParameters &&
-                            "cursor-not-allowed hover:border-default"
-                        )}
-                    >
-                        <span className="font-semibold text-sm">Details</span>
-                        <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
-                    </OutlinedButton>
+                    <div className="flex-1">
+                        <AdvancedSettings
+                            address={selectedAccount.address}
+                            advancedSettings={advancedSettings}
+                            display={{
+                                nonce: true,
+                                flashbots: true,
+                                slippage: true,
+                            }}
+                            transactionGasLimit={selectedGasLimit}
+                            setAdvancedSettings={(
+                                newSettings: TransactionAdvancedData
+                            ) => {
+                                setAdvancedSettings({
+                                    ...newSettings,
+                                    slippage:
+                                        newSettings.slippage !== undefined
+                                            ? newSettings.slippage
+                                            : defaultAdvancedSettings.slippage,
+                                })
+                            }}
+                            label={"Settings"}
+                            buttonClassName="h-12"
+                        />
+                    </div>
+                    <div className="flex-1 ml-2">
+                        <OutlinedButton
+                            onClick={() => {
+                                swapParameters && setShowDetails(true)
+                            }}
+                            className={classnames(
+                                "!w-full h-12 space-x-2 p-4",
+                                !swapParameters &&
+                                "cursor-not-allowed hover:border-default"
+                            )}
+                        >
+                            <span className="font-semibold text-sm">Details</span>
+                            <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
+                        </OutlinedButton>
+                    </div>
                 </div>
                 <div className="h-full flex flex-col justify-end space-y-3">
                     {isFetchingSwaps ? (

@@ -22,7 +22,9 @@ export const useSelectedNetwork = () => {
         isSendEnabled:
             isFeatureEnabled(network, "sends") && isUserNetworkOnline,
         isTornadoEnabled: isFeatureEnabled(network, "tornado"),
-        isSwapEnabled: availableSwapChainIds.includes(network.chainId),
+        isSwapEnabled:
+            availableSwapChainIds.includes(network.chainId) ||
+            network.name.toLowerCase() === "localhost",
         isBridgeEnabled:
             availableBridgeChains && availableBridgeChains.length
                 ? availableBridgeChains.some(

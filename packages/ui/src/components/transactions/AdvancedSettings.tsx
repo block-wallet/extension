@@ -7,7 +7,7 @@ import Tooltip from "../label/Tooltip"
 import { AiFillInfoCircle } from "react-icons/ai"
 import { BigNumber } from "@ethersproject/bignumber"
 import { classnames } from "../../styles"
-import { FunctionComponent, useEffect, useRef, useState } from "react"
+import { FunctionComponent, useCallback, useEffect, useRef, useState } from "react"
 import { InferType } from "yup"
 import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
 import { getNextNonce } from "../../context/commActions"
@@ -39,7 +39,7 @@ export const defaultAdvancedSettings: Required<TransactionAdvancedData> = {
     customAllowance: "0",
     customNonce: 0,
     flashbots: false,
-    slippage: 0.5,
+    slippage: 1.0,
 }
 
 export const defaultSettingsDisplay: AdvancedSettingsDisplay = {
@@ -169,7 +169,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
         }
     }
 
-    const validateSlippage = (v: string) => {
+    const validateSlippage = useCallback((v: string) => {
         if (!v) {
             setSlippageWarning(null)
             return
@@ -188,7 +188,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
         }
 
         setSlippageWarning(null)
-    }
+    }, [isFlashbotsEnabled])
 
     const onNonceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const inputLimit = 7
@@ -294,7 +294,16 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
 
         fetch()
 
-    }, [transactionId])
+    }, [
+        transactionId,
+        address,
+        advancedSettings.slippage,
+        defaultSettings.slippage,
+        isFlashbotsEnabled,
+        setAdvancedSettings,
+        setValue,
+        validateSlippage
+    ])
 
     useEffect(() => {
         if (isOpen) {
@@ -333,7 +342,18 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
             )
         }
 
-    }, [isOpen, nextNonce.current])
+    }, [
+        isOpen,
+        advancedSettings.customNonce,
+        advancedSettings.flashbots,
+        advancedSettings.slippage,
+        clearErrors,
+        defaultSettings.flashbots,
+        defaultSettings.slippage,
+        isFlashbotsAvailable,
+        setValue,
+        validateSlippage
+    ])
 
     return (
         <>

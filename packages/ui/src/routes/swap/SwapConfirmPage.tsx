@@ -1,4 +1,4 @@
-import AssetAmountDisplay from "../../components/assets/AssetAmountDisplay"
+
 import GasPriceComponent from "../../components/transactions/GasPriceComponent"
 import HardwareDeviceNotLinkedDialog from "../../components/dialog/HardwareDeviceNotLinkedDialog"
 import PopupFooter from "../../components/popup/PopupFooter"
@@ -9,27 +9,20 @@ import React, {
     useState,
     useEffect,
     useMemo,
-    useRef,
     FC,
-    useCallback,
     useLayoutEffect,
 } from "react"
 import TransactionDetails from "../../components/transactions/TransactionDetails"
 import WaitingDialog from "../../components/dialog/WaitingDialog"
-import arrowDown from "../../assets/images/icons/arrow_down_long.svg"
+
 import useCheckAccountDeviceLinked from "../../util/hooks/useCheckAccountDeviceLinked"
 import useLocalStorageState from "../../util/hooks/useLocalStorageState"
 import {
-    getExchangeParameters,
     executeExchange,
-    getLatestGasPrice,
     rejectTransaction,
-    getSwapTransactionGasLimit,
 } from "../../context/commActions"
 import {
-    SwapParameters,
     SwapQuoteResponse,
-    SwapRequestParams,
     SwapTransaction,
 } from "@block-wallet/background/controllers/SwapController"
 import {
@@ -42,18 +35,16 @@ import {
     calcExchangeRate,
     calculatePricePercentageImpact,
     calculateUsdValueDiff,
-    isSwapNativeTokenAddress,
     populateExchangeTransaction,
 } from "../../util/exchangeUtils"
-import { BigNumber } from "@ethersproject/bignumber"
+import { createTokenBigNumber } from "../../util/bigNumberUtils"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { classnames } from "../../styles"
-import { formatRounded } from "../../util/formatRounded"
+
 import { getDeviceFromAccountType } from "../../util/hardwareDevice"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
-import { useHasSufficientBalance } from "../../context/hooks/useHasSufficientBalance"
 import { useInProgressInternalTransaction } from "../../context/hooks/useInProgressInternalTransaction"
 import { useLocationRecovery } from "../../util/hooks/useLocationRecovery"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
@@ -63,11 +54,9 @@ import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionW
 import { useTokensList } from "../../context/hooks/useTokensList"
 import { isHardwareWallet } from "../../util/account"
 import useCountdown from "../../util/hooks/useCountdown"
-import { formatNumberLength } from "../../util/formatNumberLength"
+
 import OutlinedButton from "../../components/ui/OutlinedButton"
 import Icon, { IconName } from "../../components/ui/Icon"
-import RefreshLabel from "../../components/swaps/RefreshLabel"
-import { capitalize } from "../../util/capitalize"
 import {
     AdvancedSettings,
     defaultAdvancedSettings,
@@ -78,14 +67,16 @@ import { useBlankState } from "../../context/background/backgroundHooks"
 import { useTransactionById } from "../../context/hooks/useTransactionById"
 import useAwaitAllowanceTransactionDialog from "../../context/hooks/useAwaitAllowanceTransactionDialog"
 import WaitingAllowanceTransactionDialog from "../../components/dialog/WaitingAllowanceTransactionDialog"
-import ErrorMessage from "../../components/error/ErrorMessage"
-import Alert from "../../components/ui/Alert"
 import PriceImpactDialog from "../../components/swaps/PriceImpactDialog"
 import WarningDialog from "../../components/dialog/WarningDialog"
-import { formatCurrency } from "../../util/formatCurrency"
-import { simulateTransaction } from "../../context/commActions"
-import { SimulationResult } from "@block-wallet/background/controllers/SimulationController"
-import { toCurrencyAmount } from "../../util/formatCurrency"
+import SwapAlerts from "../../components/swap/SwapAlerts"
+import SwapAssetsDisplay from "../../components/swap/SwapAssetsDisplay"
+import SwapRateInfo from "../../components/swap/SwapRateInfo"
+import SwapSimulationDisplay from "../../components/swap/SwapSimulationDisplay"
+import { useSwapParameters } from "../../hooks/useSwapParameters"
+import { useSwapGasManagement } from "../../hooks/useSwapGasManagement"
+import { useSwapBalances } from "../../hooks/useSwapBalances"
+import { useSwapSimulation } from "../../hooks/useSwapSimulation"
 
 export interface SwapConfirmPageLocalState {
     fromToken: Token
@@ -107,6 +98,8 @@ const QUOTE_REFRESH_TIMEOUT = 1000 * 15
 const PRICE_IMPACT_THRESHOLD = 0.1
 const VALUE_DIFF_WARN_THRESHOLD = -0.05
 
+
+
 const SwapPageConfirm: FC<{}> = () => {
     const history = useOnMountHistory()
     const { exchangeRates, settings } = useBlankState()!
@@ -120,13 +113,6 @@ const SwapPageConfirm: FC<{}> = () => {
     const [overrideSimulationWarning, setOverrideSimulationWarning] = useState<boolean>(false)
     const [isPriceDiffDialogOpened, setIsPriceDiffDialogOpened] =
         useState<boolean>(false)
-    const [timeoutStart, setTimeoutStart] = useState<number | undefined>(
-        undefined
-    )
-    const { value: remainingSeconds } = useCountdown(
-        timeoutStart,
-        QUOTE_REFRESH_TIMEOUT
-    )
 
     const [persistedData, setPersistedData] =
         useLocalStorageState<SwapConfirmPagePersistedState>("swaps.confirm", {
@@ -158,7 +144,13 @@ const SwapPageConfirm: FC<{}> = () => {
                 }))
             }
         }
-    }, [inProgressTransaction?.id])
+    }, [
+        inProgressTransaction?.id,
+        persistedData.submitted,
+        persistedData.txId,
+        selectedAccount.accountType,
+        setPersistedData
+    ])
 
     useLayoutEffect(() => {
         if (
@@ -168,7 +160,12 @@ const SwapPageConfirm: FC<{}> = () => {
         ) {
             history.push("/")
         }
-    }, [])
+    }, [
+        inProgressTransaction?.id,
+        persistedData.submitted,
+        persistedData.txId,
+        history
+    ])
 
     const { gasPricesLevels } = useGasPriceData()
     const { isEIP1559Compatible } = useSelectedNetwork()
@@ -213,16 +210,77 @@ const SwapPageConfirm: FC<{}> = () => {
         closeDialog: closeAllowanceTxDialog,
     } = useAwaitAllowanceTransactionDialog(allowanceTransaction)
 
-    const [isFetchingSwaps, setIsFetchingSwaps] = useState<boolean>(false)
-    const [isGasLoading, setIsGasLoading] = useState<boolean>(true)
-    const [error, setError] = useState<string | undefined>(undefined)
-    const [swapParameters, setSwapParameters] = useState<
-        SwapParameters | undefined
-    >(undefined)
+
     const [showDetails, setShowDetails] = useState<boolean>(false)
     const [advancedSettings, setAdvancedSettings] = useState<
         WithRequired<TransactionAdvancedData, "slippage">
     >(defaultAdvancedSettings)
+
+    const isSwapping = status === "loading" && isOpen
+    const shouldFetchSwapParams = status !== "loading" && status !== "success"
+
+    const {
+        swapParameters,
+        error,
+        isLoading: isFetchingSwaps,
+        timeoutStart
+    } = useSwapParameters({
+        fromAddress: selectedAccount.address,
+        swapQuote,
+        slippage: advancedSettings.slippage,
+        shouldFetch: shouldFetchSwapParams && !isInProgressAllowanceTransaction,
+        refreshInterval: QUOTE_REFRESH_TIMEOUT
+    })
+
+    const { value: remainingSeconds } = useCountdown(
+        timeoutStart,
+        QUOTE_REFRESH_TIMEOUT
+    )
+
+    const {
+        defaultGas,
+        selectedFees,
+        selectedGasPrice,
+        selectedGasLimit,
+        isGasLoading,
+        gasError,
+        setSelectedFees,
+        setSelectedGasPrice,
+        setSelectedGasLimit,
+    } = useSwapGasManagement({
+        swapParameters,
+        isEIP1559Compatible,
+        defaultGasPrices: {
+            gasPrice: gasPricesLevels.average.gasPrice?.toString(),
+            maxPriorityFeePerGas: gasPricesLevels.average.maxPriorityFeePerGas?.toString(),
+            maxFeePerGas: gasPricesLevels.average.maxFeePerGas?.toString(),
+        },
+        hasBalance: true
+    })
+
+    const feePerGas = isEIP1559Compatible
+        ? selectedFees.maxFeePerGas
+        : selectedGasPrice
+    const fee = selectedGasLimit.mul(feePerGas)
+
+    const {
+        fromTokenAmount,
+        hasBalance,
+    } = useSwapBalances({
+        swapParameters,
+        swapQuote,
+        fromToken,
+        nativeToken: nativeToken.token,
+        fee
+    })
+
+    const {
+        simulation,
+        simulationError,
+    } = useSwapSimulation({
+        swapParameters,
+        isSimulationEnabled: settings.enableTransactionSimulation
+    })
 
     const pricePercentageImpact = useMemo(() => {
         if (swapParameters) {
@@ -230,11 +288,11 @@ const SwapPageConfirm: FC<{}> = () => {
                 exchangeRates,
                 {
                     token: swapParameters.fromToken,
-                    amount: BigNumber.from(swapParameters.fromTokenAmount ?? 0),
+                    amount: createTokenBigNumber(swapParameters.fromTokenAmount, swapParameters.fromToken.decimals),
                 },
                 {
                     token: swapParameters.toToken,
-                    amount: BigNumber.from(swapParameters.toTokenAmount ?? 0),
+                    amount: createTokenBigNumber(swapParameters.toTokenAmount, swapParameters.toToken.decimals),
                 }
             )
         }
@@ -245,88 +303,38 @@ const SwapPageConfirm: FC<{}> = () => {
         const fromT = swapParameters
             ? {
                 token: swapParameters.fromToken,
-                amount: BigNumber.from(swapParameters.fromTokenAmount ?? 0),
+                amount: createTokenBigNumber(swapParameters.fromTokenAmount, swapParameters.fromToken.decimals),
             }
             : {
                 token: swapQuote.fromToken,
-                amount: BigNumber.from(swapQuote.fromTokenAmount ?? 0),
+                amount: createTokenBigNumber(swapQuote.fromTokenAmount, swapQuote.fromToken.decimals),
             }
 
         const toT = swapParameters
             ? {
                 token: swapParameters.toToken,
-                amount: BigNumber.from(swapParameters.toTokenAmount ?? 0),
+                amount: createTokenBigNumber(swapParameters.toTokenAmount, swapParameters.toToken.decimals),
             }
             : {
                 token: swapQuote.toToken,
-                amount: BigNumber.from(swapQuote.toTokenAmount ?? 0),
+                amount: createTokenBigNumber(swapQuote.toTokenAmount, swapQuote.toToken.decimals),
             }
 
         return calculateUsdValueDiff(exchangeRates, fromT, toT)
     }, [swapParameters, swapQuote, exchangeRates])
 
-    const [defaultGas, setDefaultGas] = useState<{
-        gasPrice: BigNumber
-        gasLimit: BigNumber
-    }>({
-        gasPrice: BigNumber.from(gasPricesLevels.average.gasPrice ?? "0"),
-        gasLimit: BigNumber.from(0),
-    })
-    const [selectedFees, setSelectedFees] = useState({
-        maxPriorityFeePerGas: BigNumber.from(
-            gasPricesLevels.average.maxPriorityFeePerGas ?? "0"
-        ),
-        maxFeePerGas: BigNumber.from(
-            gasPricesLevels.average.maxFeePerGas ?? "0"
-        ),
-    })
-    const [selectedGasPrice, setSelectedGasPrice] = useState(
-        BigNumber.from(gasPricesLevels.average.gasPrice ?? "0")
-    )
-    const [selectedGasLimit, setSelectedGasLimit] = useState(BigNumber.from(0))
 
-    const isSwapping = status === "loading" && isOpen
-    const shouldFetchSwapParams = status !== "loading" && status !== "success"
-    const isGasInitialized = useRef<boolean>(false)
 
-    const feePerGas = isEIP1559Compatible
-        ? selectedFees.maxFeePerGas
-        : selectedGasPrice
 
-    const fee = selectedGasLimit.mul(feePerGas)
-    const isSwappingNativeToken = isSwapNativeTokenAddress(
-        swapParameters?.fromToken.address || swapQuote.fromToken.address
-    )
-    const total = isSwappingNativeToken
-        ? BigNumber.from(
-            swapParameters?.fromTokenAmount || swapQuote.fromTokenAmount
-        ).add(fee)
-        : fee
 
-    const hasNativeAssetBalance = useHasSufficientBalance(
-        total,
-        nativeToken.token
-    )
 
-    const hasFromTokenBalance = useHasSufficientBalance(
-        BigNumber.from(
-            swapParameters?.fromTokenAmount || swapQuote.fromTokenAmount
-        ),
-        fromToken
-    )
 
-    const hasBalance = isSwappingNativeToken
-        ? hasNativeAssetBalance
-        : hasNativeAssetBalance && hasFromTokenBalance
-
+    const toTokenAmount = swapParameters?.toTokenAmount || swapQuote.toTokenAmount
+    const toTokenDecimals = swapParameters?.toToken.decimals || swapQuote.toToken.decimals
     const exchangeRate = calcExchangeRate(
-        BigNumber.from(
-            swapParameters?.fromTokenAmount || swapQuote.fromTokenAmount
-        ),
+        fromTokenAmount,
         fromToken.decimals,
-        BigNumber.from(
-            swapParameters?.toTokenAmount || swapQuote.toTokenAmount
-        ),
+        createTokenBigNumber(toTokenAmount, toTokenDecimals),
         toToken.decimals
     )
 
@@ -337,45 +345,9 @@ const SwapPageConfirm: FC<{}> = () => {
         )
     }, [usdValueDiff])
 
-    const [simulationError, setSimulationError] = useState<string | undefined>(
-        undefined
-    )
-    const [simulation, setSimulation] = useState<SimulationResult | undefined>(
-        undefined
-    )
 
-    useEffect(() => {
-        const run = async () => {
-            if (!swapParameters) return
-            if (!settings.enableTransactionSimulation) {
-                setSimulationError(undefined)
-                return
-            }
-            try {
-                const res = await simulateTransaction({
-                    from: swapParameters.tx.from,
-                    to: swapParameters.tx.to,
-                    data: swapParameters.tx.data,
-                    value: swapParameters.tx.value,
-                    gasLimit: BigNumber.from(swapParameters.tx.gas || 0),
-                    gasPrice: swapParameters.tx.gasPrice
-                        ? BigNumber.from(swapParameters.tx.gasPrice)
-                        : undefined,
-                } as any)
-                if (!res.success) {
-                    setSimulationError(res.revertReason || res.errorMessage)
-                    setSimulation(undefined)
-                } else {
-                    setSimulationError(undefined)
-                    setSimulation(res)
-                }
-            } catch (e: any) {
-                setSimulationError(e?.message || "Simulation error")
-                setSimulation(undefined)
-            }
-        }
-        run()
-    }, [swapParameters, settings.enableTransactionSimulation])
+
+
 
     const onSubmit = async () => {
         if (error || !swapParameters || !hasBalance) return
@@ -424,108 +396,24 @@ const SwapPageConfirm: FC<{}> = () => {
         }
     }
 
-    const updateSwapParameters = useCallback(async () => {
-        setError(undefined)
-        setIsFetchingSwaps(true)
-        const params: SwapRequestParams = {
-            fromAddress: selectedAccount.address,
-            fromToken: swapQuote.fromToken,
-            toToken: swapQuote.toToken,
-            amount: swapQuote.fromTokenAmount,
-            slippage: advancedSettings.slippage,
-        }
-        try {
-            const swapParams = await getExchangeParameters(
-                DEFAULT_EXCHANGE_TYPE,
-                params
-            )
-            setSwapParameters(swapParams)
-        } catch (error) {
-            setError(capitalize(error.message || "Error fetching swap"))
-        } finally {
-            setTimeoutStart(new Date().getTime())
-            setIsFetchingSwaps(false)
-        }
-    }, [
-        selectedAccount.address,
-        advancedSettings.slippage,
-        swapQuote.fromToken.address,
-        swapQuote.fromTokenAmount,
-        swapQuote.toToken.address,
-    ])
 
-    useEffect(() => {
-        const setGas = async () => {
-            if ((!swapParameters && error) || !hasBalance) {
-                setIsGasLoading(false)
-            }
-            if (swapParameters && isGasInitialized.current === false) {
-                setIsGasLoading(true)
 
-                try {
-                    let gasPrice: BigNumber = BigNumber.from(0)
 
-                    if (!isEIP1559Compatible) {
-                        gasPrice = await getLatestGasPrice()
-                    }
 
-                    let gasLimitEstimation = await getSwapTransactionGasLimit(
-                        swapParameters.tx
-                    )
 
-                    setDefaultGas({
-                        gasPrice: BigNumber.from(gasPrice),
-                        gasLimit: BigNumber.from(gasLimitEstimation.gasLimit),
-                    })
-
-                    isGasInitialized.current = true
-                } catch (error) {
-                    setError("Error fetching gas default")
-                } finally {
-                    setIsGasLoading(false)
-                }
-            }
-        }
-
-        setGas()
-
-    }, [swapParameters, error, hasBalance])
-
-    useEffect(() => {
-        if (!shouldFetchSwapParams || isInProgressAllowanceTransaction) {
-            setTimeoutStart(undefined)
-            return
-        }
-
-        let timeoutRef: ReturnType<typeof setTimeout>
-
-        async function fetchParams() {
-            await updateSwapParameters()
-            timeoutRef = setTimeout(fetchParams, QUOTE_REFRESH_TIMEOUT)
-        }
-
-        fetchParams()
-
-        return () => {
-            timeoutRef && clearTimeout(timeoutRef)
-        }
-    }, [
-        updateSwapParameters,
-        shouldFetchSwapParams,
-        isInProgressAllowanceTransaction,
-    ])
 
     const remainingSuffix = Math.ceil(remainingSeconds!)
         ? `${Math.floor(remainingSeconds!)}s`
         : ""
 
     const rate = useMemo(() => {
-        return BigNumber.from(
-            swapParameters?.toTokenAmount || swapQuote.toTokenAmount
+        return createTokenBigNumber(
+            swapParameters?.toTokenAmount || swapQuote.toTokenAmount,
+            swapParameters?.toToken.decimals || swapQuote.toToken.decimals
         )
-    }, [swapParameters?.toTokenAmount, swapQuote.toTokenAmount])
+    }, [swapParameters?.toTokenAmount, swapQuote.toTokenAmount, swapParameters?.toToken.decimals, swapQuote.toToken.decimals])
 
-    let errMessage = error
+    let errMessage = error || gasError
 
     if (!hasBalance && swapParameters) {
         errMessage = NOT_ENOUGH_BALANCE_ERROR
@@ -692,11 +580,11 @@ const SwapPageConfirm: FC<{}> = () => {
                     isOpen={isPriceImpactDialogOpened}
                     fromToken={{
                         token: swapParameters.fromToken,
-                        amount: BigNumber.from(swapParameters.fromTokenAmount),
+                        amount: createTokenBigNumber(swapParameters.fromTokenAmount, swapParameters.fromToken.decimals),
                     }}
                     toToken={{
                         token: swapParameters.toToken,
-                        amount: BigNumber.from(swapParameters.toTokenAmount),
+                        amount: createTokenBigNumber(swapParameters.toTokenAmount, swapParameters.toToken.decimals),
                     }}
                     onClose={() => setIsPriceImpactDialogOpened(false)}
                     priceImpactPercentage={pricePercentageImpact}
@@ -704,126 +592,33 @@ const SwapPageConfirm: FC<{}> = () => {
             )}
 
             <div className="flex flex-col px-6 py-3 h-full">
-                <AssetAmountDisplay
-                    asset={fromToken}
-                    amount={BigNumber.from(
-                        swapParameters?.fromTokenAmount ||
-                        swapQuote.fromTokenAmount
+                <SwapAssetsDisplay
+                    fromToken={fromToken}
+                    toToken={toToken}
+                    fromAmount={fromTokenAmount}
+                    toAmount={createTokenBigNumber(
+                        swapParameters?.toTokenAmount || swapQuote.toTokenAmount,
+                        toTokenDecimals
                     )}
                 />
 
-                <div className="pt-5">
-                    <hr className="-mx-5" />
-                    <div className="flex -translate-y-2/4 justify-center items-center mx-auto rounded-full w-8 h-8 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 z-10">
-                        <img
-                            src={arrowDown}
-                            className="h-4 w-auto mx-auto dark:invert"
-                            alt="arrow"
-                        />
-                    </div>
-                </div>
-
-                <AssetAmountDisplay
-                    asset={toToken}
-                    amount={BigNumber.from(
-                        swapParameters?.toTokenAmount || swapQuote.toTokenAmount
-                    )}
+                <SwapRateInfo
+                    fromToken={fromToken}
+                    toToken={toToken}
+                    exchangeRate={exchangeRate}
+                    usdValueDiff={usdValueDiff}
+                    shouldWarnPriceDiff={shouldWarnPriceDiff}
+                    onPriceDiffClick={() => setIsPriceDiffDialogOpened(true)}
                 />
-
-                <p className="text-sm py-1 leading-loose text-gray-600 dark:text-gray-400 uppercase text-center w-full">
-                    {`1 ${fromToken.symbol} = ${formatNumberLength(
-                        formatRounded(exchangeRate.toFixed(10), 8),
-                        10
-                    )} ${toToken.symbol}`}
-                </p>
-                <p
-                    className="text-[13px] pb-1 pt-0.5 text-gray-700 dark:text-gray-300 text-center cursor-pointer"
-                    onClick={() => {
-                        if (shouldWarnPriceDiff) setIsPriceDiffDialogOpened(true)
-                    }}
-                    title={shouldWarnPriceDiff ? "Price difference is too big" : undefined}
-                >
-                    Value diff {usdValueDiff.percent !== undefined
-                        ? `${(usdValueDiff.percent * 100).toFixed(2)}%`
-                        : "–"} {usdValueDiff.absolute !== undefined
-                            ? `(${formatCurrency(Math.abs(usdValueDiff.absolute), { showSymbol: true, showCurrency: false })})`
-                            : ""}
-                </p>
-                {simulationError && (
-                    <p className="text-[12px] text-center text-red-600 dark:text-red-400">
-                        Simulation failed: {simulationError}
-                    </p>
-                )}
-                {!simulationError && (
-                    <p className="text-[12px] text-center text-gray-500 dark:text-gray-400">
-                        Simulation passed
-                    </p>
-                )}
-
-                {simulation && simulation.success && (
-                    <div className="mt-1 text-[12px] text-gray-700 dark:text-gray-300">
-                        {(() => {
-                            try {
-                                let usdDelta = 0
-                                if (simulation.nativeBalanceDelta && nativeToken) {
-                                    const r = exchangeRates[nativeToken.token.symbol]
-                                    if (r) {
-                                        const amt = BigNumber.from(simulation.nativeBalanceDelta.startsWith('-') ? simulation.nativeBalanceDelta.slice(1) : simulation.nativeBalanceDelta)
-                                        const sign = simulation.nativeBalanceDelta.startsWith('-') ? -1 : 1
-                                        usdDelta += sign * toCurrencyAmount(amt, r, nativeToken.token.decimals)
-                                    }
-                                }
-                                if (simulation.erc20Transfers && simulation.erc20Transfers.length > 0) {
-                                    simulation.erc20Transfers.slice(0, 6).forEach(t => {
-                                        const symbol = t.token?.toLowerCase() === fromToken.address?.toLowerCase() ? fromToken.symbol : (t.token?.toLowerCase() === toToken.address?.toLowerCase() ? toToken.symbol : undefined)
-                                        const decimals = t.token?.toLowerCase() === fromToken.address?.toLowerCase() ? fromToken.decimals : (t.token?.toLowerCase() === toToken.address?.toLowerCase() ? toToken.decimals : undefined)
-                                        if (symbol && typeof decimals === 'number') {
-                                            const rate = exchangeRates[symbol]
-                                            if (rate) {
-                                                const val = BigNumber.from(t.value)
-                                                const isToUser = t.to?.toLowerCase() === selectedAccount.address.toLowerCase()
-                                                const isFromUser = t.from?.toLowerCase() === selectedAccount.address.toLowerCase()
-                                                if (isToUser || isFromUser) {
-                                                    const delta = toCurrencyAmount(val, rate, decimals) * (isToUser ? 1 : -1)
-                                                    usdDelta += delta
-                                                }
-                                            }
-                                        }
-                                    })
-                                }
-                                const sign = usdDelta >= 0 ? '' : '-'
-                                const absUsd = Math.abs(usdDelta)
-                                return (
-                                    <div className="text-center font-medium">
-                                        Net USD delta: {sign}{formatCurrency(absUsd, { showSymbol: true, showCurrency: false })}
-                                    </div>
-                                )
-                            } catch {
-                                return null
-                            }
-                        })()}
-                        {simulation.nativeBalanceDelta && simulation.nativeBalanceDelta !== '0' && (
-                            <div className="text-center">
-                                Native delta: {simulation.nativeBalanceDelta}
-                            </div>
-                        )}
-                        {simulation.erc20Transfers && simulation.erc20Transfers.length > 0 && (
-                            <div className="mt-1">
-                                <div className="text-center font-medium">Token transfers detected</div>
-                                <ul className="max-h-20 overflow-auto text-xs mt-1 space-y-1">
-                                    {simulation.erc20Transfers.slice(0, 4).map((t, idx) => (
-                                        <li key={idx} className="text-center break-all">
-                                            {t.value} @ {t.token} → {t.to}
-                                        </li>
-                                    ))}
-                                    {simulation.erc20Transfers.length > 4 && (
-                                        <li className="text-center">…</li>
-                                    )}
-                                </ul>
-                            </div>
-                        )}
-                    </div>
-                )}
+                <SwapSimulationDisplay
+                    simulation={simulation}
+                    simulationError={simulationError}
+                    fromToken={fromToken}
+                    toToken={toToken}
+                    nativeToken={nativeToken.token}
+                    exchangeRates={exchangeRates}
+                    selectedAccountAddress={selectedAccount.address}
+                />
 
                 <p className="text-[13px] font-medium pb-1 pt-0.5 text-gray-700 dark:text-gray-300">
                     Gas Price
@@ -910,62 +705,16 @@ const SwapPageConfirm: FC<{}> = () => {
                     </div>
                 </div>
                 <div className="h-full flex flex-col justify-end space-y-3">
-                    {isFetchingSwaps ? (
-                        <div />
-                    ) : (
-                        <>
-                            {errMessage ? (
-                                <ErrorMessage>{errMessage}</ErrorMessage>
-                            ) : priceImpactWarning ? (
-                                <Alert
-                                    type="warn"
-                                    className={classnames(
-                                        "p-2",
-                                        "font-semibold",
-                                        "cursor-pointer hover:opacity-50",
-                                        "text-left"
-                                    )}
-                                    onClick={() => setIsPriceImpactDialogOpened(true)}
-                                >
-                                    <span>
-                                        {pricePercentageImpact ? (
-                                            <span>
-                                                High price impact! More than{" "}
-                                                {(
-                                                    pricePercentageImpact * 100
-                                                ).toFixed(2)}
-                                                % loss
-                                            </span>
-                                        ) : (
-                                            <span>
-                                                Unable to calculate the price
-                                                impact
-                                            </span>
-                                        )}
-                                    </span>
-                                </Alert>
-                            ) : shouldWarnPriceDiff ? (
-                                <Alert
-                                    type="warn"
-                                    className={classnames(
-                                        "p-2",
-                                        "font-semibold",
-                                        "cursor-pointer hover:opacity-50",
-                                        "text-left"
-                                    )}
-                                    onClick={() => setIsPriceDiffDialogOpened(true)}
-                                >
-                                    <span>Price difference is too big</span>
-                                </Alert>
-                            ) : null}
-                            {remainingSuffix && (
-                                <RefreshLabel
-                                    value={remainingSuffix}
-                                    className="pb-1"
-                                />
-                            )}
-                        </>
-                    )}
+                    <SwapAlerts
+                        errorMessage={errMessage}
+                        priceImpactWarning={priceImpactWarning}
+                        pricePercentageImpact={pricePercentageImpact}
+                        shouldWarnPriceDiff={shouldWarnPriceDiff}
+                        remainingSuffix={remainingSuffix}
+                        isFetchingSwaps={isFetchingSwaps}
+                        onPriceImpactClick={() => setIsPriceImpactDialogOpened(true)}
+                        onPriceDiffClick={() => setIsPriceDiffDialogOpened(true)}
+                    />
                 </div>
             </div>
         </PopupLayout>

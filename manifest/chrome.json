@@ -50,6 +50,11 @@
         "tabs",
         "offscreen"
     ],
+    "host_permissions": [
+        "http://localhost:8545/*",
+        "http://127.0.0.1:8545/*",
+        "https://www.4byte.directory/*"
+    ],
     "web_accessible_resources": [
         {
             "resources": [

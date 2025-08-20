@@ -12,7 +12,6 @@ import { InferType } from "yup"
 import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
 import { getNextNonce } from "../../context/commActions"
 import { useForm } from "react-hook-form"
-import { useOnClickOutside } from "../../util/useOnClickOutside"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { yupResolver } from "@hookform/resolvers/yup"
 import OutlinedButton from "../ui/OutlinedButton"
@@ -128,10 +127,6 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
     const [slippageWarning, setSlippageWarning] = useState<string | null>(null)
 
     const nextNonce = useRef<number>(defaultSettings.customNonce)
-    const clickOutsideRef = useRef<HTMLDivElement | null>(null)
-    useOnClickOutside(clickOutsideRef, () => {
-        setIsOpen(false)
-    })
 
     const schema = GetAdvancedSettingsSchema(display)
 
@@ -361,31 +356,25 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                 </div>
             )}
 
-            <Dialog open={isOpen} className="px-6">
-                <div className="relative">
+            <Dialog open={isOpen} className="max-h-[560px]">
+                <div className="relative flex flex-col h-full">
                     <button
                         onClick={() => setIsOpen(false)}
-                        className="absolute -top-2 -right-2 p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="absolute top-0 right-2 z-10 p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
                         aria-label="Close advanced settings"
                     >
                         <CloseIcon size="16" />
                     </button>
-
-                    <div className="text-center mb-6">
-                        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 dark:from-purple-400 dark:to-purple-500 flex items-center justify-center shadow-lg">
-                            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
-                            </svg>
-                        </div>
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                    <div className="text-center px-6 pt-1 pb-2 shrink-0">
+                        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
                             {label}
                         </h2>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
                             Customize transaction parameters for optimal execution
                         </p>
                     </div>
 
-                    <div className="space-y-6" ref={clickOutsideRef}>
+                    <div className="flex-1 overflow-y-auto px-6 space-y-4">
                         {display.slippage && (
                             <div className="space-y-3">
                                 <div className="flex items-center space-x-2">
@@ -540,7 +529,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                         )}
 
                         {/* Reset button */}
-                        <div className="flex justify-center pt-2">
+                        <div className="flex justify-center pt-1">
                             <button
                                 onClick={resetSettings}
                                 className="text-sm font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:underline transition-colors duration-200"
@@ -550,22 +539,20 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                         </div>
 
                         {/* Actions */}
-                        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                            <div className="flex space-x-3">
-                                <button
-                                    onClick={() => setIsOpen(false)}
-                                    className="flex-1 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors duration-200"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={onSubmit}
-                                    disabled={!(canSubmit && isModified())}
-                                    className="flex-1 px-4 py-3 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 dark:from-purple-500 dark:to-purple-600 dark:hover:from-purple-600 dark:hover:to-purple-700 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:transform-none disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-md"
-                                >
-                                    Save Settings
-                                </button>
-                            </div>
+                        <div className="flex space-x-3 pt-6">
+                            <button
+                                onClick={() => setIsOpen(false)}
+                                className="flex-1 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors duration-200"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={onSubmit}
+                                disabled={!(canSubmit && isModified())}
+                                className="flex-1 px-4 py-3 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 dark:from-purple-500 dark:to-purple-600 dark:hover:from-purple-600 dark:hover:to-purple-700 rounded-xl transition-all duration-200 transform hover:scale-[1.02] disabled:transform-none disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Save Settings
+                            </button>
                         </div>
                     </div>
                 </div>

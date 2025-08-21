@@ -24,9 +24,8 @@ const SwapAssetsDisplay: React.FC<SwapAssetsDisplayProps> = ({
                 amount={fromAmount}
             />
 
-            <div className="pt-5">
-                <hr className="-mx-5" />
-                <div className="flex -translate-y-2/4 justify-center items-center mx-auto rounded-full w-8 h-8 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 z-10">
+            <div className="flex justify-center items-center py-5">
+                <div className="flex justify-center items-center mx-auto rounded-full w-8 h-8 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                     <img
                         src={arrowDown}
                         className="h-4 w-auto mx-auto dark:invert"

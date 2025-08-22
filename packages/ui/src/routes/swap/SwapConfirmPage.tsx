@@ -251,9 +251,9 @@ const SwapPageConfirm: FC<{}> = () => {
         swapParameters,
         isEIP1559Compatible,
         defaultGasPrices: {
-            gasPrice: gasPricesLevels.average.gasPrice?.toString(),
-            maxPriorityFeePerGas: gasPricesLevels.average.maxPriorityFeePerGas?.toString(),
-            maxFeePerGas: gasPricesLevels.average.maxFeePerGas?.toString(),
+            gasPrice: gasPricesLevels.average.gasPrice ?? "0",
+            maxPriorityFeePerGas: gasPricesLevels.average.maxPriorityFeePerGas ?? "0",
+            maxFeePerGas: gasPricesLevels.average.maxFeePerGas ?? "0",
         },
         hasBalance: true
     })
@@ -277,6 +277,7 @@ const SwapPageConfirm: FC<{}> = () => {
     const {
         simulation,
         simulationError,
+        isSimulating,
     } = useSwapSimulation({
         swapParameters,
         isSimulationEnabled: settings.enableTransactionSimulation
@@ -613,6 +614,8 @@ const SwapPageConfirm: FC<{}> = () => {
                 <SwapSimulationDisplay
                     simulation={simulation}
                     simulationError={simulationError}
+                    isSimulating={isSimulating}
+                    isSimulationEnabled={settings.enableTransactionSimulation}
                     fromToken={fromToken}
                     toToken={toToken}
                     nativeToken={nativeToken.token}

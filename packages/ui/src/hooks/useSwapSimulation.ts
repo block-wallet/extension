@@ -3,6 +3,8 @@ import { SwapParameters } from "@block-wallet/background/controllers/SwapControl
 import { SimulationResult } from "@block-wallet/background/controllers/SimulationController"
 import { simulateTransaction } from "../context/commActions"
 import { createEtherBigNumber, createGasBigNumber } from "../util/bigNumberUtils"
+import { parseUnits } from "@ethersproject/units"
+import { BigNumber } from "@ethersproject/bignumber"
 
 interface UseSwapSimulationProps {
     swapParameters: SwapParameters | undefined
@@ -41,15 +43,32 @@ export const useSwapSimulation = ({
             setSimulationError(undefined)
 
             try {
+                let normalizedGasPrice = undefined as ReturnType<typeof createGasBigNumber> | undefined
+                try {
+                    const gp: any = (swapParameters as any).tx?.gasPrice
+                    if (gp !== undefined && gp !== null) {
+                        if (typeof gp === 'string' && !gp.startsWith('0x') && gp.length <= 10) {
+                            normalizedGasPrice = createGasBigNumber(parseUnits(gp, 'gwei').toString())
+                        } else {
+                            normalizedGasPrice = createGasBigNumber(gp)
+                        }
+
+                        const minReasonableWei = BigNumber.from(parseUnits('1', 'gwei'))
+                        if (normalizedGasPrice.lt(minReasonableWei)) {
+                            normalizedGasPrice = undefined
+                        }
+                    }
+                } catch (_) {
+                    normalizedGasPrice = undefined
+                }
+
                 const simulationParams = {
                     from: swapParameters.tx.from,
                     to: swapParameters.tx.to,
                     data: swapParameters.tx.data,
                     value: createEtherBigNumber(swapParameters.tx.value),
                     gasLimit: createGasBigNumber(swapParameters.tx.gas || 0),
-                    gasPrice: swapParameters.tx.gasPrice
-                        ? createGasBigNumber(swapParameters.tx.gasPrice)
-                        : undefined,
+                    gasPrice: normalizedGasPrice,
                 }
 
                 const result = await simulateTransaction(simulationParams)

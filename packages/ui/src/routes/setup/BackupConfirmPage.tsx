@@ -5,7 +5,6 @@ import PageLayout from "../../components/PageLayout"
 import Divider from "../../components/Divider"
 import Spinner from "../../components/spinner/Spinner"
 import classnames from "classnames"
-import { Classes } from "../../styles/classes"
 import { verifySeedPhrase } from "../../context/commActions"
 import { findPositionOfSelectedWord, shuffleArray } from "../../util"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
@@ -27,7 +26,9 @@ const SeedWordsInput: FunctionComponent<{
     words: SeedPhraseWord[]
     value: SeedPhraseWord[]
     onChange: (words: SeedPhraseWord[]) => void
-}> = ({ words, value, onChange }) => {
+    compact?: boolean
+    totalCount: number
+}> = ({ words, value, onChange, compact = false, totalCount }) => {
     const [availableWords, setAvailableWords] = useState([...words])
 
     const handleWordClick = (
@@ -39,7 +40,6 @@ const SeedWordsInput: FunctionComponent<{
         let updatedAvailableWords = [...availableWords]
 
         if (isInputClick) {
-            // remove the word from the input
             newValue.splice(wordIndex, 1)
             const wordIndexInWords = findPositionOfSelectedWord(
                 updatedAvailableWords,
@@ -48,7 +48,6 @@ const SeedWordsInput: FunctionComponent<{
             updatedAvailableWords[wordIndexInWords].isSelected = false
         } else {
             if (seedWord.isSelected) {
-                // find the word in the input and remove it
                 const wordIndexInInput = findPositionOfSelectedWord(
                     newValue,
                     seedWord
@@ -67,53 +66,59 @@ const SeedWordsInput: FunctionComponent<{
     }
 
     return (
-        <div className="space-y-6">
-            {/* Input area */}
-            <div className="bg-white dark:bg-gray-800/50 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-4 min-h-[120px]">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                    Selected Words ({value.length}/12)
+        <div className={compact ? "flex-1 flex flex-col space-y-3" : "space-y-6"}>
+            <div className={compact ? "bg-white dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 rounded-lg p-3 min-h-[90px]" : "bg-white dark:bg-gray-800/50 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-4 min-h-[120px]"}>
+                <h3 className={compact ? "text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2" : "text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3"}>
+                    Selected Words ({value.length}/{totalCount})
                 </h3>
-                <div className="grid grid-cols-4 gap-2">
+                <div className={compact ? "grid grid-cols-3 gap-2" : "grid grid-cols-4 gap-2"}>
                     {value.map((wordObj, index) => (
                         <button
                             type="button"
                             key={`${wordObj.word}_${index}`}
-                            className="group relative bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg py-2 px-3 text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95"
+                            className={compact
+                                ? "group relative bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-md py-1.5 px-2 text-xs font-medium shadow"
+                                : "group relative bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg py-2 px-3 text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95"}
                             onClick={() => handleWordClick(wordObj, index, true)}
                         >
-                            <span className="mr-1 text-xs opacity-75">#{index + 1}</span>
+                            <span className={compact ? "mr-1 text-[10px] opacity-75" : "mr-1 text-xs opacity-75"}>#{index + 1}</span>
                             {wordObj.word}
-                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                ×
-                            </div>
+                            {!compact && (
+                                <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                    ×
+                                </div>
+                            )}
                         </button>
                     ))}
                 </div>
                 {value.length === 0 && (
-                    <div className="flex items-center justify-center h-16 text-gray-400 dark:text-gray-500">
-                        <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className={compact ? "flex items-center justify-center h-12 text-gray-400 dark:text-gray-500" : "flex items-center justify-center h-16 text-gray-400 dark:text-gray-500"}>
+                        <svg className={compact ? "w-5 h-5 mr-2" : "w-6 h-6 mr-2"} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M7 11l5-5m0 0l5 5m-5-5v12" />
                         </svg>
-                        <span className="text-sm">Click words below to add them</span>
+                        <span className={compact ? "text-xs" : "text-sm"}>Click words below to add them</span>
                     </div>
                 )}
             </div>
 
-            {/* Available words */}
             <div>
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                <h3 className={compact ? "text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2" : "text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3"}>
                     Available Words
                 </h3>
-                <div className="grid grid-cols-4 gap-2">
+                <div className={compact ? "grid grid-cols-3 gap-2" : "grid grid-cols-4 gap-2"}>
                     {availableWords.map((wordObj, index) => (
                         <button
                             type="button"
                             key={`${wordObj.word}_${index}`}
                             className={classnames(
-                                "rounded-lg py-3 px-3 text-sm font-medium border-2 transition-all duration-200 transform hover:scale-105 active:scale-95",
+                                compact
+                                    ? "rounded-md py-2 px-2 text-xs font-medium border"
+                                    : "rounded-lg py-3 px-3 text-sm font-medium border-2 transition-all duration-200 transform hover:scale-105 active:scale-95",
                                 wordObj.isSelected
                                     ? "border-transparent bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-50"
-                                    : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800/50 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm hover:shadow-md"
+                                    : compact
+                                        ? "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800/50 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                        : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800/50 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm hover:shadow-md"
                             )}
                             onClick={() => {
                                 return handleWordClick(wordObj, index, false)
@@ -129,7 +134,6 @@ const SeedWordsInput: FunctionComponent<{
     )
 }
 
-// subcomponent
 const SeedPhraseBlock = (props: any) => {
     const {
         isReminder,
@@ -141,27 +145,33 @@ const SeedPhraseBlock = (props: any) => {
 
     return (
         <div className={classnames(
-            "space-y-6",
-            isReminder ? "p-4" : "p-8"
+            isReminder ? "flex-1 flex flex-col justify-between p-4 space-y-3" : "space-y-6 p-8"
         )}>
-            {/* Instructions */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4">
-                <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0">
-                        <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 className="text-sm font-bold text-blue-900 dark:text-blue-100 mb-1">
-                            Verification Instructions
-                        </h3>
-                        <p className="text-xs text-blue-800 dark:text-blue-200 leading-relaxed">
-                            Make sure that you've got it right - type out your phrase by selecting the words below in the correct order.
-                        </p>
+            {isReminder ? (
+                <div className="text-center">
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Select the words in the correct order to verify your phrase.
+                    </p>
+                </div>
+            ) : (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4">
+                    <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0">
+                            <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-bold text-blue-900 dark:text-blue-100 mb-1">
+                                Verification Instructions
+                            </h3>
+                            <p className="text-xs text-blue-800 dark:text-blue-200 leading-relaxed">
+                                Make sure that you've got it right - type out your phrase by selecting the words below in the correct order.
+                            </p>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Error display */}
             {verificationError && (
@@ -189,6 +199,8 @@ const SeedPhraseBlock = (props: any) => {
                 words={seedWords}
                 value={inputWords}
                 onChange={(words) => onSeedWordsChange(words)}
+                compact={isReminder}
+                totalCount={seedWords.length}
             />
         </div>
     )
@@ -225,6 +237,7 @@ const BackupConfirmPage = () => {
         })
         return wordsForSeedPhrase
     }, [seedPhrase])
+    const totalWordsCount = useMemo(() => seedPhrase.split(" ").length, [seedPhrase])
 
     const isPhraseValid = () => {
         let inputPhrase: string[] = []
@@ -276,6 +289,7 @@ const BackupConfirmPage = () => {
                         </PopupFooter>
                     }
                 >
+                    <div className="flex-1 flex flex-col">
                     <SeedPhraseBlock
                         isReminder={true}
                         verificationError={verificationError}
@@ -283,6 +297,7 @@ const BackupConfirmPage = () => {
                         inputWords={inputWords}
                         onSeedWordsChange={(words: any) => setInputWords(words)}
                     />
+                    </div>
                 </PopupLayout>
             ) : (
                 // browser tab version during installation
@@ -383,7 +398,7 @@ const BackupConfirmPage = () => {
 
                                     {!isPhraseValid() && inputWords.length > 0 && (
                                         <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-3">
-                                            Please select all 12 words in the correct order
+                                            Please select all {totalWordsCount} words in the correct order
                                         </p>
                                     )}
                                 </div>

@@ -28,6 +28,10 @@ interface ClickToRevealProps {
      * Allow downloading as text file
      */
     allowDownload?: boolean
+    /**
+     * Compact layout optimized for extension popup (reduced paddings/sizes)
+     */
+    compact?: boolean
 }
 
 const ClickToReveal: FunctionComponent<ClickToRevealProps> = ({
@@ -37,6 +41,7 @@ const ClickToReveal: FunctionComponent<ClickToRevealProps> = ({
     onClick,
     className,
     allowDownload = false,
+    compact = false,
 }) => {
     const [copied, setCopied] = useState(false)
 
@@ -62,21 +67,27 @@ const ClickToReveal: FunctionComponent<ClickToRevealProps> = ({
         <div
             className={classnames(
                 "flex flex-col items-center justify-center w-full border border-primary-grey-hover rounded-lg transition-all",
-                revealed ? "bg-primary-blue-50 p-6" : "min-h-[150px] cursor-pointer",
+                revealed
+                    ? compact
+                        ? "bg-primary-blue-50 p-3"
+                        : "bg-primary-blue-50 p-6"
+                    : compact
+                    ? "min-h-[100px] cursor-pointer"
+                    : "min-h-[150px] cursor-pointer",
                 className
             )}
             onClick={!revealed ? onClick : undefined}
         >
             {revealed ? (
                 <div className="w-full">
-                    <div className="flex justify-between items-center mb-3">
-                        <span className="text-sm font-semibold text-primary-blue-default">
+                    <div className={compact ? "flex justify-between items-center mb-2" : "flex justify-between items-center mb-3"}>
+                        <span className={compact ? "text-xs font-semibold text-gray-900 dark:text-gray-100" : "text-sm font-semibold text-primary-blue-default"}>
                             Your Secret Recovery Phrase
                         </span>
                         <div className="flex space-x-2">
                             {allowDownload && (
                                 <button
-                                    className="p-2 text-gray-600 hover:text-primary-blue-default rounded-full hover:bg-primary-blue-100"
+                                    className={compact ? "p-1 text-gray-600 dark:text-gray-300 hover:text-primary-blue-default rounded hover:bg-primary-blue-100" : "p-2 text-gray-600 hover:text-primary-blue-default rounded-full hover:bg-primary-blue-100"}
                                     onClick={downloadAsFile}
                                     title="Download as file"
                                 >
@@ -84,12 +95,12 @@ const ClickToReveal: FunctionComponent<ClickToRevealProps> = ({
                                 </button>
                             )}
                             <button
-                                className="p-2 text-gray-600 hover:text-primary-blue-default rounded-full hover:bg-primary-blue-100"
+                                className={compact ? "p-1 text-gray-600 dark:text-gray-300 hover:text-primary-blue-default rounded hover:bg-primary-blue-100" : "p-2 text-gray-600 hover:text-primary-blue-default rounded-full hover:bg-primary-blue-100"}
                                 onClick={copyToClipboard}
                                 title="Copy to clipboard"
                             >
                                 {copied ? (
-                                    <span className="text-xs">Copied!</span>
+                                    <span className="text-[10px]">Copied!</span>
                                 ) : (
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -99,27 +110,29 @@ const ClickToReveal: FunctionComponent<ClickToRevealProps> = ({
                             </button>
                         </div>
                     </div>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 text-sm">
+                    <div className={compact ? "grid grid-cols-3 gap-2 text-[11px]" : "grid grid-cols-3 sm:grid-cols-4 gap-3 text-sm"}>
                         {hiddenText.split(" ").map((word, index) => (
                             <div
                                 key={index}
-                                className="flex items-center p-2 border border-primary-grey-hover rounded-md bg-white"
+                                className={compact ? "flex items-center p-1.5 border border-primary-grey-hover rounded bg-white dark:bg-gray-800" : "flex items-center p-2 border border-primary-grey-hover rounded-md bg-white dark:bg-gray-800"}
                             >
-                                <span className="text-gray-400 text-xs mr-2">{index + 1}.</span>
-                                <span className="font-medium">{word}</span>
+                                <span className={compact ? "text-gray-400 dark:text-gray-400 text-[10px] mr-2" : "text-gray-400 dark:text-gray-400 text-xs mr-2"}>{index + 1}.</span>
+                                <span className={compact ? "font-medium break-all text-gray-900 dark:text-gray-100" : "font-medium text-gray-900 dark:text-gray-100"}>{word}</span>
                             </div>
                         ))}
                     </div>
-                    <div className="mt-4 text-xs text-primary-grey-dark bg-yellow-50 p-3 rounded border border-yellow-200">
-                        <strong>Warning:</strong> Never share your secret recovery phrase with anyone. Anyone with this phrase can take your assets forever.
-                    </div>
+                    {!compact && (
+                        <div className="mt-4 text-xs text-primary-grey-dark bg-yellow-50 p-3 rounded border border-yellow-200">
+                            <strong>Warning:</strong> Never share your secret recovery phrase with anyone. Anyone with this phrase can take your assets forever.
+                        </div>
+                    )}
                 </div>
             ) : (
-                <div className="flex flex-col items-center justify-center space-y-3 p-4">
-                    <div className="w-12 h-12 rounded-full bg-primary-grey-default flex items-center justify-center">
-                        <IoMdEye className="text-2xl text-gray-600" />
+                <div className={compact ? "flex flex-col items-center justify-center space-y-2 p-3" : "flex flex-col items-center justify-center space-y-3 p-4"}>
+                    <div className={compact ? "w-9 h-9 rounded-full bg-primary-grey-default flex items-center justify-center" : "w-12 h-12 rounded-full bg-primary-grey-default flex items-center justify-center"}>
+                        <IoMdEye className={compact ? "text-xl text-gray-600" : "text-2xl text-gray-600"} />
                     </div>
-                    <span className="text-primary-grey-dark text-sm">{revealMessage}</span>
+                    <span className={compact ? "text-primary-grey-dark text-xs" : "text-primary-grey-dark text-sm"}>{revealMessage}</span>
                 </div>
             )}
         </div>

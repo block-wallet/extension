@@ -8,9 +8,9 @@ interface UseSwapGasManagementProps {
     swapParameters: SwapParameters | undefined
     isEIP1559Compatible: boolean
     defaultGasPrices: {
-        gasPrice?: string
-        maxPriorityFeePerGas?: string
-        maxFeePerGas?: string
+        gasPrice?: string | number | BigNumber | null
+        maxPriorityFeePerGas?: string | number | BigNumber | null
+        maxFeePerGas?: string | number | BigNumber | null
     }
     hasBalance: boolean
 }

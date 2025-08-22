@@ -8,6 +8,8 @@ import { createEtherBigNumber, createTokenBigNumber } from "../../util/bigNumber
 interface SwapSimulationDisplayProps {
     simulation?: SimulationResult
     simulationError?: string
+    isSimulating?: boolean
+    isSimulationEnabled?: boolean
     fromToken: Token
     toToken: Token
     nativeToken: Token
@@ -18,12 +20,19 @@ interface SwapSimulationDisplayProps {
 const SwapSimulationDisplay: React.FC<SwapSimulationDisplayProps> = ({
     simulation,
     simulationError,
+    isSimulating,
+    isSimulationEnabled,
     fromToken,
     toToken,
     nativeToken,
     exchangeRates,
     selectedAccountAddress
 }) => {
+    const renderSimulationPending = () => (
+        <p className="text-[12px] text-center text-gray-500 dark:text-gray-400">
+            Simulating…
+        </p>
+    )
     const renderSimulationError = () => (
         <p className="text-[12px] text-center text-red-600 dark:text-red-400">
             Simulation failed: {simulationError}
@@ -142,12 +151,32 @@ const SwapSimulationDisplay: React.FC<SwapSimulationDisplayProps> = ({
         }
     }
 
-    return (
-        <>
-            {simulationError ? renderSimulationError() : renderSimulationSuccess()}
-            {renderSimulationDetails()}
-        </>
-    )
+    if (!isSimulationEnabled) {
+        return null
+    }
+
+    if (isSimulating || (!simulation && !simulationError)) {
+        return renderSimulationPending()
+    }
+
+    if (simulationError) {
+        return (
+            <>
+                {renderSimulationError()}
+            </>
+        )
+    }
+
+    if (simulation?.success) {
+        return (
+            <>
+                {renderSimulationSuccess()}
+                {renderSimulationDetails()}
+            </>
+        )
+    }
+
+    return null
 }
 
 export default SwapSimulationDisplay

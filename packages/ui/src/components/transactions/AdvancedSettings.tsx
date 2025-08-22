@@ -270,31 +270,41 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
     )
 
     useEffect(() => {
+        let cancelled = false
         const fetch = async () => {
-            nextNonce.current = await getNextNonce(address)
+            try {
+                if (!isOpen) return
+                const nn = await getNextNonce(address)
+                if (cancelled) return
+                nextNonce.current = nn
 
-            setValue("slippage", defaultSettings.slippage.toString(), {
-                shouldValidate: true,
-            })
-            setValue("nonce", nextNonce.current.toString(), {
-                shouldValidate: true,
-            })
+                setValue("slippage", defaultSettings.slippage.toString(), {
+                    shouldValidate: true,
+                })
+                setValue("nonce", nextNonce.current.toString(), {
+                    shouldValidate: true,
+                })
 
-            validateSlippage(defaultSettings.slippage.toString())
+                validateSlippage(defaultSettings.slippage.toString())
 
-            setAdvancedSettings({
-                customNonce: nextNonce.current,
-                flashbots: isFlashbotsEnabled,
-                slippage:
-                    advancedSettings.slippage !== undefined
-                        ? advancedSettings.slippage
-                        : defaultSettings.slippage,
-            })
+                setAdvancedSettings({
+                    customNonce: nextNonce.current,
+                    flashbots: isFlashbotsEnabled,
+                    slippage:
+                        advancedSettings.slippage !== undefined
+                            ? advancedSettings.slippage
+                            : defaultSettings.slippage,
+                })
+            } catch (_) {
+                // ignore
+            }
         }
 
         fetch()
 
+        return () => { cancelled = true }
     }, [
+        isOpen,
         transactionId,
         address,
         advancedSettings.slippage,

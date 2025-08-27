@@ -211,11 +211,11 @@ import KeyringControllerDerivated from './KeyringControllerDerivated';
 import { extensionInstances } from '../infrastructure/connection';
 import {
     focusWindow,
-    openExtensionInBrowser,
-    switchToTab,
     closeTab,
     getVersion,
     getCurrentWindowId,
+    openOnboardingPopup,
+    closeOnboardingWindow,
 } from '../utils/window';
 import BlockUpdatesController from './block-updates/BlockUpdatesController';
 
@@ -1852,31 +1852,7 @@ export default class BlankController extends EventEmitter {
      *
      */
     private returnToOnboarding() {
-        let onboardingInstance: string | null = null;
-
-        // Check if there is any open onboarding tab
-        for (const instance in extensionInstances) {
-            if (
-                isOnboardingTabUrl(
-                    extensionInstances[instance].port.sender?.url
-                )
-            ) {
-                onboardingInstance = instance;
-            }
-        }
-
-        if (onboardingInstance) {
-            const tab = extensionInstances[onboardingInstance].port.sender?.tab;
-            if (tab && tab.id && tab.windowId) {
-                // Focus window
-                focusWindow(tab.windowId);
-                // Switch to tab
-                switchToTab(tab.id);
-            }
-        } else {
-            // Open new onboarding tab
-            openExtensionInBrowser();
-        }
+        openOnboardingPopup('intro').catch(() => undefined);
     }
 
     private closeInstances() {
@@ -1901,8 +1877,8 @@ export default class BlankController extends EventEmitter {
 
     private openExtensionTab(route: string) {
         this.closeInstances();
-        // Open new onboarding tab
-        openExtensionInBrowser(route);
+        // Open onboarding as a dedicated popup window
+        openOnboardingPopup(route).catch(() => undefined);
     }
 
     /**
@@ -3255,6 +3231,11 @@ export default class BlankController extends EventEmitter {
                 this.notificationController.showSetUpCompleteNotification();
             }
             this.isSetupComplete = true;
+            try {
+                await closeOnboardingWindow();
+            } catch (_e) {
+                // ignore
+            }
         }
     }
 

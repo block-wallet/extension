@@ -8,7 +8,7 @@ import BlankStorageStore from './infrastructure/stores/BlankStorageStore';
 import initialState, { BlankAppState } from './utils/constants/initialState';
 import reconcileState from './infrastructure/stores/migrator/reconcileState';
 import compareVersions from 'compare-versions';
-import { getVersion, openExtensionInBrowser } from './utils/window';
+import { getVersion, openOnboardingPopup } from './utils/window';
 import { setupConnection } from './infrastructure/connection';
 import { migrator } from './infrastructure/stores/migrator/migrator';
 import { DeepPartial } from './utils/types/helpers';
@@ -258,11 +258,17 @@ initBlockWallet().catch((error) => {
     console.error(error.message || error);
 });
 
-// On install, open onboarding tab
-chrome.runtime.onInstalled.addListener(({ reason }) => {
+chrome.runtime.onInstalled.addListener(async ({ reason }) => {
     if (reason === 'install') {
         chrome.runtime.setUninstallURL('https://forms.gle/g4RghfndrhwPS6L76');
-        openExtensionInBrowser();
+        try {
+            const flag = await chrome.storage.session.get('onboarding_suppress_autoreopen');
+            if (!flag.onboarding_suppress_autoreopen) {
+                await openOnboardingPopup('intro');
+            }
+        } catch (e) {
+            console.error('Failed to open onboarding popup:', e);
+        }
     }
 
     // For existing users, when the extension gets updated we also set the uninstall form.

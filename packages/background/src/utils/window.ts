@@ -226,6 +226,22 @@ export const updateWindow = (
 };
 
 /**
+ * Closes a specific window by id
+ *
+ */
+export const closeWindowById = (windowId: number): Promise<void> => {
+    return new Promise<void>((resolve, reject) => {
+        chrome.windows.remove(windowId).then(() => {
+            const error = checkForError();
+            if (error) {
+                reject(error);
+            }
+            resolve();
+        });
+    });
+};
+
+/**
  * Highlights the specified tab
  *
  */
@@ -265,3 +281,159 @@ export function isOnboardingTabUrl(tabUrl: string | undefined): boolean {
     }
     return tabUrl.includes(ONBOARDING_TAB_NAME);
 }
+
+/**
+ * Onboarding popup helpers
+ */
+let onboardingListenersInitialized = false;
+
+/**
+ * Opens the onboarding UI in a focused popup window and sets session flags.
+ * Returns the created window id.
+ */
+export const openOnboardingPopup = async (
+    route: string | null = null,
+    queryString: string | null = null
+): Promise<number | undefined> => {
+    if (chrome.storage?.session) {
+        const { onboarding_active, onboarding_window_id } =
+            await chrome.storage.session.get([
+                'onboarding_active',
+                'onboarding_window_id',
+            ]);
+        if (onboarding_active && typeof onboarding_window_id === 'number') {
+            try {
+                await focusWindow(onboarding_window_id);
+                return onboarding_window_id;
+            } catch (_e) {
+                await chrome.storage.session.set({
+                    onboarding_active: false,
+                    onboarding_window_id: undefined,
+                });
+            }
+        }
+    }
+
+        let url = chrome.runtime.getURL(ONBOARDING_TAB_NAME);
+        if (queryString) {
+            url += `?${queryString}`;
+        }
+        if (route) {
+            url += `#${route}`;
+        }
+
+        const width = 1000;
+        const height = 740;
+        let left = 0;
+        let top = 0;
+
+        try {
+            const win = await getLastFocusedWindow();
+            if (
+                win.top !== undefined &&
+                win.left !== undefined &&
+                win.width !== undefined
+            ) {
+                top = win.top;
+                left = win.left + (win.width - width);
+            }
+        } catch (_e) {
+            const { screenX, screenY, outerWidth } = window;
+            top = Math.max(screenY, 0);
+            left = Math.max(screenX + (outerWidth - width), 0);
+        }
+
+        const newWindow = await openWindow({
+            url,
+            type: 'popup',
+            state: 'normal',
+            width,
+            height,
+            left,
+            top,
+            focused: true,
+        });
+
+        if (newWindow?.state === 'fullscreen' && newWindow.id) {
+            await updateWindow(newWindow.id, {
+                state: 'normal',
+                width,
+                height,
+                left,
+                top,
+                focused: true,
+            });
+        }
+
+        if (newWindow?.id !== undefined && chrome.storage?.session) {
+            await chrome.storage.session.set({
+                onboarding_active: true,
+                onboarding_window_id: newWindow.id,
+            });
+        }
+
+        setupOnboardingFocusGuard();
+
+        return newWindow?.id;
+};
+
+/**
+ * Closes the onboarding popup window (if open) and clears session flags.
+ */
+export const closeOnboardingWindow = async (): Promise<void> => {
+    try {
+        if (!chrome.storage?.session) return;
+        const result = await chrome.storage.session.get([
+            'onboarding_window_id',
+            'onboarding_active',
+        ]);
+        const windowId = result.onboarding_window_id as number | undefined;
+        if (windowId !== undefined) {
+            try {
+                await closeWindowById(windowId);
+            } catch (_e) {
+                // ignore if already closed
+            }
+        }
+        await chrome.storage.session.set({
+            onboarding_active: false,
+            onboarding_window_id: undefined,
+        });
+    } catch (_e) {
+        // ignore cleanup errors
+    }
+};
+
+/**
+ * Ensures onboarding focus guard listeners are installed. They will refocus
+ * the onboarding window if it loses focus and reopen it if the user closes it
+ * before setup is complete.
+ */
+export const setupOnboardingFocusGuard = (): void => {
+    if (onboardingListenersInitialized) return;
+    onboardingListenersInitialized = true;
+
+    try {
+        chrome.windows.onRemoved.addListener(async (removedWindowId) => {
+            try {
+                if (!chrome.storage?.session) return;
+                const { onboarding_active, onboarding_window_id } =
+                    await chrome.storage.session.get([
+                        'onboarding_active',
+                        'onboarding_window_id',
+                    ]);
+                if (!onboarding_active || typeof onboarding_window_id !== 'number') return;
+                if (removedWindowId === onboarding_window_id) {
+                    await chrome.storage.session.set({
+                        onboarding_active: false,
+                        onboarding_window_id: undefined,
+                    });
+                }
+            } catch (_e) {
+                // ignore
+            }
+        });
+    } catch (_e) {
+        // ignore listener setup errors
+    }
+};

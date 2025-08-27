@@ -1,11 +1,10 @@
 import { Link } from "react-router-dom"
 
-import { Classes, classnames } from "../styles/classes"
 import PageLayout from "../components/PageLayout"
 import logo from "../assets/images/logo.svg"
 
 const IntroductionPage = () => (
-    <PageLayout header className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30">
+    <PageLayout className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30">
         <div className="flex flex-col items-center relative my-8 mx-6 z-10 max-w-md">
             {/* Hero Section */}
             <div className="flex flex-col items-center mb-12 space-y-8 text-center">

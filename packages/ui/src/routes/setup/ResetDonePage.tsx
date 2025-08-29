@@ -51,7 +51,7 @@ const ResetDonePage = () => {
             <div className="absolute w-full h-full flex flex-row items-center justify-center overflow-hidden z-10">
                 <Confetti active={confettiActive} config={config} />
             </div>
-            <PageLayout header centered className="relative overflow-hidden">
+            <PageLayout centered className="relative overflow-hidden">
                 <div className="flex flex-col items-center relative py-14 z-10">
                     <div className="flex flex-col items-center my-12 space-y-6">
                         <span className="font-semibold text-5xl">

@@ -448,7 +448,7 @@ const SeedImportPage = () => {
     }
 
     return (
-        <PageLayout header className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30 min-h-screen">
+        <PageLayout className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30 min-h-screen">
             <div className="relative z-10 w-full max-w-4xl mx-auto px-4 py-8">
                 {/* Page header */}
                 <div className="text-center mb-8">

@@ -101,7 +101,7 @@ const SetupPage = () => {
     useCheckUserIsOnboarded()
 
     return (
-        <PageLayout header className="relative bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20">
+        <PageLayout className="relative bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20">
             {/* Header section */}
             <div className="text-center mb-4 px-6">
                 <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">

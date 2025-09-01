@@ -2,7 +2,7 @@ import { FunctionComponent } from "react"
 
 import { Link } from "react-router-dom"
 import Divider from "../../components/Divider"
-import { Classes, classnames } from "../../styles/classes"
+import { classnames } from "../../styles/classes"
 
 import importSeedIcon from "../../assets/images/icons/import_seed.svg"
 import newAccountIcon from "../../assets/images/icons/new_account.svg"
@@ -18,7 +18,6 @@ const SetupOption: FunctionComponent<{
     recommended?: boolean
 }> = ({ title, description, icon, linkTo, linkLabel, recommended = false }) => (
     <div className="group relative">
-        {/* Recommended badge */}
         {recommended && (
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
                 <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
@@ -27,7 +26,6 @@ const SetupOption: FunctionComponent<{
             </div>
         )}
 
-        {/* Main card */}
         <div className={classnames(
             "relative flex flex-col h-full p-5 rounded-2xl border-2 transition-all duration-300 transform group-hover:scale-[1.02] group-hover:-translate-y-1",
             "bg-white dark:bg-gray-800/50 backdrop-blur-sm",
@@ -35,17 +33,13 @@ const SetupOption: FunctionComponent<{
             "shadow-sm group-hover:shadow-xl dark:group-hover:shadow-2xl",
             recommended && "ring-2 ring-green-200 dark:ring-green-400/30"
         )}>
-            {/* Gradient overlay for hover effect */}
             <div className="absolute inset-0 bg-gradient-to-br from-blue-50/0 via-purple-50/0 to-indigo-50/0 dark:from-blue-900/0 dark:via-purple-900/0 dark:to-indigo-900/0 group-hover:from-blue-50/50 group-hover:via-purple-50/30 group-hover:to-indigo-50/50 dark:group-hover:from-blue-900/20 dark:group-hover:via-purple-900/10 dark:group-hover:to-indigo-900/20 rounded-2xl transition-all duration-300"></div>
 
             <div className="relative z-10 flex flex-col h-full">
-                {/* Icon section */}
                 <div className="flex justify-center mb-4">
                     <div className="relative">
-                        {/* Glow effect */}
                         <div className="absolute -inset-2 bg-gradient-to-r from-blue-400/20 to-purple-400/20 dark:from-blue-400/30 dark:to-purple-400/30 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-                        {/* Icon container */}
                         <div className="relative w-14 h-14 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-xl shadow-md dark:shadow-lg flex items-center justify-center border border-gray-200 dark:border-gray-600 group-hover:border-blue-300 dark:group-hover:border-blue-500 transition-all duration-300 overflow-hidden">
                             {typeof icon === 'string' ? (
                                 <img
@@ -62,7 +56,6 @@ const SetupOption: FunctionComponent<{
                     </div>
                 </div>
 
-                {/* Content section */}
                 <div className="flex flex-col flex-grow text-center space-y-3">
                     <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-300">
                         {title}
@@ -73,7 +66,6 @@ const SetupOption: FunctionComponent<{
                     </p>
                 </div>
 
-                {/* Button section */}
                 <div className="mt-4">
                     <Link
                         to={linkTo}
@@ -82,12 +74,10 @@ const SetupOption: FunctionComponent<{
                     >
                         <span className="relative z-10">{linkLabel}</span>
 
-                        {/* Arrow icon */}
                         <svg className="w-4 h-4 ml-2 relative z-10 transition-transform duration-200 group-hover/button:translate-x-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                         </svg>
 
-                        {/* Shine effect */}
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover/button:opacity-100 transition-all duration-500 transform -translate-x-full group-hover/button:translate-x-full skew-x-12"></div>
                     </Link>
                 </div>
@@ -97,12 +87,10 @@ const SetupOption: FunctionComponent<{
 )
 
 const SetupPage = () => {
-    // if the onboarding is ready the user shoulnd't do it again.
     useCheckUserIsOnboarded()
 
     return (
-        <PageLayout className="relative bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20">
-            {/* Header section */}
+        <PageLayout screen className="w-full h-screen max-w-none shadow-none rounded-none relative bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20">
             <div className="text-center mb-4 px-6">
                 <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                     Choose Your Setup Method

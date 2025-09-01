@@ -7,7 +7,6 @@ import Divider from "../../components/Divider"
 import TextInput from "../../components/input/TextInput"
 import PasswordInput from "../../components/input/PasswordInput"
 import LinkButton from "../../components/button/LinkButton"
-import { Classes, classnames } from "../../styles"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useCheckUserIsOnboarded } from "../../context/hooks/useCheckUserIsOnboarded"
 import {
@@ -71,25 +70,21 @@ const PrivateKeyImportPage = () => {
   const password = watch("password")
   const passwordConfirmation = watch("passwordConfirmation")
 
-  // Trigger validation for password confirmation when password changes
   useEffect(() => {
     if (password && passwordConfirmation) {
       trigger("passwordConfirmation")
     }
   }, [password, passwordConfirmation, trigger])
 
-  // Function to handle retrying the import on port disconnection
   const handleRetry = () => {
     setRetryAttempts(prev => prev + 1)
     setImportError("")
-    // Wait for 500ms to ensure connection is reestablished
     setTimeout(() => {
       handleSubmit(onSubmit)()
     }, 500)
   }
 
   const onSubmit = async (data: PrivateKeyImportFormData) => {
-    // Check password strength
     if (passwordScore < 3) {
       return
     }
@@ -100,36 +95,29 @@ const PrivateKeyImportPage = () => {
     try {
       setStep('creating')
 
-      // First, create a wallet with the provided password
       await createWallet(data.password)
 
       setStep('importing')
 
-      // Ensure private key has 0x prefix
       const privateKey = data.privateKey.startsWith("0x")
         ? data.privateKey
         : `0x${data.privateKey}`
 
-      // Then import the account
       const accountInfo = await importAccountPrivateKey(
         { privateKey },
-        "Imported Account" // Default name
+        "Imported Account"
       )
 
-      // Select the newly imported account
       await selectAccount(accountInfo.address)
 
-      // Mark setup as complete
       await completeSetup(true)
 
       setStep('done')
 
-      // Redirect to setup done page
       history.push({ pathname: "/setup/done" })
     } catch (error: any) {
       console.error("Error importing account from private key:", error)
 
-      // Check if this is a port disconnection error
       if (error?.message && error.message.includes("disconnected port object")) {
         setImportError("Connection to extension was interrupted. Please try again.")
       } else if (error?.message && error.message.toLowerCase().includes("duplicate")) {
@@ -158,9 +146,8 @@ const PrivateKeyImportPage = () => {
   }
 
   return (
-    <PageLayout className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30 min-h-screen">
+    <PageLayout screen className="w-full h-screen max-w-none shadow-none rounded-none relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30">
       <div className="relative z-10 w-full max-w-2xl mx-auto px-4 py-8">
-        {/* Page header */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-gray-100 dark:via-blue-100 dark:to-indigo-100 bg-clip-text text-transparent mb-2">
             Import from Private Key
@@ -172,10 +159,8 @@ const PrivateKeyImportPage = () => {
 
         <Divider />
 
-        {/* Main content card */}
         <div className="mt-8 w-full max-w-lg mx-auto">
           <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl dark:shadow-2xl overflow-hidden">
-            {/* Header */}
             <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-indigo-900/20 p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="text-center space-y-3">
                 <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl mx-auto flex items-center justify-center shadow-lg">
@@ -194,7 +179,6 @@ const PrivateKeyImportPage = () => {
               </div>
             </div>
 
-            {/* Warning section */}
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-800/50 rounded-xl p-4">
                 <div className="flex items-start space-x-3">
@@ -216,10 +200,8 @@ const PrivateKeyImportPage = () => {
               </div>
             </div>
 
-            {/* Form section */}
             <form onSubmit={handleSubmit(onSubmit)} noValidate>
               <div className="p-6 space-y-6">
-                {/* Private Key Input */}
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
                     Private Key
@@ -242,7 +224,6 @@ const PrivateKeyImportPage = () => {
                   </div>
                 </div>
 
-                {/* Password Section */}
                 <div className="bg-gray-50 dark:bg-gray-800/30 rounded-xl p-4 space-y-4">
                   <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center">
                     <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -269,7 +250,6 @@ const PrivateKeyImportPage = () => {
                   </div>
                 </div>
 
-                {/* Terms of Use */}
                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4">
                   <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0 mt-0.5">
@@ -301,7 +281,6 @@ const PrivateKeyImportPage = () => {
                   </div>
                 </div>
 
-                {/* Error Display */}
                 {importError && (
                   <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-800/50 rounded-xl p-4">
                     <div className="flex items-start space-x-3">
@@ -332,7 +311,6 @@ const PrivateKeyImportPage = () => {
                 )}
               </div>
 
-              {/* Footer with actions */}
               <div className="bg-gray-50 dark:bg-gray-800/50 p-6 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex flex-row justify-between space-x-4">
                   <LinkButton
@@ -369,11 +347,9 @@ const PrivateKeyImportPage = () => {
         </div>
       </div>
 
-      {/* Decorative background elements */}
       <div className="absolute top-1/4 -left-8 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-purple-400/10 dark:from-blue-400/5 dark:to-purple-400/5 rounded-full blur-3xl"></div>
       <div className="absolute bottom-1/4 -right-8 w-40 h-40 bg-gradient-to-tl from-indigo-400/10 to-purple-400/10 dark:from-indigo-400/5 dark:to-purple-400/5 rounded-full blur-3xl"></div>
 
-      {/* Subtle grid pattern */}
       <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03]" style={{
         backgroundImage: `radial-gradient(circle at 1px 1px, rgba(100,100,100,0.3) 1px, transparent 0)`,
         backgroundSize: '24px 24px'

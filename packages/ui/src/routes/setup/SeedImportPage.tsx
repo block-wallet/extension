@@ -10,7 +10,6 @@ import { useCheckUserIsOnboarded } from "../../context/hooks/useCheckUserIsOnboa
 import { DiscoveredAccountInfo } from "../../../../background/src/utils/types/communication"
 import Spinner from "../../components/spinner/Spinner"
 import Checkbox from "../../components/input/Checkbox"
-import AccountDisplay from "../../components/account/AccountDisplay"
 
 enum ImportStep {
     ENTER_SEED_AND_PASSWORD,
@@ -129,7 +128,6 @@ const SeedImportPage = () => {
             case ImportStep.ENTER_SEED_AND_PASSWORD:
                 return (
                     <div className="w-full max-w-lg mx-auto">
-                        {/* Step indicator */}
                         <div className="mb-8">
                             <div className="flex items-center justify-center space-x-2 mb-4">
                                 <div className="flex items-center space-x-2">
@@ -148,9 +146,7 @@ const SeedImportPage = () => {
                             </div>
                         </div>
 
-                        {/* Main content card */}
                         <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl dark:shadow-2xl overflow-hidden">
-                            {/* Header */}
                             <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-indigo-900/20 p-6 border-b border-gray-200 dark:border-gray-700">
                                 <div className="text-center space-y-3">
                                     <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl mx-auto flex items-center justify-center shadow-lg">
@@ -169,7 +165,6 @@ const SeedImportPage = () => {
                                 </div>
                             </div>
 
-                            {/* Warning section */}
                             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                                 <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-800/50 rounded-xl p-4">
                                     <div className="flex items-start space-x-3">
@@ -191,7 +186,6 @@ const SeedImportPage = () => {
                                 </div>
                             </div>
 
-                            {/* Form section */}
                             <div className="p-6">
                                 <SeedImport
                                     buttonLabel="Next: Discover Accounts"
@@ -204,7 +198,6 @@ const SeedImportPage = () => {
             case ImportStep.SELECT_ACCOUNTS:
                 return (
                     <div className="w-full max-w-2xl mx-auto">
-                        {/* Step indicator */}
                         <div className="mb-8">
                             <div className="flex items-center justify-center space-x-2 mb-4">
                                 <div className="flex items-center space-x-2">
@@ -223,9 +216,7 @@ const SeedImportPage = () => {
                             </div>
                         </div>
 
-                        {/* Main content card */}
                         <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl dark:shadow-2xl overflow-hidden">
-                            {/* Header */}
                             <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-indigo-900/20 p-6 border-b border-gray-200 dark:border-gray-700">
                                 <div className="text-center space-y-3">
                                     <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl mx-auto flex items-center justify-center shadow-lg">
@@ -327,7 +318,6 @@ const SeedImportPage = () => {
                                     </div>
                                 )}
 
-                                {/* Accounts list */}
                                 {!discoveryLoading && !discoveryError && discoveredAccounts.length > 0 && (
                                     <div className="space-y-4">
                                         <div className="flex items-center justify-between mb-4">
@@ -448,7 +438,7 @@ const SeedImportPage = () => {
     }
 
     return (
-        <PageLayout className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30 min-h-screen">
+        <PageLayout screen className="w-full h-screen max-w-none shadow-none rounded-none relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30">
             <div className="relative z-10 w-full max-w-4xl mx-auto px-4 py-8">
                 {/* Page header */}
                 <div className="text-center mb-8">

@@ -4,11 +4,9 @@ import PageLayout from "../components/PageLayout"
 import logo from "../assets/images/logo.svg"
 
 const IntroductionPage = () => (
-    <PageLayout className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30">
+    <PageLayout screen className="w-full h-screen max-w-none shadow-none rounded-none relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30">
         <div className="flex flex-col items-center relative my-8 mx-6 z-10 max-w-md">
-            {/* Hero Section */}
             <div className="flex flex-col items-center mb-12 space-y-8 text-center">
-                {/* Logo with glow effect */}
                 <div className="relative">
                     <div className="absolute -inset-4 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-20 dark:opacity-30 blur-lg animate-pulse"></div>
                     <div
@@ -21,7 +19,6 @@ const IntroductionPage = () => (
                     </div>
                 </div>
 
-                {/* Main heading with gradient text */}
                 <div className="space-y-4">
                     <h1 className="font-black text-4xl md:text-5xl bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-gray-100 dark:via-blue-100 dark:to-indigo-100 bg-clip-text text-transparent leading-tight">
                         Welcome to<br />
@@ -35,7 +32,6 @@ const IntroductionPage = () => (
                     </p>
                 </div>
 
-                {/* Feature highlights */}
                 <div className="grid grid-cols-3 gap-4 w-full max-w-xs">
                     <div className="flex flex-col items-center space-y-2 p-3 rounded-xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50">
                         <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
@@ -67,7 +63,6 @@ const IntroductionPage = () => (
                 </div>
             </div>
 
-            {/* CTA Button */}
             <div className="w-full max-w-xs">
                 <Link
                     to="/setup"
@@ -78,22 +73,18 @@ const IntroductionPage = () => (
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                     </svg>
 
-                    {/* Gradient overlay for hover effect */}
                     <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </Link>
 
-                {/* Subtle subtitle */}
                 <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-4 font-medium">
                     Create a new wallet or import an existing one
                 </p>
             </div>
         </div>
 
-        {/* Decorative background elements */}
         <div className="absolute top-1/4 -left-8 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-purple-400/10 dark:from-blue-400/5 dark:to-purple-400/5 rounded-full blur-3xl"></div>
         <div className="absolute bottom-1/4 -right-8 w-40 h-40 bg-gradient-to-tl from-indigo-400/10 to-purple-400/10 dark:from-indigo-400/5 dark:to-purple-400/5 rounded-full blur-3xl"></div>
 
-        {/* Subtle grid pattern */}
         <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03]" style={{
             backgroundImage: `radial-gradient(circle at 1px 1px, rgba(100,100,100,0.3) 1px, transparent 0)`,
             backgroundSize: '24px 24px'

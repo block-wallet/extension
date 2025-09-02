@@ -146,10 +146,13 @@ const PrivateKeyImportPage = () => {
   }
 
   return (
-    <PageLayout screen className="w-full h-screen max-w-none shadow-none rounded-none relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30">
-      <div className="relative z-10 w-full max-w-2xl mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-gray-100 dark:via-blue-100 dark:to-indigo-100 bg-clip-text text-transparent mb-2">
+    <PageLayout
+      screen
+      className="w-full h-screen max-w-none shadow-none rounded-none relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30 flex items-center justify-center"
+    >
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-6 py-3 h-full flex flex-col justify-center">
+        <div className="text-center mb-3">
+          <h1 className="text-lg font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-gray-100 dark:via-blue-100 dark:to-indigo-100 bg-clip-text text-transparent mb-1">
             Import from Private Key
           </h1>
           <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto">
@@ -159,49 +162,45 @@ const PrivateKeyImportPage = () => {
 
         <Divider />
 
-        <div className="mt-8 w-full max-w-lg mx-auto">
-          <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl dark:shadow-2xl overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-indigo-900/20 p-6 border-b border-gray-200 dark:border-gray-700">
-              <div className="text-center space-y-3">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl mx-auto flex items-center justify-center shadow-lg">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                    Import Private Key
-                  </h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    Enter your private key and set a password to import your account
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-800/50 rounded-xl p-4">
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0">
-                    <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+        <div className="mt-3 w-full max-w-4xl mx-auto">
+          <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-xl overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-0">
+              <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-indigo-900/20 p-4 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-700">
+                <div className="text-center space-y-2">
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg mx-auto flex items-center justify-center shadow-lg">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 0 1 21 9z" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-red-900 dark:text-red-100 mb-1">
-                      Security Warning
-                    </h3>
-                    <p className="text-xs text-red-800 dark:text-red-200 leading-relaxed">
-                      Never share your private key with anyone. BlockWallet will never ask for your private key.
-                      Anyone with access to your private key can control your account and steal your funds.
+                    <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                      Import Private Key
+                    </h2>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      Import your account
                     </p>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} noValidate>
-              <div className="p-6 space-y-6">
+              <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-b lg:border-b-0 lg:border-r border-red-200 dark:border-red-800/50 p-4">
+                <div className="flex items-start space-x-2">
+                  <svg className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                  <div>
+                    <h3 className="text-xs font-bold text-red-900 dark:text-red-100 mb-1">
+                      Security Warning
+                    </h3>
+                    <p className="text-xs text-red-800 dark:text-red-200 leading-tight">
+                      Never share your private key. Anyone with access can control your account.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmit(onSubmit)} noValidate className="col-span-1 lg:col-span-2">
+                <div className="p-4 space-y-4">
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
                     Private Key
@@ -224,15 +223,15 @@ const PrivateKeyImportPage = () => {
                   </div>
                 </div>
 
-                <div className="bg-gray-50 dark:bg-gray-800/30 rounded-xl p-4 space-y-4">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-                    <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-gray-50 dark:bg-gray-800/30 rounded-lg p-3 space-y-3">
+                  <h3 className="text-xs font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+                    <svg className="w-3 h-3 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                     Set Wallet Password
                   </h3>
 
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <PasswordInput
                       label="New Password"
                       placeholder="Enter New Password"
@@ -311,7 +310,7 @@ const PrivateKeyImportPage = () => {
                 )}
               </div>
 
-              <div className="bg-gray-50 dark:bg-gray-800/50 p-6 border-t border-gray-200 dark:border-gray-700">
+              <div className="bg-gray-50 dark:bg-gray-800/50 p-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex flex-row justify-between space-x-4">
                   <LinkButton
                     location="/setup/"
@@ -345,15 +344,16 @@ const PrivateKeyImportPage = () => {
             </form>
           </div>
         </div>
+        </div>
+
+        <div className="absolute top-1/4 -left-8 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-purple-400/10 dark:from-blue-400/5 dark:to-purple-400/5 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-1/4 -right-8 w-40 h-40 bg-gradient-to-tl from-indigo-400/10 to-purple-400/10 dark:from-indigo-400/5 dark:to-purple-400/5 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03] pointer-events-none" style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(100,100,100,0.3) 1px, transparent 0)`,
+          backgroundSize: '24px 24px'
+        }}></div>
       </div>
-
-      <div className="absolute top-1/4 -left-8 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-purple-400/10 dark:from-blue-400/5 dark:to-purple-400/5 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-1/4 -right-8 w-40 h-40 bg-gradient-to-tl from-indigo-400/10 to-purple-400/10 dark:from-indigo-400/5 dark:to-purple-400/5 rounded-full blur-3xl"></div>
-
-      <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03]" style={{
-        backgroundImage: `radial-gradient(circle at 1px 1px, rgba(100,100,100,0.3) 1px, transparent 0)`,
-        backgroundSize: '24px 24px'
-      }}></div>
     </PageLayout>
   )
 }

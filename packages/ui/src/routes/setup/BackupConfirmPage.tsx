@@ -273,7 +273,6 @@ const BackupConfirmPage = () => {
     return (
         <IdleComponent>
             {isReminder ? (
-                // reminder view in app
                 <PopupLayout
                     header={
                         <PopupHeader title="Confirm Seed Phrase" keepState />
@@ -300,19 +299,18 @@ const BackupConfirmPage = () => {
                     </div>
                 </PopupLayout>
             ) : (
-                // browser tab version during installation
-                <PageLayout
-                    header={!isReminder}
-                    className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30 min-h-screen"
-                    withSteps={!isReminder}
-                    currentStep={3}
-                    totalSteps={4}
-                    stepLabels={CREATE_WALLET_STEP_LABELS}
-                >
-                    <div className="relative z-10 w-full max-w-4xl mx-auto px-4 py-8">
+                    <PageLayout
+                        header={!isReminder}
+                        className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30 h-screen flex items-center justify-center"
+                        withSteps={!isReminder}
+                        currentStep={3}
+                        totalSteps={4}
+                        stepLabels={CREATE_WALLET_STEP_LABELS}
+                    >
+                        <div className="relative z-10 w-full max-w-6xl mx-auto px-6 py-3 h-full flex flex-col justify-center max-h-full overflow-y-auto">
                         {/* Page header */}
-                        <div className="text-center mb-8">
-                            <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-gray-100 dark:via-blue-100 dark:to-indigo-100 bg-clip-text text-transparent mb-2">
+                        <div className="text-center mb-6">
+                            <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-gray-100 dark:via-blue-100 dark:to-indigo-100 bg-clip-text text-transparent mb-2">
                                 Confirm Secret Phrase
                             </h1>
                             <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto">
@@ -322,9 +320,9 @@ const BackupConfirmPage = () => {
 
                         <Divider />
 
-                        {/* Main content card */}
-                        <div className="mt-8">
-                            <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl dark:shadow-2xl overflow-hidden">
+                            {/* Main content card */}
+                            <div className="mt-3">
+                                <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-xl overflow-hidden">
                                 {/* Header */}
                                 <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-indigo-900/20 p-6 border-b border-gray-200 dark:border-gray-700">
                                     <div className="text-center space-y-3">

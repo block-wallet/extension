@@ -4,9 +4,9 @@ import PageLayout from "../components/PageLayout"
 import logo from "../assets/images/logo.svg"
 
 const IntroductionPage = () => (
-    <PageLayout screen className="w-full h-screen max-w-none shadow-none rounded-none relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30">
-        <div className="flex flex-col items-center relative my-8 mx-6 z-10 max-w-md">
-            <div className="flex flex-col items-center mb-12 space-y-8 text-center">
+    <PageLayout screen className="w-full h-screen max-w-none shadow-none rounded-none relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30 flex items-center justify-center">
+        <div className="flex flex-col items-center relative py-4 px-6 z-10 max-w-lg w-full h-full justify-center">
+            <div className="flex flex-col items-center mb-8 space-y-6 text-center">
                 <div className="relative">
                     <div className="absolute -inset-4 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-20 dark:opacity-30 blur-lg animate-pulse"></div>
                     <div
@@ -19,20 +19,20 @@ const IntroductionPage = () => (
                     </div>
                 </div>
 
-                <div className="space-y-4">
-                    <h1 className="font-black text-4xl md:text-5xl bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-gray-100 dark:via-blue-100 dark:to-indigo-100 bg-clip-text text-transparent leading-tight">
+                <div className="space-y-3">
+                    <h1 className="font-black text-3xl lg:text-4xl bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-gray-100 dark:via-blue-100 dark:to-indigo-100 bg-clip-text text-transparent leading-tight">
                         Welcome to<br />
                         <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 dark:from-blue-400 dark:via-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
                             BlockWallet
                         </span>
                     </h1>
 
-                    <p className="text-lg text-gray-600 dark:text-gray-300 max-w-sm mx-auto leading-relaxed font-medium">
+                    <p className="text-base text-gray-600 dark:text-gray-300 max-w-sm mx-auto leading-relaxed font-medium">
                         Your gateway to Web3 with uncompromising privacy and security
                     </p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 w-full max-w-xs">
+                <div className="grid grid-cols-3 gap-3 w-full max-w-xs">
                     <div className="flex flex-col items-center space-y-2 p-3 rounded-xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50">
                         <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
                             <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -63,10 +63,10 @@ const IntroductionPage = () => (
                 </div>
             </div>
 
-            <div className="w-full max-w-xs">
+            <div className="w-full max-w-sm">
                 <Link
                     to="/setup"
-                    className="group relative w-full flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 text-white font-bold text-lg rounded-2xl shadow-lg hover:shadow-xl dark:shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95"
+                    className="group relative w-full flex items-center justify-center px-8 py-3 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 text-white font-bold text-base rounded-2xl shadow-lg hover:shadow-xl dark:shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95"
                 >
                     <span className="relative z-10">Get Started</span>
                     <svg className="w-6 h-6 ml-2 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

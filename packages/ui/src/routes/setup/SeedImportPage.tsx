@@ -127,7 +127,7 @@ const SeedImportPage = () => {
         switch (currentStep) {
             case ImportStep.ENTER_SEED_AND_PASSWORD:
                 return (
-                    <div className="w-full max-w-lg mx-auto">
+                    <div className="w-full max-w-4xl mx-auto">
                         <div className="mb-8">
                             <div className="flex items-center justify-center space-x-2 mb-4">
                                 <div className="flex items-center space-x-2">
@@ -146,47 +146,30 @@ const SeedImportPage = () => {
                             </div>
                         </div>
 
-                        <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl dark:shadow-2xl overflow-hidden">
-                            <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-indigo-900/20 p-6 border-b border-gray-200 dark:border-gray-700">
-                                <div className="text-center space-y-3">
-                                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl mx-auto flex items-center justify-center shadow-lg">
-                                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                            Import Your Wallet
-                                        </h2>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                            Enter your seed phrase and set a password to restore your wallet
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                                <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-800/50 rounded-xl p-4">
-                                    <div className="flex items-start space-x-3">
-                                        <div className="flex-shrink-0">
-                                            <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-xl overflow-hidden">
+                            <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-indigo-900/20 p-4 border-b border-gray-200 dark:border-gray-700">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-3">
+                                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center shadow-lg">
+                                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 0 1 21 9z" />
                                             </svg>
                                         </div>
                                         <div>
-                                            <h3 className="text-sm font-bold text-red-900 dark:text-red-100 mb-1">
-                                                Security Warning
-                                            </h3>
-                                            <p className="text-xs text-red-800 dark:text-red-200 leading-relaxed">
-                                                Never share your seed phrase with anyone. BlockWallet will never ask for your seed phrase.
-                                                Anyone with access to your seed phrase can control your wallet and steal your funds.
-                                            </p>
+                                            <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Import Wallet</h2>
+                                            <p className="text-xs text-gray-600 dark:text-gray-400">Enter your seed phrase and set password</p>
                                         </div>
+                                    </div>
+                                    <div className="hidden md:flex items-center px-2 py-1 rounded border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/20">
+                                        <svg className="w-3 h-3 text-red-600 dark:text-red-400 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                        </svg>
+                                        <span className="text-[11px] text-red-800 dark:text-red-200 leading-none">Never share your seed phrase</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="p-6">
+                            <div className="p-4">
                                 <SeedImport
                                     buttonLabel="Next: Discover Accounts"
                                     action={handleSeedAndPasswordSubmit}
@@ -197,7 +180,7 @@ const SeedImportPage = () => {
                 )
             case ImportStep.SELECT_ACCOUNTS:
                 return (
-                    <div className="w-full max-w-2xl mx-auto">
+                    <div className="w-full max-w-5xl mx-auto">
                         <div className="mb-8">
                             <div className="flex items-center justify-center space-x-2 mb-4">
                                 <div className="flex items-center space-x-2">
@@ -216,19 +199,19 @@ const SeedImportPage = () => {
                             </div>
                         </div>
 
-                        <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl dark:shadow-2xl overflow-hidden">
-                            <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-indigo-900/20 p-6 border-b border-gray-200 dark:border-gray-700">
-                                <div className="text-center space-y-3">
-                                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl mx-auto flex items-center justify-center shadow-lg">
-                                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-xl overflow-hidden">
+                            <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-indigo-900/20 p-4 border-b border-gray-200 dark:border-gray-700">
+                                <div className="flex items-center justify-center space-x-3">
+                                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center shadow-lg">
+                                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                     </div>
                                     <div>
-                                        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                                        <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">
                                             Select Accounts to Import
                                         </h2>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                        <p className="text-xs text-gray-600 dark:text-gray-400">
                                             Choose which accounts you'd like to add to your wallet
                                         </p>
                                     </div>
@@ -236,7 +219,7 @@ const SeedImportPage = () => {
                             </div>
 
                             {/* Content */}
-                            <div className="p-6">
+                            <div className="p-4">
                                 {/* Loading state */}
                                 {discoveryLoading && (
                                     <div className="flex flex-col items-center justify-center py-12 space-y-4">
@@ -329,17 +312,17 @@ const SeedImportPage = () => {
                                             </span>
                                         </div>
 
-                                        <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 max-h-64 overflow-y-auto pr-2">
                                             {discoveredAccounts.map((account, index) => (
                                                 <div
                                                     key={account.address}
-                                                    className={`group relative p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer ${selectedAccounts[account.address]
+                                                    className={`group relative p-3 rounded-lg border transition-all duration-200 cursor-pointer ${selectedAccounts[account.address]
                                                         ? 'border-blue-300 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                                                         : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 hover:border-gray-300 dark:hover:border-gray-600'
                                                         }`}
                                                     onClick={() => handleAccountSelectionChange(account.address, !selectedAccounts[account.address])}
                                                 >
-                                                    <div className="flex items-center space-x-4">
+                                                    <div className="flex items-center space-x-3">
                                                         <div className="flex-shrink-0">
                                                             <Checkbox
                                                                 label=""
@@ -349,36 +332,36 @@ const SeedImportPage = () => {
                                                         </div>
 
                                                         <div className="flex-1 min-w-0">
-                                                            <div className="flex items-center justify-between mb-2">
-                                                                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                                            <div className="flex items-center justify-between mb-1">
+                                                                <h4 className="text-xs font-semibold text-gray-900 dark:text-gray-100">
                                                                     Account #{account.index + 1}
                                                                 </h4>
                                                                 {index === 0 && (
-                                                                    <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 rounded-full">
+                                                                    <span className="px-1.5 py-0.5 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 rounded">
                                                                         Primary
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            <div className="space-y-1">
-                                                                <p className="text-xs font-mono text-gray-600 dark:text-gray-400 break-all">
+                                                            <div className="space-y-0.5">
+                                                                <p className="text-xs font-mono text-gray-600 dark:text-gray-400 truncate">
                                                                     {account.address}
                                                                 </p>
                                                                 <p className="text-xs text-gray-500 dark:text-gray-500">
-                                                                    Derivation Path: m/44'/60'/0'/0/{account.index}
+                                                                    Path: m/44'/60'/0'/0/{account.index}
                                                                 </p>
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    {selectedAccounts[account.address] && (
-                                                        <div className="absolute top-2 right-2">
-                                                            <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center">
-                                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                                                </svg>
-                                                            </div>
-                                                        </div>
-                                                    )}
+                                    {selectedAccounts[account.address] && (
+                                        <div className="absolute top-1 right-1">
+                                            <div className="w-4 h-4 bg-blue-500 text-white rounded-full flex items-center justify-center">
+                                                <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    )}
                                                 </div>
                                             ))}
                                         </div>
@@ -388,7 +371,7 @@ const SeedImportPage = () => {
 
                             {/* Footer with actions */}
                             {!discoveryLoading && (
-                                <div className="bg-gray-50 dark:bg-gray-800/50 p-6 border-t border-gray-200 dark:border-gray-700">
+                                <div className="bg-gray-50 dark:bg-gray-800/50 p-4 border-t border-gray-200 dark:border-gray-700">
                                     <div className="flex flex-row justify-between space-x-4">
                                         <button
                                             onClick={handleBack}
@@ -438,11 +421,11 @@ const SeedImportPage = () => {
     }
 
     return (
-        <PageLayout screen className="w-full h-screen max-w-none shadow-none rounded-none relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30">
-            <div className="relative z-10 w-full max-w-4xl mx-auto px-4 py-8">
+        <PageLayout screen className="w-full h-screen max-w-none shadow-none rounded-none relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30 flex flex-col">
+            <div className="relative z-10 w-full max-w-6xl mx-auto px-6 py-3 flex-1 flex flex-col min-h-0">
                 {/* Page header */}
-                <div className="text-center mb-8">
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-gray-100 dark:via-blue-100 dark:to-indigo-100 bg-clip-text text-transparent mb-2">
+                <div className="text-center mb-3">
+                    <h1 className="text-lg font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-gray-100 dark:via-blue-100 dark:to-indigo-100 bg-clip-text text-transparent mb-1">
                         Import Your Wallet
                     </h1>
                     <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto">
@@ -453,17 +436,17 @@ const SeedImportPage = () => {
                 <Divider />
 
                 {/* Step content */}
-                <div className="mt-8">
+                <div className="mt-3 flex-1 min-h-0 overflow-y-auto">
                     {renderStepContent()}
                 </div>
             </div>
 
             {/* Decorative background elements */}
-            <div className="absolute top-1/4 -left-8 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-purple-400/10 dark:from-blue-400/5 dark:to-purple-400/5 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-1/4 -right-8 w-40 h-40 bg-gradient-to-tl from-indigo-400/10 to-purple-400/10 dark:from-indigo-400/5 dark:to-purple-400/5 rounded-full blur-3xl"></div>
+            <div className="absolute top-1/4 -left-8 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-purple-400/10 dark:from-blue-400/5 dark:to-purple-400/5 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute bottom-1/4 -right-8 w-40 h-40 bg-gradient-to-tl from-indigo-400/10 to-purple-400/10 dark:from-indigo-400/5 dark:to-purple-400/5 rounded-full blur-3xl pointer-events-none"></div>
 
             {/* Subtle grid pattern */}
-            <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03]" style={{
+            <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03] pointer-events-none" style={{
                 backgroundImage: `radial-gradient(circle at 1px 1px, rgba(100,100,100,0.3) 1px, transparent 0)`,
                 backgroundSize: '24px 24px'
             }}></div>

@@ -5,7 +5,6 @@ import { FaGithub, FaTelegramPlane } from "react-icons/fa"
 import { IoLogoTwitter } from "react-icons/io"
 
 import PageLayout from "../../components/PageLayout"
-import Divider from "../../components/Divider"
 
 import { completeSetup } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
@@ -40,7 +39,6 @@ const SetupDonePage = () => {
     const [confettiActive, setConfettiActive] = useState(false)
 
     useEffect(() => {
-        // Trigger confetti after a short delay for better effect
         const confettiTimer = setTimeout(() => {
             setConfettiActive(true)
         }, 500)
@@ -54,7 +52,6 @@ const SetupDonePage = () => {
         return () => clearTimeout(confettiTimer)
     }, [history])
 
-    // Determine if we are coming from the wallet creation flow
     const isFromWalletCreation = history.location?.state?.from === "wallet_creation" ||
         history.location?.pathname?.includes("/setup/create");
 
@@ -74,7 +71,6 @@ const SetupDonePage = () => {
 
     return (
         <>
-            {/* Enhanced Confetti */}
             <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
                 <Confetti active={confettiActive} config={config} />
             </div>
@@ -82,16 +78,14 @@ const SetupDonePage = () => {
             <PageLayout
                 header
                 centered
-                className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30 min-h-screen"
+                className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30 h-screen flex items-center justify-center"
                 withSteps={isFromWalletCreation}
                 currentStep={4}
                 totalSteps={4}
                 stepLabels={CREATE_WALLET_STEP_LABELS}
             >
-                <div className="relative z-10 w-full max-w-3xl mx-auto px-4 py-8">
-                    {/* Success Animation & Content */}
+                <div className="relative z-10 w-full max-w-6xl mx-auto px-6 py-3 h-full flex flex-col justify-center max-h-full overflow-y-auto">
                     <div className="text-center space-y-8 mb-12">
-                        {/* Success Icon with Animation */}
                         <div className="relative mx-auto w-20 h-20 mb-8">
                             <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse"></div>
                             <div className="relative w-full h-full bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-xl">
@@ -101,7 +95,6 @@ const SetupDonePage = () => {
                             </div>
                         </div>
 
-                        {/* Main Success Message */}
                         <div className="space-y-4">
                             <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-gray-100 dark:via-blue-100 dark:to-indigo-100 bg-clip-text text-transparent leading-tight">
                                 🎉 Ready to Go!
@@ -112,9 +105,7 @@ const SetupDonePage = () => {
                         </div>
                     </div>
 
-                    {/* Main Content Cards */}
                     <div className="grid gap-6 md:gap-8 max-w-4xl mx-auto">
-                        {/* Getting Started Card */}
                         <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl dark:shadow-2xl overflow-hidden">
                             <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-indigo-900/20 p-6 border-b border-gray-200 dark:border-gray-700">
                                 <div className="flex items-center space-x-3">
@@ -185,7 +176,6 @@ const SetupDonePage = () => {
                             </div>
                         </div>
 
-                        {/* Community Card */}
                         <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl dark:shadow-2xl overflow-hidden">
                             <div className="bg-gradient-to-r from-green-50 via-blue-50 to-purple-50 dark:from-green-900/20 dark:via-blue-900/20 dark:to-purple-900/20 p-6 border-b border-gray-200 dark:border-gray-700">
                                 <div className="flex items-center space-x-3">
@@ -235,7 +225,6 @@ const SetupDonePage = () => {
                         </div>
                     </div>
 
-                    {/* Footer Message */}
                     <div className="text-center mt-12 space-y-4">
                         <div className="inline-flex items-center space-x-2 bg-white dark:bg-gray-800/50 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-full px-6 py-3 shadow-lg">
                             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -249,7 +238,6 @@ const SetupDonePage = () => {
                     </div>
                 </div>
 
-                {/* Enhanced Background Logo */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div
                         className="w-96 h-96 opacity-[0.02] dark:opacity-[0.05] transform rotate-12"
@@ -262,11 +250,9 @@ const SetupDonePage = () => {
                     />
                 </div>
 
-                {/* Decorative background elements */}
                 <div className="absolute top-1/4 -left-8 w-32 h-32 bg-gradient-to-br from-green-400/10 to-blue-400/10 dark:from-green-400/5 dark:to-blue-400/5 rounded-full blur-3xl"></div>
                 <div className="absolute bottom-1/4 -right-8 w-40 h-40 bg-gradient-to-tl from-purple-400/10 to-pink-400/10 dark:from-purple-400/5 dark:to-pink-400/5 rounded-full blur-3xl"></div>
 
-                {/* Subtle grid pattern */}
                 <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03]" style={{
                     backgroundImage: `radial-gradient(circle at 1px 1px, rgba(100,100,100,0.3) 1px, transparent 0)`,
                     backgroundSize: '24px 24px'

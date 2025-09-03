@@ -117,14 +117,13 @@ const PasswordSetupPage = () => {
 
     return (
         <PageLayout
-            header
             className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30 h-screen flex items-center justify-center"
             withSteps={true}
             currentStep={1}
             totalSteps={4}
             stepLabels={CREATE_WALLET_STEP_LABELS}
         >
-            <div className="relative z-10 w-full max-w-4xl mx-auto px-6 py-3 h-full flex flex-col justify-center max-h-full overflow-y-auto">
+            <div className="relative z-10 w-full max-w-4xl mx-auto px-6 py-3 h-full flex flex-col justify-center">
                 <div className="text-center mb-3">
                     <h1 className="text-lg font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-gray-100 dark:via-blue-100 dark:to-indigo-100 bg-clip-text text-transparent mb-1">
                         Create a Password
@@ -177,7 +176,7 @@ const PasswordSetupPage = () => {
 
                             <form onSubmit={onSubmit} className="col-span-1">
                                 <div className="p-4 space-y-4">
-                                <div className="space-y-3">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <PasswordInput
                                         label="New Password"
                                         placeholder="Enter New Password"
@@ -253,10 +252,10 @@ const PasswordSetupPage = () => {
                 </div>
             </div>
 
-            <div className="absolute top-1/4 -left-8 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-purple-400/10 dark:from-blue-400/5 dark:to-purple-400/5 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-1/4 -right-8 w-40 h-40 bg-gradient-to-tl from-indigo-400/10 to-purple-400/10 dark:from-indigo-400/5 dark:to-purple-400/5 rounded-full blur-3xl"></div>
+            <div className="absolute top-1/4 -left-8 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-purple-400/10 dark:from-blue-400/5 dark:to-purple-400/5 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute bottom-1/4 -right-8 w-40 h-40 bg-gradient-to-tl from-indigo-400/10 to-purple-400/10 dark:from-indigo-400/5 dark:to-purple-400/5 rounded-full blur-3xl pointer-events-none"></div>
 
-            <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03]" style={{
+            <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03] pointer-events-none" style={{
                 backgroundImage: `radial-gradient(circle at 1px 1px, rgba(100,100,100,0.3) 1px, transparent 0)`,
                 backgroundSize: '24px 24px'
             }}></div>

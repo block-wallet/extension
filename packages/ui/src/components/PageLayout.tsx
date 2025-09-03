@@ -1,7 +1,6 @@
 import { FunctionComponent } from "react"
 import { classnames } from "../styles/classes"
 import FullCenterContainer from "./FullCenterContainer"
-import LogoHeader from "./LogoHeader"
 import StepIndicator from "./setup/StepIndicator"
 
 const PageLayout: FunctionComponent<{
@@ -32,7 +31,6 @@ const PageLayout: FunctionComponent<{
 }> = ({
     children,
     centered = false,
-    header = false,
     className,
     maxWidth,
     style,
@@ -45,11 +43,6 @@ const PageLayout: FunctionComponent<{
 }) => (
         <FullCenterContainer centered={centered} screen={screen}>
             <div className="flex-1 flex flex-col items-center">
-                {header ? (
-                    <div className="mt-8 mb-4">
-                        <LogoHeader />
-                    </div>
-                ) : null}
                 <div
                     className={classnames(
                         "flex-1 flex flex-row w-full justify-center"

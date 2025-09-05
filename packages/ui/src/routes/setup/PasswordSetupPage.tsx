@@ -117,6 +117,7 @@ const PasswordSetupPage = () => {
 
     return (
         <PageLayout
+            screen
             className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30 h-screen flex items-center justify-center"
             withSteps={true}
             currentStep={1}
@@ -137,7 +138,7 @@ const PasswordSetupPage = () => {
 
                 <div className="mt-3">
                     <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-xl overflow-hidden">
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
                             <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-indigo-900/20 p-4 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-700">
                                 <div className="text-center space-y-2">
                                     <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg mx-auto flex items-center justify-center shadow-lg">
@@ -156,23 +157,7 @@ const PasswordSetupPage = () => {
                                 </div>
                             </div>
 
-                            <div className="bg-blue-50 dark:bg-blue-900/20 border-b lg:border-b-0 lg:border-r border-blue-200 dark:border-blue-800/50 p-4">
-                                <div className="flex items-start space-x-2">
-                                    <svg className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <div>
-                                        <h3 className="text-xs font-bold text-blue-900 dark:text-blue-100 mb-1">
-                                            Password Tips
-                                        </h3>
-                                        <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-0.5 leading-tight">
-                                            <li>• 8+ characters</li>
-                                            <li>• Letters & numbers</li>
-                                            <li>• Keep it secure</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
+
 
                             <form onSubmit={onSubmit} className="col-span-1">
                                 <div className="p-4 space-y-4">
@@ -193,6 +178,22 @@ const PasswordSetupPage = () => {
                                         {...register("passwordConfirmation")}
                                         error={formState.errors.passwordConfirmation?.message}
                                     />
+                                </div>
+
+                                <div className="mt-1">
+                                    <div className="inline-flex items-start space-x-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-lg">
+                                        <svg className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <div>
+                                            <h3 className="text-xs font-bold text-blue-900 dark:text-blue-100 mb-1">Password Tips</h3>
+                                            <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-0.5 leading-tight">
+                                                <li>• 8+ characters</li>
+                                                <li>• Letters & numbers</li>
+                                                <li>• Keep it secure</li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div className="bg-gray-50 dark:bg-gray-800/30 rounded-lg p-3">

@@ -42,15 +42,15 @@ const PageLayout: FunctionComponent<{
     stepLabels,
 }) => (
         <FullCenterContainer centered={centered} screen={screen}>
-            <div className="flex-1 flex flex-col items-center">
+            <div className="flex-1 flex flex-col items-center min-h-0">
                 <div
                     className={classnames(
-                        "flex-1 flex flex-row w-full justify-center"
+                        "flex-1 flex flex-row w-full justify-center min-h-0"
                     )}
                 >
                     <div
                         className={classnames(
-                            "flex-1 flex flex-col items-center bg-white dark:bg-gray-900",
+                            "flex-1 flex flex-col items-center bg-white dark:bg-gray-900 min-h-0",
                             screen ? "shadow-none rounded-none max-w-none" : "shadow-lg rounded-md",
                             maxWidth || (screen ? "" : "max-w-2xl"),
                             className

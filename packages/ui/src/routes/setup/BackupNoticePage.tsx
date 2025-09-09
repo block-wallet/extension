@@ -34,6 +34,7 @@ const BackupNoticePage = () => {
     return (
         <IdleComponent>
             <PageLayout
+                screen
                 className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30 h-screen flex items-center justify-center"
                 withSteps={true}
                 currentStep={2}
@@ -53,7 +54,7 @@ const BackupNoticePage = () => {
                     <Divider />
 
                     <div className="mt-3">
-                        <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-3 gap-0">
+                        <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-2 gap-0">
                             <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 p-4 border-b lg:border-b-0 lg:border-r border-orange-200 dark:border-orange-800/50">
                                 <div className="text-center space-y-2">
                                     <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg mx-auto flex items-center justify-center shadow-lg">
@@ -72,51 +73,6 @@ const BackupNoticePage = () => {
                                 </div>
                             </div>
 
-                            <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-b lg:border-b-0 lg:border-r border-red-200 dark:border-red-800/50 p-4">
-                                <div className="space-y-3">
-                                    <div className="flex items-start space-x-2">
-                                        <svg className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                        </svg>
-                                        <div>
-                                            <h3 className="text-xs font-bold text-red-900 dark:text-red-100 mb-1">
-                                                Security Notice
-                                            </h3>
-                                            <p className="text-xs text-red-800 dark:text-red-200 leading-tight">
-                                                Seed phrase is your only recovery method. Store safely, never share.
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 gap-2 mt-3">
-                                        <div className="flex items-center space-x-2">
-                                            <div className="w-4 h-4 bg-green-100 dark:bg-green-900/30 rounded flex items-center justify-center">
-                                                <svg className="w-2 h-2 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 8 8">
-                                                    <circle cx="4" cy="4" r="3"/>
-                                                </svg>
-                                            </div>
-                                            <span className="text-xs text-gray-700 dark:text-gray-300">Your keys, your crypto</span>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                            <div className="w-4 h-4 bg-blue-100 dark:bg-blue-900/30 rounded flex items-center justify-center">
-                                                <svg className="w-2 h-2 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 8 8">
-                                                    <circle cx="4" cy="4" r="3"/>
-                                                </svg>
-                                            </div>
-                                            <span className="text-xs text-gray-700 dark:text-gray-300">Keep keys safe offline</span>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                            <div className="w-4 h-4 bg-purple-100 dark:bg-purple-900/30 rounded flex items-center justify-center">
-                                                <svg className="w-2 h-2 text-purple-600 dark:text-purple-400" fill="currentColor" viewBox="0 0 8 8">
-                                                    <circle cx="4" cy="4" r="3"/>
-                                                </svg>
-                                            </div>
-                                            <span className="text-xs text-gray-700 dark:text-gray-300">Keys are your backup</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
                             <div className="p-4">
                                 <ClickToReveal
                                     hiddenText={seedPhrase}
@@ -124,10 +80,27 @@ const BackupNoticePage = () => {
                                     revealed={revealed}
                                     onClick={() => setRevealed(true)}
                                     allowDownload={true}
+                                    compact={true}
+                                    className="max-h-64 md:max-h-72 overflow-y-auto"
                                 />
+                                <div className="mt-2">
+                                    <div className="inline-flex items-start space-x-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg">
+                                        <svg className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                        </svg>
+                                        <div>
+                                            <h3 className="text-xs font-bold text-red-900 dark:text-red-100 mb-1">Security Notice</h3>
+                                            <ul className="text-xs text-red-800 dark:text-red-200 space-y-0.5 leading-tight">
+                                                <li>• Never share your seed phrase</li>
+                                                <li>• Store it offline safely</li>
+                                                <li>• It's your only recovery</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="bg-gray-50 dark:bg-gray-800/50 p-4 border-t border-gray-200 dark:border-gray-700 col-span-1 lg:col-span-3">
+                            <div className="bg-gray-50 dark:bg-gray-800/50 p-4 border-t border-gray-200 dark:border-gray-700 col-span-1 lg:col-span-2">
                                 <div className="flex flex-row justify-between space-x-4">
                                     <LinkButton
                                         location="/setup/done"

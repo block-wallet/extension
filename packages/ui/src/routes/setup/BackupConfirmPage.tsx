@@ -66,12 +66,12 @@ const SeedWordsInput: FunctionComponent<{
     }
 
     return (
-        <div className={compact ? "flex-1 flex flex-col space-y-3" : "space-y-6"}>
+        <div className={compact ? "flex-1 flex flex-col space-y-3" : "space-y-4"}>
             <div className={compact ? "bg-white dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 rounded-lg p-3 min-h-[90px]" : "bg-white dark:bg-gray-800/50 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-4 min-h-[120px]"}>
                 <h3 className={compact ? "text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2" : "text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3"}>
                     Selected Words ({value.length}/{totalCount})
                 </h3>
-                <div className={compact ? "grid grid-cols-3 gap-2" : "grid grid-cols-4 gap-2"}>
+                <div className={compact ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2" : "grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2"}>
                     {value.map((wordObj, index) => (
                         <button
                             type="button"
@@ -105,7 +105,7 @@ const SeedWordsInput: FunctionComponent<{
                 <h3 className={compact ? "text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2" : "text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3"}>
                     Available Words
                 </h3>
-                <div className={compact ? "grid grid-cols-3 gap-2" : "grid grid-cols-4 gap-2"}>
+                <div className={compact ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2" : "grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2"}>
                     {availableWords.map((wordObj, index) => (
                         <button
                             type="button"
@@ -154,26 +154,16 @@ const SeedPhraseBlock = (props: any) => {
                     </p>
                 </div>
             ) : (
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4">
-                    <div className="flex items-start space-x-3">
-                        <div className="flex-shrink-0">
-                            <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 className="text-sm font-bold text-blue-900 dark:text-blue-100 mb-1">
-                                Verification Instructions
-                            </h3>
-                            <p className="text-xs text-blue-800 dark:text-blue-200 leading-relaxed">
-                                Make sure that you've got it right - type out your phrase by selecting the words below in the correct order.
-                            </p>
-                        </div>
-                    </div>
+                <div className="inline-flex items-start space-x-2 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-lg max-w-[520px]">
+                    <svg className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-xs text-blue-800 dark:text-blue-200 leading-tight">
+                        Select the words below in the correct order to confirm your backup.
+                    </p>
                 </div>
             )}
 
-            {/* Error display */}
             {verificationError && (
                 <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-800/50 rounded-xl p-4">
                     <div className="flex items-start space-x-3">
@@ -194,7 +184,6 @@ const SeedPhraseBlock = (props: any) => {
                 </div>
             )}
 
-            {/* Word selection interface */}
             <SeedWordsInput
                 words={seedWords}
                 value={inputWords}
@@ -300,6 +289,7 @@ const BackupConfirmPage = () => {
                 </PopupLayout>
             ) : (
                     <PageLayout
+                        screen
                         className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30 h-screen flex items-center justify-center"
                         withSteps={!isReminder}
                         currentStep={3}
@@ -307,9 +297,8 @@ const BackupConfirmPage = () => {
                         stepLabels={CREATE_WALLET_STEP_LABELS}
                     >
                         <div className="relative z-10 w-full max-w-6xl mx-auto px-6 py-3 h-full flex flex-col justify-center">
-                        {/* Page header */}
-                        <div className="text-center mb-6">
-                            <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-gray-100 dark:via-blue-100 dark:to-indigo-100 bg-clip-text text-transparent mb-2">
+                        <div className="text-center mb-3">
+                            <h1 className="text-lg font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-gray-100 dark:via-blue-100 dark:to-indigo-100 bg-clip-text text-transparent mb-1">
                                 Confirm Secret Phrase
                             </h1>
                             <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto">
@@ -319,46 +308,37 @@ const BackupConfirmPage = () => {
 
                         <Divider />
 
-                            {/* Main content card */}
-                            <div className="mt-3">
+                            <div className="mt-2">
                                 <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-xl overflow-hidden">
-                                {/* Header */}
-                                <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-indigo-900/20 p-6 border-b border-gray-200 dark:border-gray-700">
-                                    <div className="text-center space-y-3">
-                                        <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl mx-auto flex items-center justify-center shadow-lg">
-                                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-indigo-900/20 p-2.5 border-b border-gray-200 dark:border-gray-700">
+                                    <div className="flex items-center justify-center space-x-3">
+                                        <div className="w-7 h-7 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center shadow">
+                                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
                                         </div>
-                                        <div>
-                                            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                                Verify Your Backup
-                                            </h2>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                                Select the words in the correct order to confirm your backup
-                                            </p>
-                                        </div>
+                                        <h2 className="text-xs font-bold text-gray-900 dark:text-gray-100">Verify Your Backup</h2>
                                     </div>
                                 </div>
 
-                                {/* Content */}
-                                <SeedPhraseBlock
-                                    isReminder={isReminder}
-                                    verificationError={verificationError}
-                                    seedWords={seedWords}
-                                    inputWords={inputWords}
-                                    onSeedWordsChange={(words: any) => setInputWords(words)}
-                                />
+                                <div className="p-3">
+                                    <SeedPhraseBlock
+                                        isReminder={isReminder}
+                                        verificationError={verificationError}
+                                        seedWords={seedWords}
+                                        inputWords={inputWords}
+                                        onSeedWordsChange={(words: any) => setInputWords(words)}
+                                    />
+                                </div>
 
-                                {/* Footer with actions */}
-                                <div className="bg-gray-50 dark:bg-gray-800/50 p-6 border-t border-gray-200 dark:border-gray-700">
+                                <div className="bg-gray-50 dark:bg-gray-800/50 p-3 border-t border-gray-200 dark:border-gray-700">
                                     <div className="flex flex-row justify-between space-x-4">
                                         <Link
                                             to={{
                                                 pathname: backLink,
                                                 state: { seedPhrase, password },
                                             }}
-                                            className="flex items-center px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm max-w-[170px]"
+                                            className="flex items-center px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm max-w-[170px]"
                                             draggable={false}
                                         >
                                             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -370,7 +350,7 @@ const BackupConfirmPage = () => {
                                         <button
                                             type="button"
                                             className={classnames(
-                                                "flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg max-w-[170px] min-w-[140px]",
+                                                "flex items-center justify-center px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg max-w-[170px] min-w-[130px]",
                                                 (!isPhraseValid() || isVerificationInProgress) &&
                                                 "opacity-50 pointer-events-none transform-none"
                                             )}
@@ -403,11 +383,9 @@ const BackupConfirmPage = () => {
                         </div>
                     </div>
 
-                    {/* Decorative background elements */}
                     <div className="absolute top-1/4 -left-8 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-purple-400/10 dark:from-blue-400/5 dark:to-purple-400/5 rounded-full blur-3xl pointer-events-none"></div>
                     <div className="absolute bottom-1/4 -right-8 w-40 h-40 bg-gradient-to-tl from-indigo-400/10 to-purple-400/10 dark:from-indigo-400/5 dark:to-purple-400/5 rounded-full blur-3xl pointer-events-none"></div>
 
-                    {/* Subtle grid pattern */}
                     <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03] pointer-events-none" style={{
                         backgroundImage: `radial-gradient(circle at 1px 1px, rgba(100,100,100,0.3) 1px, transparent 0)`,
                         backgroundSize: '24px 24px'

@@ -12,9 +12,7 @@ import { useCheckUserIsOnboarded } from "../../context/hooks/useCheckUserIsOnboa
 import {
   importAccountPrivateKey,
   selectAccount,
-  createWallet,
-  completeSetup
-} from "../../context/commActions"
+  createWallet} from "../../context/commActions"
 import Spinner from "../../components/spinner/Spinner"
 
 const schema = yup.object().shape({
@@ -109,8 +107,6 @@ const PrivateKeyImportPage = () => {
       )
 
       await selectAccount(accountInfo.address)
-
-      await completeSetup(true)
 
       setStep('done')
 

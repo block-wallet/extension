@@ -231,6 +231,20 @@ const initBlockWallet = async () => {
         }
     });
 
+    if (isManifestV3()) {
+        try {
+            chrome.tabs.query({}, (tabs) => {
+                for (const tab of tabs) {
+                    if (tab.id) {
+                        chrome.tabs.sendMessage(tab.id, { name: CONTENT.READY }).catch?.(() => undefined);
+                    }
+                }
+            });
+        } catch (e) {
+            // Non-fatal
+        }
+    }
+
     // Set isBlankInitialized response and should inject response
     chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
         if (request.message === 'isBlankInitialized') {
@@ -239,6 +253,8 @@ const initBlockWallet = async () => {
             sendResponse({ shouldInject: blankController.shouldInject() });
         } else if (request.message === CONTENT.SW_KEEP_ALIVE) {
             sendResponse();
+        } else if (request.message === CONTENT.READY) {
+            sendResponse({ acknowledged: true });
         }
     });
 

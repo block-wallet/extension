@@ -55,10 +55,67 @@ const checkDocType = (): boolean => {
 };
 
 /**
+ * Returns whether the current URL is blocked for provider injection.
+ * Inspired by MetaMask's provider-injection rules (blocked domains and paths).
+ */
+const isBlockedDomainOrPath = (): boolean => {
+    try {
+        const url = new URL(window.location.href);
+        const currentHostname = url.hostname;
+        const currentPathname = url.pathname;
+
+        const blockedDomains = [
+            'execution.consensys.io',
+            'execution.metamask.io',
+            'uscourts.gov',
+            'dropbox.com',
+            'webbyawards.com',
+            'adyen.com',
+            'gravityforms.com',
+            'harbourair.com',
+            'ani.gamer.com.tw',
+            'blueskybooking.com',
+            'sharefile.com',
+            'battle.net',
+            'accounts.google.com',
+            'accounts.youtube.com',
+            'appleid.apple.com',
+        ];
+
+        const blockedUrlPaths = [
+            'cdn.shopify.com/s/javascripts/tricorder/xtld-read-only-frame.html',
+        ];
+
+        const trimTrailingSlash = (str: string) =>
+            str.endsWith('/') ? str.slice(0, -1) : str;
+
+        const isBlockedDomain = blockedDomains.some(
+            (blockedDomain) =>
+                blockedDomain === currentHostname ||
+                currentHostname.endsWith(`.${blockedDomain}`)
+        );
+
+        if (isBlockedDomain) {
+            return true;
+        }
+
+        const hostAndPath = trimTrailingSlash(`${currentHostname}${currentPathname}`);
+        const isBlockedPath = blockedUrlPaths.some(
+            (blockedUrlPath) => trimTrailingSlash(blockedUrlPath) === hostAndPath
+        );
+
+        return isBlockedPath;
+    } catch (_) {
+        // Be permissive on errors; don't block by default
+        return false;
+    }
+};
+
+/**
  * Helper function with checks to do before loading the script
  */
 export const checkScriptLoad = (): boolean => {
-    return checkDocType() && checkExtension() && documentElementCheck();
+    return checkDocType() && checkExtension() && documentElementCheck() && !isBlockedDomainOrPath();
 };
 
 /**

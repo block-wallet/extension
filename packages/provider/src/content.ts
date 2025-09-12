@@ -100,7 +100,7 @@ function injectProvider() {
         // Log provider injection errors for troubleshooting
         const errorInfo = {
             timestamp: Date.now(),
-            error: error.message || String(error),
+            error: (error as any).message || String(error),
             context: 'injectProvider',
         };
         providerInjectionErrors.push(errorInfo);
@@ -114,6 +114,7 @@ function injectProvider() {
             });
         } catch (e) {
             // Silent catch - background may not be available
+            console.debug('Provider injection: background not available');
         }
     }
 }
@@ -182,7 +183,7 @@ function swKeepAlive() {
                     resolve();
                 }
             );
-        } catch (e) {
+        } catch (e: any) {
             let message = `BlockWallet: ${e}`;
             if (e.message === EXTENSION_CONTEXT_INVALIDATED_CHROMIUM_ERROR) {
                 message = `BlockWallet: Please refresh the page. ${e}`;
@@ -283,6 +284,42 @@ if (isManifestV3()) {
             clearTimeout(timeoutRef);
         }
     });
+
+    // Reconnect streams on BFCache or prerender transitions
+    if ((document as any).prerendering) {
+        document.addEventListener('prerenderingchange', () => {
+            // Force reconnection on prerender -> active
+            try {
+                if (port) {
+                    port.disconnect();
+                }
+            } catch (e) {
+                console.debug('Error disconnecting port during prerender change', e);
+            }
+            init();
+        });
+    }
+
+    window.addEventListener('pageshow', (event: PageTransitionEvent) => {
+        if ((event as any).persisted) {
+            console.warn('BFCached page has become active. Restoring the connection.');
+            setupReadyHandshake();
+            init();
+        }
+    });
+
+    window.addEventListener('pagehide', (event: PageTransitionEvent) => {
+        if ((event as any).persisted) {
+            console.warn('Page may become BFCached. Destroying the connection.');
+            try {
+                if (port) {
+                    port.disconnect();
+                }
+            } catch (e) {
+                console.debug('Error disconnecting port during pagehide', e);
+            }
+        }
+    });
 } else {
     SW_ALIVE = true;
 }
@@ -379,6 +416,7 @@ const windowListener = async ({
                     init();
                 } catch (e) {
                     // ignore reinit errors; retry loop will handle
+                    console.debug('Error reinitializing during retry', e);
                 }
             }
 
@@ -398,20 +436,6 @@ window.addEventListener('message', (message) => {
         console.warn('Error processing window message:', error);
     });
 });
-
-/**
- * Handles DOM operations safely
- */
-// Note: helper currently unused, retained for future safe DOM operations
-// function safeDOMOperation(operation: () => void): boolean {
-//     try {
-//         operation();
-//         return true;
-//     } catch (error) {
-//         console.warn('DOM operation failed:', error);
-//         return false;
-//     }
-// }
 
 // Init function with improved connection resilience and state management
 const init = () => {
@@ -507,5 +531,30 @@ const init = () => {
 
     portReinitialized = true;
 };
+
+// Helper to request READY from background and set up listener to re-init when background announces READY
+function setupReadyHandshake() {
+    try {
+        // Proactively notify background we're alive
+        chrome.runtime.sendMessage({ message: CONTENT.READY }, () => { /* acknowledged */ });
+    } catch (e) {
+        console.debug('READY handshake: background not available', e);
+    }
+
+    try {
+        chrome.runtime.onMessage.addListener((msg) => {
+            if (msg && msg.name === CONTENT.READY) {
+                if (!port) {
+                    init();
+                }
+            }
+        });
+    } catch (e) {
+        console.debug('READY handshake listener error', e);
+    }
+}
+
+// Initialize READY handshake at startup
+setupReadyHandshake();
 
 init();

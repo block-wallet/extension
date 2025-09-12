@@ -42,3 +42,37 @@ export const getCurrentOS = () => {
         return "Linux"
     }
 }
+
+/**
+ * Opens the extension UI in a new tab with an optional route and query string.
+ */
+export const openExtensionInBrowser = (route?: string, queryString?: string) => {
+    // Use popup.html so the full tab loads the same router as the popup
+    let extensionURL = chrome.runtime.getURL('popup.html')
+    const currentHash = typeof window !== 'undefined' ? (window.location.hash || '').replace(/^#/, '') : ''
+    const targetRoute = route || currentHash || 'home'
+    if (targetRoute) {
+        extensionURL += `#${targetRoute}`
+    }
+    if (queryString) {
+        extensionURL += `?${queryString}`
+    }
+    chrome.tabs.create({ url: extensionURL })
+}
+
+/**
+ * Shows a basic notification using chrome.notifications.
+ */
+export const showBasicNotification = async (title: string, message: string, url?: string) => {
+    try {
+        const iconUrl = chrome.runtime.getURL('images/icon-64.png')
+        await chrome.notifications.create(url || '', {
+            type: 'basic',
+            title,
+            iconUrl,
+            message,
+        })
+    } catch (e) {
+        // non-fatal
+    }
+}

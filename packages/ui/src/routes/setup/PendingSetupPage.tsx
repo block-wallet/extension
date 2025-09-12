@@ -24,7 +24,9 @@ const PendingSetupPage = () => {
                         </span>
                     </div>
                     <button
-                        onClick={() => returnToOnboarding()}
+                        onClick={() => {
+                            returnToOnboarding();
+                        }}
                         className={classnames(Classes.button, "mt-12")}
                     >
                         Back to Onboarding

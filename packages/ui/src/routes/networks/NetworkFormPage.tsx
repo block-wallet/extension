@@ -36,6 +36,7 @@ import { parseChainId } from "../../util/networkUtils"
 import { AiOutlineWarning, AiOutlineInfoCircle } from "react-icons/ai"
 import { HiOutlineExternalLink } from "react-icons/hi"
 import usePersistedLocalStorageForm from "../../util/hooks/usePersistedLocalStorageForm"
+import { showBasicNotification } from "../../context/util/platform"
 
 const getStatusFromEnpoint = (
     chainInfo: ChainListItem,
@@ -553,6 +554,13 @@ const NetworkFormPage = ({
                             return addNetworkInvoke.reset()
                         }
 
+                        if (addNetworkInvoke.isSuccess) {
+                            showBasicNotification(
+                                isEdit ? 'Network updated' : 'Network added',
+                                isEdit ? 'Network updated successfully' : 'Network added successfully'
+                            )
+                        }
+
                         history.push(
                             isEdit || !switchToNetwork ? "/settings/networks" : "/"
                         )
@@ -585,6 +593,11 @@ const NetworkFormPage = ({
                         if (removeNetworkInvoke.isError) {
                             return removeNetworkInvoke.reset()
                         }
+
+                        if (removeNetworkInvoke.isSuccess) {
+                            showBasicNotification('Network deleted', 'Network deleted successfully')
+                        }
+
                         history.push("/settings/networks")
                     }}
                     showCloseButton

@@ -13,6 +13,7 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import logo from "../../assets/images/logo.svg"
 import { LINKS } from "../../util/constants"
 import { CREATE_WALLET_STEP_LABELS } from "./PasswordSetupPage"
+import { showBasicNotification } from "../../context/util/platform"
 
 const links = [
     {
@@ -50,6 +51,9 @@ const SetupDonePage = () => {
         }
         const completeTimer = setTimeout(() => {
             completeSetup(sendNotification)
+            if (sendNotification) {
+                showBasicNotification('BlockWallet', 'Your wallet is ready to use.')
+            }
         }, 2500)
 
         return () => {

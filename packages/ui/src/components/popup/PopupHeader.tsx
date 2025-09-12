@@ -17,6 +17,8 @@ import { DropdownMenuItem } from "../ui/Dropdown/DropdownMenu"
 import useHotKey, { UseHotKeyProps } from "../../util/hooks/useHotKey"
 import { AiFillInfoCircle } from "react-icons/ai"
 import Tooltip from "../label/Tooltip"
+import { openExtensionInBrowser } from "../../context/util/platform"
+import { FiMaximize } from "react-icons/fi"
 
 export interface PopupHeaderProps {
     title: string
@@ -186,6 +188,20 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
                             </Dropdown.Menu>
                         </Dropdown>
                     )}
+
+                    {/* Open in full tab */}
+                    <button
+                        onClick={() => openExtensionInBrowser()}
+                        disabled={disabled}
+                        title="Open in new tab"
+                        className={classnames(
+                            "p-2 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default",
+                            disabled && "pointer-events-none text-gray-300"
+                        )}
+                        type="button"
+                    >
+                        <FiMaximize size={18} />
+                    </button>
 
                     {close && (
                         <button

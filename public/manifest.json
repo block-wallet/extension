@@ -82,8 +82,8 @@
             "description": "Start the extension"
         }
     },
-    "version": "2.0.1",
-    "version_name": "2.0.1",
+    "version": "2.0.3",
+    "version_name": "2.0.3",
     "web_accessible_resources": [
         {
             "resources": [

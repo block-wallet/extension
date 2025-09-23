@@ -53,6 +53,12 @@ import { AccountType, HardwareWalletOpTypes } from "../../context/commTypes"
 import DAppPopupHeader from "../../components/dApp/DAppPopupHeader"
 import { getNetworkNameFromChainId } from "../../util/getExplorer"
 import CodeBlock from "../../components/ui/CodeBlock"
+import {
+    extractSiweSummary,
+    isLikelySiweString,
+    isLikelySiweTypedData,
+    sanitizeTypedMessage,
+} from "../../util/typedData"
 
 import "react-json-view-lite/dist/index.css"
 
@@ -245,9 +251,45 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
         data: NormalizedSignatureData[SignatureMethods],
         rawData: string | undefined
     ) => {
+        // SIWE detection and banner
+        let siweBanner: JSX.Element | null = null
+        if (method === "personal_sign" && typeof (rawData ?? data) === "string") {
+            if (isLikelySiweString((rawData ?? data) as string)) {
+                siweBanner = (
+                    <div className="w-full px-3 py-2 mb-2 text-sm text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
+                        <strong className="font-semibold">SIWE detected: </strong>
+                        Sign-In With Ethereum message
+                    </div>
+                )
+            }
+        }
+
+        if (
+            (method === "eth_signTypedData" ||
+                method === "eth_signTypedData_v3" ||
+                method === "eth_signTypedData_v4") &&
+            data && typeof data === "object"
+        ) {
+            const typed = data as any
+            if (typed?.message && isLikelySiweTypedData(typed.message)) {
+                const summary = extractSiweSummary(typed.message)
+                siweBanner = (
+                    <div className="w-full px-3 py-2 mb-2 text-sm text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
+                        <strong className="font-semibold">SIWE detected: </strong>
+                        {summary?.domain ? (
+                            <span>Domain {summary.domain}</span>
+                        ) : (
+                            <span>Sign-In With Ethereum message</span>
+                        )}
+                    </div>
+                )
+            }
+        }
+
         if (method === "eth_sign") {
             return (
                 <>
+                    {siweBanner}
                     <WarningDialog
                         open={isEthSignWarningOpen}
                         onDone={() => setIsEthSignWarningOpen(false)}
@@ -273,6 +315,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
         if (method === "personal_sign") {
             return (
                 <>
+                    {siweBanner}
                     <span className="font-semibold py-2 text-gray-900 dark:text-gray-100">Message</span>
                     <CodeBlock className="max-h-56 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">
                         <>{rawData ?? data}</>
@@ -285,6 +328,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
             const v1Data = data as V1TypedData[]
             return (
                 <>
+                    {siweBanner}
                     {v1Data.map((param: V1TypedData) => {
                         return (
                             <>
@@ -302,13 +346,15 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
         }
 
         const v4Data = data as TypedMessage<MessageSchema>
+        const sanitizedMessage = sanitizeTypedMessage(v4Data.message)
         return (
             <>
+                {siweBanner}
                 {formatTypedDomain(v4Data.domain)}
                 <span className="font-semibold py-1 text-gray-900 dark:text-gray-100">Message</span>
                 <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md p-2">
                     <JsonView
-                        data={v4Data.message}
+                        data={sanitizedMessage as any}
                         style={jsonViewStyle}
                         shouldInitiallyExpand={allExpanded}
                     />

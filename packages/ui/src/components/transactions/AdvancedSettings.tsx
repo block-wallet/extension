@@ -128,9 +128,15 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
 
     const nextNonce = useRef<number>(defaultSettings.customNonce)
 
-    const schema = GetAdvancedSettingsSchema(display)
+        const schema = GetAdvancedSettingsSchema(display)
 
-    const {
+     const renderNonceHint = () => (
+         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+             If another pending transaction uses the same nonce, submitting this will replace it.
+         </div>
+     )
+
+     const {
         clearErrors,
         getValues,
         handleSubmit,
@@ -511,6 +517,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                                         <span>{errors.nonce.message}</span>
                                     </div>
                                 )}
+                                {!errors.nonce?.message && renderNonceHint()}
                             </div>
                         )}
 

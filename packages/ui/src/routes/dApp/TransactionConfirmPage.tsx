@@ -53,6 +53,7 @@ import {
     setUserSettings,
 } from "../../context/commActions"
 import { simulateTransaction } from "../../context/commActions"
+import { subscribeActivityList } from "../../context/commActions"
 
 // Utils
 import { formatName } from "../../util/formatAccount"
@@ -62,6 +63,7 @@ import { formatNumberLength } from "../../util/formatNumberLength"
 import {
     HardwareWalletOpTypes,
     TransactionCategories,
+    TransactionStatus,
 } from "../../context/commTypes"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
 import {
@@ -202,6 +204,7 @@ const TransactionConfirm: React.FC<{
     const [transactionAdvancedData, setTransactionAdvancedData] =
         useState<TransactionAdvancedData>({})
     const nonceRef = useRef(0)
+    const [hasSameNoncePending, setHasSameNoncePending] = useState(false)
 
     const description =
         transaction.methodSignature?.name ??
@@ -256,6 +259,32 @@ const TransactionConfirm: React.FC<{
             nonceRef.current = nonce
         })
     }, [selectedAddress])
+
+    useEffect(() => {
+        let unsubscribed = false
+        subscribeActivityList(({ pending }) => {
+            if (unsubscribed) return
+            try {
+                const sameNonce = pending.some((tx) => {
+                    if (tx.id === transactionId) return false
+                    const txNonce = tx.transactionParams?.nonce
+                    const currentNonce = params?.nonce
+                    const isPendingStatus =
+                        tx.status === TransactionStatus.UNAPPROVED ||
+                        tx.status === TransactionStatus.APPROVED ||
+                        tx.status === TransactionStatus.SIGNED
+                    return isPendingStatus && txNonce != null && currentNonce != null && txNonce === currentNonce
+                })
+                setHasSameNoncePending(sameNonce)
+            } catch {
+                setHasSameNoncePending(false)
+            }
+            return true
+        })
+        return () => {
+            unsubscribed = true
+        }
+    }, [transactionId, params?.nonce])
 
     // To prevent calculations on every render, force dependency array to only check state value that impacts
     // Recalculate gas values when switching between transactions too.
@@ -577,6 +606,11 @@ const TransactionConfirm: React.FC<{
                 onClose={() => setHasDetails(false)}
                 nonce={transactionAdvancedData.customNonce ?? nonceRef.current}
             />
+            {hasSameNoncePending && (
+                <div className="mx-6 mt-2 mb-0 text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded p-2">
+                    Another pending transaction with the same nonce exists. Submitting this may replace the other transaction.
+                </div>
+            )}
             <div className="flex flex-row items-center justify-between w-full px-6 py-4 border-b">
                 {isLoading && <LoadingOverlay />}
                 <CheckBoxDialog

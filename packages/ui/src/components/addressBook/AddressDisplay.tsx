@@ -3,7 +3,8 @@ import { formatHash, formatName } from "../../util/formatAccount"
 import CollapsableMessage from "../CollapsableMessage"
 import CheckmarkCircle from "../icons/CheckmarkCircle"
 import ExclamationCircleIconFull from "../icons/ExclamationCircleIconFull"
-import { getAddressType } from "../../context/commActions"
+import { getAddressType, lookupAddressEns } from "../../context/commActions"
+import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 
 export enum AddressType {
     NORMAL = "NORMAL",
@@ -53,6 +54,8 @@ export const AddressDisplay: FunctionComponent<{
 }> = ({ receivingAddress, selectedAccountName }) => {
     const [showingTheWholeAddress, setShowingTheWholeAddress] = useState(false)
     const [addressType, setAddressType] = useState<AddressType>()
+    const [ensName, setEnsName] = useState<string | null>(null)
+    const { chainId } = useSelectedNetwork()
 
     const addressToDisplay = formatHash(receivingAddress)
     const fullAddressToDisplay = formatHash(
@@ -70,6 +73,26 @@ export const AddressDisplay: FunctionComponent<{
             setAddressType(type)
         })
     }, [receivingAddress])
+
+    useEffect(() => {
+        let cancelled = false
+        const run = async () => {
+            try {
+                if (chainId !== 1) {
+                    setEnsName(null)
+                    return
+                }
+                const name = await lookupAddressEns(receivingAddress)
+                if (!cancelled) setEnsName(name)
+            } catch {
+                if (!cancelled) setEnsName(null)
+            }
+        }
+        run()
+        return () => {
+            cancelled = true
+        }
+    }, [chainId, receivingAddress])
 
     return (
         <>
@@ -105,6 +128,11 @@ export const AddressDisplay: FunctionComponent<{
                             {addressToDisplay}
                         </span>
                     )}
+                    {ensName && (
+                        <span className="text-gray-500 dark:text-gray-400 truncate ml-2">
+                            ({ensName})
+                        </span>
+                    )}
                 </div>
             ) : (
                 <CollapsableMessage
@@ -128,6 +156,11 @@ export const AddressDisplay: FunctionComponent<{
                             <span className="text-gray-600 dark:text-gray-400 truncate ml-1">
                                 {addressToDisplay}
                             </span>
+                            {ensName && (
+                                <span className="text-gray-500 dark:text-gray-400 truncate ml-2">
+                                    ({ensName})
+                                </span>
+                            )}
                         </div>
                     }
                 />

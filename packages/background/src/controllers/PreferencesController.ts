@@ -23,6 +23,8 @@ export interface UserSettings {
     displayNetWorth: boolean;
     // Theme preference for the wallet UI
     theme: 'light' | 'dark' | 'system';
+    // Enable ENS forward/reverse hints in the UI
+    ensHintsEnabled?: boolean;
 }
 
 export interface Note {

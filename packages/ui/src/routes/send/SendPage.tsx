@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useMergeRefs } from "../../context/hooks/useMergeRefs"
 import { addressBookSet, addressBookGetRecentAddresses } from "../../context/commActions"
+import { resolveEnsName } from "../../context/commActions"
+import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
+import { useBlankState } from "../../context/background/backgroundHooks"
+import { setUserSettings } from "../../context/commActions"
 
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
@@ -70,6 +74,9 @@ const SendPage = () => {
     const [selectedAccount, setSelectedAccount] = useState<AccountResult>()
     const [searchString, setSearchString] = useState<string>("")
     const [warning, setWarning] = useState<string>("")
+    const [ensResolvedAddress, setEnsResolvedAddress] = useState<string | null>(null)
+    const { settings } = useBlankState()!
+    const ensHintsEnabled = settings?.ensHintsEnabled ?? true
     const [preSelectedAsset, setPreSelectedAsset] = useState<TokenWithBalance>()
     const [isAddress, setIsAddress] = useState<boolean>(false)
 
@@ -144,13 +151,26 @@ const SendPage = () => {
     })
     const { ref } = register("address")
 
+    const { chainId } = useSelectedNetwork()
+
     const onChangeHandler = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value
         setValue("address", value)
         setSearchString(value)
         setAddContact(false)
         setShowRecents(value === "")
-    }, [setValue, setSearchString, setAddContact, setShowRecents])
+        // Forward ENS resolution hint (mainnet only)
+        try {
+            if (ensHintsEnabled && chainId === 1 && /\.[eE][tT][hH]$/.test(value.trim())) {
+                const addr = await resolveEnsName(value.trim())
+                setEnsResolvedAddress(addr)
+            } else {
+                setEnsResolvedAddress(null)
+            }
+        } catch {
+            setEnsResolvedAddress(null)
+        }
+    }, [setValue, setSearchString, setAddContact, setShowRecents, chainId, ensHintsEnabled])
 
     useEffect(() => {
         const checkAddress = () => {
@@ -271,6 +291,42 @@ const SendPage = () => {
                         debounceTime={1000}
                         searchShowSkeleton={setShowSearchSkeleton}
                     />
+                    {ensHintsEnabled && ensResolvedAddress && !isAddress && (
+                        <div className="text-xs text-gray-600 dark:text-gray-400 px-1 flex items-center gap-2">
+                            <span>Resolves to: <span className="font-mono">{ensResolvedAddress}</span></span>
+                            <button
+                                type="button"
+                                className="px-2 py-0.5 rounded-full border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                onClick={() => {
+                                    const addr = ensResolvedAddress
+                                    if (!addr) return
+                                    setValue("address", addr, { shouldValidate: true })
+                                    setSearchString(addr)
+                                    setIsAddress(true)
+                                    setShowRecents(false)
+                                    setEnsResolvedAddress(null)
+                                }}
+                            >
+                                Use
+                            </button>
+                        </div>
+                    )}
+                    <div className="px-1">
+                        <label className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 cursor-pointer select-none">
+                            <input
+                                type="checkbox"
+                                className="form-checkbox"
+                                checked={!!ensHintsEnabled}
+                                onChange={async (e) => {
+                                    await setUserSettings({
+                                        ...settings,
+                                        ensHintsEnabled: e.target.checked,
+                                    })
+                                }}
+                            />
+                            Show ENS hints
+                        </label>
+                    </div>
                     {canAddContact && !showSearchSkeleton && (
                         <Checkbox
                             label="Add to contacts"

@@ -174,6 +174,7 @@ const initialState: BlankAppState = {
             enableTransactionSimulation: true,
             displayNetWorth: true,
             theme: 'system', // Default theme preference
+            ensHintsEnabled: true,
         },
         releaseNotesSettings: {
             lastVersionUserSawNews: '0.1.3',

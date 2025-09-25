@@ -21,6 +21,7 @@ interface State {
     hideEstimatedGasExceedsThresholdWarning: boolean
     hideBridgeInsufficientNativeTokenWarning: boolean
     enableTransactionSimulation: boolean
+    ensHintsEnabled: boolean
 }
 
 const NotificationsAndWarningsPage = () => {
@@ -38,6 +39,7 @@ const NotificationsAndWarningsPage = () => {
         hideBridgeInsufficientNativeTokenWarning:
             settings.hideBridgeInsufficientNativeTokenWarning,
         enableTransactionSimulation: settings.enableTransactionSimulation,
+        ensHintsEnabled: settings.ensHintsEnabled ?? true,
     })
 
     const [preferencesConfig, setPreferencesConfig] = useReducer(
@@ -61,6 +63,7 @@ const NotificationsAndWarningsPage = () => {
                     preferencesConfig.hideBridgeInsufficientNativeTokenWarning,
                 enableTransactionSimulation:
                     preferencesConfig.enableTransactionSimulation,
+                ensHintsEnabled: preferencesConfig.ensHintsEnabled,
             })
         )
     }
@@ -173,6 +176,16 @@ const NotificationsAndWarningsPage = () => {
                                     onToggle={(value) =>
                                         setPreferencesConfig({
                                             enableTransactionSimulation: value,
+                                        })
+                                    }
+                                />
+                                <ToggleButton
+                                    id="ensHints"
+                                    label="Show ENS Hints"
+                                    defaultChecked={preferencesConfig.ensHintsEnabled}
+                                    onToggle={(value) =>
+                                        setPreferencesConfig({
+                                            ensHintsEnabled: value,
                                         })
                                     }
                                 />

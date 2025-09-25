@@ -33,7 +33,6 @@ import { formatHashLastChars } from "../../util/formatAccount"
 import AccountsList from "../../components/account/AccountsList"
 import AccountDisplay from "../../components/account/AccountDisplay"
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
-import { AccountType } from "../../context/commTypes"
 
 // Simple type for recent addresses
 type RecentAddressInfo = {
@@ -151,7 +150,7 @@ const SendPage = () => {
     })
     const { ref } = register("address")
 
-    const { chainId } = useSelectedNetwork()
+    const { ens } = useSelectedNetwork()
 
     const onChangeHandler = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value
@@ -159,9 +158,8 @@ const SendPage = () => {
         setSearchString(value)
         setAddContact(false)
         setShowRecents(value === "")
-        // Forward ENS resolution hint (mainnet only)
         try {
-            if (ensHintsEnabled && chainId === 1 && /\.[eE][tT][hH]$/.test(value.trim())) {
+            if (ensHintsEnabled && ens && /\.[eE][tT][hH]$/.test(value.trim())) {
                 const addr = await resolveEnsName(value.trim())
                 setEnsResolvedAddress(addr)
             } else {
@@ -170,7 +168,7 @@ const SendPage = () => {
         } catch {
             setEnsResolvedAddress(null)
         }
-    }, [setValue, setSearchString, setAddContact, setShowRecents, chainId, ensHintsEnabled])
+    }, [setValue, setSearchString, setAddContact, setShowRecents, ens, ensHintsEnabled])
 
     useEffect(() => {
         const checkAddress = () => {

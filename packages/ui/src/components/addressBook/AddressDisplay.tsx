@@ -55,7 +55,7 @@ export const AddressDisplay: FunctionComponent<{
     const [showingTheWholeAddress, setShowingTheWholeAddress] = useState(false)
     const [addressType, setAddressType] = useState<AddressType>()
     const [ensName, setEnsName] = useState<string | null>(null)
-    const { chainId } = useSelectedNetwork()
+    const { ens } = useSelectedNetwork()
 
     const addressToDisplay = formatHash(receivingAddress)
     const fullAddressToDisplay = formatHash(
@@ -78,7 +78,7 @@ export const AddressDisplay: FunctionComponent<{
         let cancelled = false
         const run = async () => {
             try {
-                if (chainId !== 1) {
+                if (!ens) {
                     setEnsName(null)
                     return
                 }
@@ -92,7 +92,7 @@ export const AddressDisplay: FunctionComponent<{
         return () => {
             cancelled = true
         }
-    }, [chainId, receivingAddress])
+    }, [ens, receivingAddress])
 
     return (
         <>

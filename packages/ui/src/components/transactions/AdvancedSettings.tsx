@@ -392,8 +392,8 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                 </div>
             )}
 
-            <Dialog open={isOpen} className="max-h-[560px]">
-                <div className="relative flex flex-col h-full">
+            <Dialog open={isOpen} className="max-h-[560px] max-w-full">
+                <div className="relative flex flex-col h-full max-h-[560px] overflow-hidden">
                     <button
                         onClick={() => setIsOpen(false)}
                         className="absolute top-0 right-2 z-10 p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -401,7 +401,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                     >
                         <CloseIcon size="16" />
                     </button>
-                    <div className="text-center px-6 pt-1 pb-2 shrink-0">
+                    <div className="text-center px-6 pt-1 pb-2 flex-shrink-0">
                         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
                             {label}
                         </h2>
@@ -410,7 +410,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                         </p>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto px-6 space-y-4">
+                    <div className="flex-1 overflow-y-auto px-6 space-y-4 min-h-0">
                         {display.slippage && (
                             <div className="space-y-3">
                                 <div className="flex items-center space-x-2">
@@ -441,7 +441,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                                         autoComplete="off"
                                         onChange={onSlippageChange}
                                         className={classnames(
-                                            "w-full px-4 py-3 text-sm rounded-xl border transition-all duration-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 dark:focus:border-purple-400",
+                                            "w-full max-w-full px-4 py-3 text-sm rounded-xl border transition-all duration-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 dark:focus:border-purple-400",
                                             "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100",
                                             errors.slippage
                                                 ? "border-red-300 dark:border-red-600 focus:ring-red-500/20"
@@ -501,7 +501,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                                     autoComplete="off"
                                     onChange={onNonceChange}
                                     className={classnames(
-                                        "w-full px-4 py-3 text-sm rounded-xl border transition-all duration-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 dark:focus:border-purple-400",
+                                        "w-full max-w-full px-4 py-3 text-sm rounded-xl border transition-all duration-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 dark:focus:border-purple-400",
                                         "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100",
                                         errors.nonce
                                             ? "border-red-300 dark:border-red-600 focus:ring-red-500/20"
@@ -566,7 +566,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                         )}
 
                         {/* Reset button */}
-                        <div className="flex justify-center pt-1">
+                        <div className="flex justify-center pt-1 pb-4">
                             <button
                                 onClick={resetSettings}
                                 className="text-sm font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:underline transition-colors duration-200"
@@ -574,9 +574,11 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                                 Reset to Default
                             </button>
                         </div>
+                    </div>
 
-                        {/* Actions */}
-                        <div className="flex space-x-3 pt-6">
+                    {/* Actions footer - fixed at bottom */}
+                    <div className="flex-shrink-0 px-6 pb-4">
+                        <div className="flex space-x-3">
                             <button
                                 onClick={() => setIsOpen(false)}
                                 className="flex-1 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors duration-200"

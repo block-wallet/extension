@@ -235,7 +235,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                         <span className="font-semibold pt-1 text-gray-900 dark:text-gray-100">
                             {formattedDomainKeyNames[displayOrder[i]]}
                         </span>
-                        <span className="text-primary-grey-dark dark:text-gray-300 allow-select-all">
+                        <span className="text-primary-grey-dark dark:text-gray-300 allow-select-all break-all">
                             {param}
                         </span>
                     </>
@@ -256,7 +256,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
         if (method === "personal_sign" && typeof (rawData ?? data) === "string") {
             if (isLikelySiweString((rawData ?? data) as string)) {
                 siweBanner = (
-                    <div className="w-full px-3 py-2 mb-2 text-sm text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
+                    <div className="w-full max-w-full px-3 py-2 mb-2 text-sm text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded overflow-hidden">
                         <strong className="font-semibold">SIWE detected: </strong>
                         Sign-In With Ethereum message
                     </div>
@@ -274,10 +274,10 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
             if (typed?.message && isLikelySiweTypedData(typed.message)) {
                 const summary = extractSiweSummary(typed.message)
                 siweBanner = (
-                    <div className="w-full px-3 py-2 mb-2 text-sm text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
+                    <div className="w-full max-w-full px-3 py-2 mb-2 text-sm text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded overflow-hidden">
                         <strong className="font-semibold">SIWE detected: </strong>
                         {summary?.domain ? (
-                            <span>Domain {summary.domain}</span>
+                            <span className="break-all">Domain {summary.domain}</span>
                         ) : (
                             <span>Sign-In With Ethereum message</span>
                         )}
@@ -300,12 +300,12 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                         iconColor="text-red-500"
                         wideMargins={false}
                     />
-                    <div className="w-full px-3 py-3 text-sm text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded">
+                    <div className="w-full max-w-full px-3 py-3 text-sm text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded overflow-hidden">
                         <strong className="font-semibold">Warning: </strong>
-                        {`Make sure you trust ${origin}. Signing this could grant complete control of your assets`}
+                        <span className="break-words">{`Make sure you trust ${origin}. Signing this could grant complete control of your assets`}</span>
                     </div>
                     <span className="font-semibold py-2 text-gray-900 dark:text-gray-100">Message</span>
-                    <CodeBlock className="max-h-56 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">
+                    <CodeBlock className="max-h-56 max-w-full overflow-auto bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">
                         <>{rawData ?? data}</>
                     </CodeBlock>
                 </>
@@ -317,7 +317,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                 <>
                     {siweBanner}
                     <span className="font-semibold py-2 text-gray-900 dark:text-gray-100">Message</span>
-                    <CodeBlock className="max-h-56 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">
+                    <CodeBlock className="max-h-56 max-w-full overflow-auto bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">
                         <>{rawData ?? data}</>
                     </CodeBlock>
                 </>
@@ -335,7 +335,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                                 <span className="font-semibold pt-1 text-gray-900 dark:text-gray-100">
                                     {param.name}
                                 </span>
-                                <span className="text-primary-grey-dark dark:text-gray-300 allow-select-all">
+                                <span className="text-primary-grey-dark dark:text-gray-300 allow-select-all break-all">
                                     {`${param.value}`}
                                 </span>
                             </>
@@ -352,7 +352,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                 {siweBanner}
                 {formatTypedDomain(v4Data.domain)}
                 <span className="font-semibold py-1 text-gray-900 dark:text-gray-100">Message</span>
-                <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md p-2">
+                <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md p-2 max-w-full overflow-auto">
                     <JsonView
                         data={sanitizedMessage as any}
                         style={jsonViewStyle}
@@ -438,42 +438,48 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                 showCheckbox
                 checkboxText="Don't show this warning again"
             />
-            {/* Origin display removed per updated UX */}
-            <span className="font-semibold px-6 py-3 text-sm text-gray-800 dark:text-gray-100">
-                Signing Account
-            </span>
-            <div className="flex flex-col px-6">
-                <div className="flex flex-row items-center space-x-4 p-3 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                    <AccountIcon
-                        className="w-10 h-10"
-                        fill={getAccountColor(accountData.address)}
-                    />
-                    <button
-                        type="button"
-                        className="relative flex flex-col group space-y-1"
-                        onClick={copy}
-                    >
-                        <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                            {formatName(accountData.name, 15)}
-                            {" ("}
-                            {formatNumberLength(
-                                formatUnits(
-                                    nativeToken.balance,
-                                    nativeToken.token.decimals
-                                ),
-                                5
-                            )}
-                            {` ${nativeToken.token.symbol})`}
-                        </span>
-                        <span className="text-xs text-gray-600 dark:text-gray-400">
-                            {formatHash(accountData.address)}
-                        </span>
-                        <CopyTooltip copied={copied} />
-                    </button>
+            <div className="flex flex-col flex-1 overflow-hidden">
+                {/* Signing Account Section */}
+                <div className="flex-shrink-0">
+                    <span className="font-semibold px-6 py-3 text-sm text-gray-800 dark:text-gray-100">
+                        Signing Account
+                    </span>
+                    <div className="flex flex-col px-6 pb-3">
+                        <div className="flex flex-row items-center space-x-4 p-3 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                            <AccountIcon
+                                className="w-10 h-10 flex-shrink-0"
+                                fill={getAccountColor(accountData.address)}
+                            />
+                            <button
+                                type="button"
+                                className="relative flex flex-col group space-y-1 min-w-0 flex-1"
+                                onClick={copy}
+                            >
+                                <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                                    {formatName(accountData.name, 15)}
+                                    {" ("}
+                                    {formatNumberLength(
+                                        formatUnits(
+                                            nativeToken.balance,
+                                            nativeToken.token.decimals
+                                        ),
+                                        5
+                                    )}
+                                    {` ${nativeToken.token.symbol})`}
+                                </span>
+                                <span className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                                    {formatHash(accountData.address)}
+                                </span>
+                                <CopyTooltip copied={copied} />
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div className="flex flex-col px-6 py-3 space-y-0.5 text-sm text-gray-800 dark:text-gray-100 break-words">
-                {formatSignatureData(method, data, rawData)}
+
+                {/* Signature Data Section - Scrollable */}
+                <div className="flex-1 overflow-auto px-6 pb-3 space-y-0.5 text-sm text-gray-800 dark:text-gray-100 break-words">
+                    {formatSignatureData(method, data, rawData)}
+                </div>
             </div>
             <HardwareDeviceNotLinkedDialog
                 onDone={resetDeviceLinkStatus}

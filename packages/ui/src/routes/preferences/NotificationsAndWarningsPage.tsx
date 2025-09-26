@@ -97,16 +97,17 @@ const NotificationsAndWarningsPage = () => {
                 </PopupFooter>
             }
         >
-            <div className="flex flex-col p-6 space-y-6 w-full">
+            <div className="flex flex-col flex-1 overflow-auto">
+                <div className="flex flex-col p-6 space-y-6 w-full max-w-full">
                 {/* Information Panel */}
-                <div className="bg-blue-50 dark:bg-gray-800 p-4 rounded-lg border border-blue-200 dark:border-gray-700">
+                <div className="bg-blue-50 dark:bg-gray-800 p-4 rounded-lg border border-blue-200 dark:border-gray-700 max-w-full overflow-hidden">
                     <div className="flex items-start space-x-3">
                         <BsGear className="text-blue-600 dark:text-blue-400 text-lg mt-0.5 flex-shrink-0" />
-                        <div>
+                        <div className="min-w-0 flex-1">
                             <h3 className="text-base font-semibold text-blue-800 dark:text-blue-200 mb-2">
                                 Safety & Notification Settings
                             </h3>
-                            <p className="text-sm text-blue-700 dark:text-blue-300">
+                            <p className="text-sm text-blue-700 dark:text-blue-300 break-words">
                                 Configure browser notifications and security warnings to protect your assets
                                 and stay informed about important wallet events.
                             </p>
@@ -115,15 +116,15 @@ const NotificationsAndWarningsPage = () => {
                 </div>
 
                 {/* Browser Notifications Section */}
-                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 max-w-full overflow-hidden">
                     <div className="space-y-4">
                         <div className="flex items-start space-x-3">
                             <BsBell className="text-blue-500 dark:text-blue-400 text-lg mt-0.5 flex-shrink-0" />
-                            <div className="flex-grow">
+                            <div className="flex-grow min-w-0">
                                 <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">
                                     Browser Notifications
                                 </h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 break-words">
                                     Receive BlockWallet's browser notifications for transaction confirmations,
                                     security alerts, and important updates.
                                 </p>
@@ -143,15 +144,15 @@ const NotificationsAndWarningsPage = () => {
                 </div>
 
                 {/* Transaction Security Warnings */}
-                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 max-w-full overflow-hidden">
                     <div className="space-y-4">
                         <div className="flex items-start space-x-3">
                             <BsShield className="text-green-500 dark:text-green-400 text-lg mt-0.5 flex-shrink-0" />
-                            <div>
+                            <div className="min-w-0 flex-1">
                                 <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">
                                     Transaction Security Warnings
                                 </h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 break-words">
                                     Security warnings help prevent accidental loss of funds by alerting you
                                     to potentially risky transaction patterns.
                                 </p>
@@ -159,13 +160,13 @@ const NotificationsAndWarningsPage = () => {
                         </div>
 
                         {/* Transaction Simulation */}
-                        <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600 max-w-full overflow-hidden">
                             <div className="space-y-3">
                                 <div>
                                     <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
                                         Transaction Simulation
                                     </h4>
-                                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-3 break-words">
                                         Previews transactions before signing to catch potential errors. Disable if you prefer not to pre-simulate.
                                     </p>
                                 </div>
@@ -267,15 +268,15 @@ const NotificationsAndWarningsPage = () => {
                 </div>
 
                 {/* Gas & Network Warnings */}
-                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 max-w-full overflow-hidden">
                     <div className="space-y-4">
                         <div className="flex items-start space-x-3">
                             <BsExclamationTriangle className="text-amber-500 dark:text-amber-400 text-lg mt-0.5 flex-shrink-0" />
-                            <div>
+                            <div className="min-w-0 flex-1">
                                 <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">
                                     Gas & Network Warnings
                                 </h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 break-words">
                                     Alerts for gas fee anomalies and cross-chain transaction requirements.
                                 </p>
                             </div>
@@ -332,14 +333,14 @@ const NotificationsAndWarningsPage = () => {
                 </div>
 
                 {/* Important Notice */}
-                <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
+                <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg border border-amber-200 dark:border-amber-800 max-w-full overflow-hidden">
                     <div className="flex items-start space-x-3">
                         <BsInfoCircle className="text-amber-600 dark:text-amber-400 text-lg mt-0.5 flex-shrink-0" />
-                        <div>
+                        <div className="min-w-0 flex-1">
                             <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-2">
                                 Security Recommendation
                             </h4>
-                            <div className="text-sm text-amber-700 dark:text-amber-300 space-y-1">
+                            <div className="text-sm text-amber-700 dark:text-amber-300 space-y-1 break-words">
                                 <p>• Keep security warnings enabled for maximum protection</p>
                                 <p>• Browser notifications help you stay informed about important events</p>
                                 <p>• You can always disable specific warnings if they become intrusive</p>
@@ -347,6 +348,7 @@ const NotificationsAndWarningsPage = () => {
                             </div>
                         </div>
                     </div>
+                </div>
                 </div>
             </div>
 

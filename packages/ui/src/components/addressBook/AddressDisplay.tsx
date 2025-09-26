@@ -98,8 +98,7 @@ export const AddressDisplay: FunctionComponent<{
         <>
             {!addressType || addressType === AddressType.NORMAL ? (
                 <div
-                    className="flex flex-row items-center w-full px-6 py-3"
-                    style={{ maxWidth: "100vw" }}
+                    className="flex flex-row items-center w-full max-w-full px-6 py-3 overflow-hidden"
                     title={formatHash(
                         receivingAddress,
                         receivingAddress.length
@@ -108,12 +107,12 @@ export const AddressDisplay: FunctionComponent<{
                         setShowingTheWholeAddress(!showingTheWholeAddress)
                     }
                 >
-                    <CheckmarkCircle classes="w-4 h-4" />
+                    <CheckmarkCircle classes="w-4 h-4 flex-shrink-0" />
                     <span
                         className={
                             displayAddressSpan
-                                ? "font-semibold text-green-500 ml-1 truncate"
-                                : "font-semibold text-green-500 ml-1 truncate cursor-pointer"
+                                ? "font-semibold text-green-500 ml-1 truncate min-w-0"
+                                : "font-semibold text-green-500 ml-1 truncate cursor-pointer min-w-0"
                         }
                         title={receivingAddress}
                     >
@@ -124,12 +123,12 @@ export const AddressDisplay: FunctionComponent<{
                     </span>
 
                     {displayAddressSpan && (
-                        <span className="text-gray-600 dark:text-gray-400 truncate ml-1">
+                        <span className="text-gray-600 dark:text-gray-400 truncate ml-1 min-w-0">
                             {addressToDisplay}
                         </span>
                     )}
                     {ensName && (
-                        <span className="text-gray-500 dark:text-gray-400 truncate ml-2">
+                        <span className="text-gray-500 dark:text-gray-400 truncate ml-2 min-w-0">
                             ({ensName})
                         </span>
                     )}
@@ -142,22 +141,22 @@ export const AddressDisplay: FunctionComponent<{
                     }}
                     isCollapsedByDefault
                     collapsedMessage={
-                        <div className="flex flex-row items-center w-full px-6 py-3">
+                        <div className="flex flex-row items-center w-full max-w-full px-6 py-3 overflow-hidden">
                             <ExclamationCircleIconFull
-                                className="w-4 h-4"
+                                className="w-4 h-4 flex-shrink-0"
                                 size="16"
                             />
                             <span
-                                className="font-semibold ml-1 truncate text-yellow-500"
+                                className="font-semibold ml-1 truncate text-yellow-500 min-w-0"
                                 title={receivingAddress}
                             >
                                 {getWarningTitle(addressType)}
                             </span>
-                            <span className="text-gray-600 dark:text-gray-400 truncate ml-1">
+                            <span className="text-gray-600 dark:text-gray-400 truncate ml-1 min-w-0">
                                 {addressToDisplay}
                             </span>
                             {ensName && (
-                                <span className="text-gray-500 dark:text-gray-400 truncate ml-2">
+                                <span className="text-gray-500 dark:text-gray-400 truncate ml-2 min-w-0">
                                     ({ensName})
                                 </span>
                             )}

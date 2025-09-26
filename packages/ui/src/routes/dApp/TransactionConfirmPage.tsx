@@ -606,13 +606,14 @@ const TransactionConfirm: React.FC<{
                 onClose={() => setHasDetails(false)}
                 nonce={transactionAdvancedData.customNonce ?? nonceRef.current}
             />
-            {hasSameNoncePending && (
-                <div className="mx-6 mt-2 mb-0 text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded p-2">
-                    Another pending transaction with the same nonce exists. Submitting this may replace the other transaction.
-                </div>
-            )}
-            <div className="flex flex-row items-center justify-between w-full px-6 py-4 border-b">
-                {isLoading && <LoadingOverlay />}
+            <div className="flex flex-col flex-1 overflow-hidden">
+                {hasSameNoncePending && (
+                    <div className="mx-6 mt-2 mb-0 text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded p-2 flex-shrink-0">
+                        Another pending transaction with the same nonce exists. Submitting this may replace the other transaction.
+                    </div>
+                )}
+                <div className="flex flex-row items-center justify-between w-full px-6 py-4 border-b flex-shrink-0">
+                    {isLoading && <LoadingOverlay />}
                 <CheckBoxDialog
                     message={`Transaction was sent with an account that's different from the selected one in your wallet. \n\n Please select if you want to continue or reject the transaction.`}
                     onClose={() => {
@@ -667,7 +668,7 @@ const TransactionConfirm: React.FC<{
                     </div>
                     <span
                         title={accountName}
-                        className="pl-2 font-semibold text-xs truncate ..."
+                        className="pl-2 font-semibold text-xs truncate min-w-0"
                     >
                         {formatName(accountName, 24)}
                     </span>
@@ -682,15 +683,15 @@ const TransactionConfirm: React.FC<{
                     )}
                 </div>
                 {simulation && simulation.success && (
-                    <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded-md border border-gray-200 dark:border-gray-700">
+                    <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded-md border border-gray-200 dark:border-gray-700 max-w-full overflow-hidden">
                         <div className="text-xs font-semibold mb-1">Simulation results</div>
                         {simulation.nativeBalanceDelta && simulation.nativeBalanceDelta !== '0' && (
-                            <div className="text-xs">Native delta: {simulation.nativeBalanceDelta}</div>
+                            <div className="text-xs break-words">Native delta: {simulation.nativeBalanceDelta}</div>
                         )}
                         {simulation.erc20Transfers && simulation.erc20Transfers.length > 0 && (
                             <ul className="text-xs list-disc pl-4 mt-1 max-h-24 overflow-auto">
                                 {simulation.erc20Transfers.slice(0, 4).map((t, i) => (
-                                    <li key={i} className="break-all">{t.value} @ {t.token} → {t.to}</li>
+                                    <li key={i} className="break-all truncate">{t.value} @ {t.token} → {t.to}</li>
                                 ))}
                                 {simulation.erc20Transfers.length > 4 && <li>…</li>}
                             </ul>
@@ -722,7 +723,7 @@ const TransactionConfirm: React.FC<{
                         onClick={() => onCopy(params?.to)}
                     >
                         <AccountIcon className="h-6 w-6" fill="black" />
-                        <span className="pl-2 font-semibold text-xs">
+                        <span className="pl-2 font-semibold text-xs truncate">
                             {params.to!.slice(0, 6)} ...{params.to!.slice(-4)}
                         </span>
                         <CopyTooltip copied={copied} />
@@ -735,9 +736,11 @@ const TransactionConfirm: React.FC<{
                         </span>
                     </div>
                 )}
-            </div>
+                </div>
 
-            <div className="flex flex-col px-6 py-3 space-y-3 w-full">
+                {/* Main scrollable content */}
+                <div className="flex-1 overflow-auto">
+                    <div className="flex flex-col px-6 py-3 space-y-3 w-full">
                 <div className="flex flex-row w-full items-center justify-start py-0.5 ">
                     <HiOutlineExclamationCircle
                         size={20}
@@ -904,6 +907,8 @@ const TransactionConfirm: React.FC<{
                     }}
                     buttonDisplay={false}
                 />
+                    </div>
+                </div>
             </div>
             <HardwareDeviceNotLinkedDialog
                 onDone={resetDeviceLinkStatus}

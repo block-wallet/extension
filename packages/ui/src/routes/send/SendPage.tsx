@@ -34,18 +34,15 @@ import AccountsList from "../../components/account/AccountsList"
 import AccountDisplay from "../../components/account/AccountDisplay"
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
 
-// Simple type for recent addresses
 type RecentAddressInfo = {
     address: string;
     name: string;
 }
 
-// Helper function to normalize addresses for consistent comparison
 const normalizeAddress = (address: string): string => {
     return address.toLowerCase();
 }
 
-// Schema
 const schema = yup.object().shape({
     address: yup
         .string()
@@ -69,11 +66,11 @@ const SendPage = () => {
 
     const addressBookAccounts = useAddressBookAccounts()
 
-    // State
     const [selectedAccount, setSelectedAccount] = useState<AccountResult>()
     const [searchString, setSearchString] = useState<string>("")
     const [warning, setWarning] = useState<string>("")
     const [ensResolvedAddress, setEnsResolvedAddress] = useState<string | null>(null)
+    const [originalEnsName, setOriginalEnsName] = useState<string | null>(null)
     const { settings } = useBlankState()!
     const ensHintsEnabled = settings?.ensHintsEnabled ?? true
     const [preSelectedAsset, setPreSelectedAsset] = useState<TokenWithBalance>()
@@ -97,10 +94,8 @@ const SendPage = () => {
         resolver: yupResolver(schema),
     })
 
-    // Hooks
     useEffect(() => {
         defaultAsset && setPreSelectedAsset(defaultAsset)
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     useEffect(() => {
@@ -108,7 +103,6 @@ const SendPage = () => {
             try {
                 const recents = await addressBookGetRecentAddresses(5)
                 const formattedRecents: RecentAddressInfo[] = Object.entries(recents).map(([address, entry]) => {
-                    // Prefer the name from the user accounts (includes renamed accounts) if available.
                     const matchingAccount = [currentAccount, ...myAccounts].find(
                         (acc) => normalizeAddress(acc.address) === normalizeAddress(address)
                     )
@@ -125,16 +119,18 @@ const SendPage = () => {
             }
         }
         fetchRecents()
-        // Running this effect again if the accounts list changes ensures we always have the latest names.
     }, [myAccounts, currentAccount])
 
-    // Handlers
     const onSubmit = handleSubmit(async (data: AddressFormData) => {
         const checksummedAddress = toChecksumAddress(data.address);
         if (addContact) {
+            const contactName = originalEnsName
+                ? originalEnsName
+                : `Account ${formatHashLastChars(checksummedAddress)}`;
+
             await addressBookSet(
                 checksummedAddress,
-                `Account ${formatHashLastChars(checksummedAddress)}`,
+                contactName,
                 ""
             )
         }
@@ -162,11 +158,14 @@ const SendPage = () => {
             if (ensHintsEnabled && ens && /\.[eE][tT][hH]$/.test(value.trim())) {
                 const addr = await resolveEnsName(value.trim())
                 setEnsResolvedAddress(addr)
+                setOriginalEnsName(value.trim())
             } else {
                 setEnsResolvedAddress(null)
+                setOriginalEnsName(null)
             }
         } catch {
             setEnsResolvedAddress(null)
+            setOriginalEnsName(null)
         }
     }, [setValue, setSearchString, setAddContact, setShowRecents, ens, ensHintsEnabled])
 
@@ -210,7 +209,6 @@ const SendPage = () => {
 
     const onAccountSelect = useCallback((account: AccountInfo | AccountResult | RecentAddressInfo) => {
         if (account && account.address) {
-            // Always use checksummed address for display and storage
             const checksummedAddress = toChecksumAddress(account.address);
 
             setSelectedAccount({ address: checksummedAddress, name: account.name });
@@ -220,6 +218,7 @@ const SendPage = () => {
             setSearchString(checksummedAddress)
             setIsAddress(true)
             setShowRecents(false)
+            setOriginalEnsName(null)
         }
     }, [setValue, setSelectedAccount, setSearchString, setIsAddress, setShowRecents])
 
@@ -230,7 +229,6 @@ const SendPage = () => {
         searchInputRef.current.setSelectionRange(len, len)
     }
 
-    // Component
     return (
         <PopupLayout
             header={
@@ -263,9 +261,8 @@ const SendPage = () => {
             }
             showProviderStatus
         >
-            {/* Search or Input */}
-            <div className="flex flex-col space-y-2 w-full bg-white dark:bg-gray-900 z-[9]">
-                <div className="w-full p-6 pb-0 space-y-2">
+            <div className="flex flex-col space-y-2 w-full bg-white dark:bg-gray-900 z-[9] flex-shrink-0">
+                <div className="w-full p-6 pb-2 space-y-2">
                     <SearchInput
                         placeholder="Enter public address, name or select contact"
                         name="address"
@@ -290,30 +287,37 @@ const SendPage = () => {
                         searchShowSkeleton={setShowSearchSkeleton}
                     />
                     {ensHintsEnabled && ensResolvedAddress && !isAddress && (
-                        <div className="text-xs text-gray-600 dark:text-gray-400 px-1 flex items-center gap-2">
-                            <span>Resolves to: <span className="font-mono">{ensResolvedAddress}</span></span>
-                            <button
-                                type="button"
-                                className="px-2 py-0.5 rounded-full border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
-                                onClick={() => {
-                                    const addr = ensResolvedAddress
-                                    if (!addr) return
-                                    setValue("address", addr, { shouldValidate: true })
-                                    setSearchString(addr)
-                                    setIsAddress(true)
-                                    setShowRecents(false)
-                                    setEnsResolvedAddress(null)
-                                }}
-                            >
-                                Use
-                            </button>
+                        <div className="text-xs text-gray-600 dark:text-gray-400 px-1 max-w-full">
+                            <div className="flex flex-col gap-2 max-w-full">
+                                <div className="flex items-center justify-between">
+                                    <span>Resolves to:</span>
+                                    <button
+                                        type="button"
+                                        className="px-2 py-0.5 rounded-full border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 flex-shrink-0 text-xs"
+                                        onClick={() => {
+                                            const addr = ensResolvedAddress
+                                            if (!addr) return
+                                            setValue("address", addr, { shouldValidate: true })
+                                            setSearchString(addr)
+                                            setIsAddress(true)
+                                            setShowRecents(false)
+                                            setEnsResolvedAddress(null)
+                                        }}
+                                    >
+                                        Use
+                                    </button>
+                                </div>
+                                <div className="font-mono text-xs break-all text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                                    {ensResolvedAddress}
+                                </div>
+                            </div>
                         </div>
                     )}
-                    <div className="px-1">
+                    <div className="px-1 space-y-2">
                         <label className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 cursor-pointer select-none">
                             <input
                                 type="checkbox"
-                                className="form-checkbox"
+                                className="cursor-pointer w-4 h-4 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400"
                                 checked={!!ensHintsEnabled}
                                 onChange={async (e) => {
                                     await setUserSettings({
@@ -324,21 +328,23 @@ const SendPage = () => {
                             />
                             Show ENS hints
                         </label>
+                        {canAddContact && !showSearchSkeleton && (
+                            <div className="-mt-2">
+                                <Checkbox
+                                    label="Add to contacts"
+                                    checked={addContact}
+                                    onChange={() => setAddContact(!addContact)}
+                                />
+                            </div>
+                        )}
                     </div>
-                    {canAddContact && !showSearchSkeleton && (
-                        <Checkbox
-                            label="Add to contacts"
-                            checked={addContact}
-                            onChange={() => setAddContact(!addContact)}
-                        />
-                    )}
                 </div>
             </div>
             <div
                 className={classnames(
-                    "space-y-4 pt-6 pb-6",
-                    warning !== "" || (canAddContact && !showSearchSkeleton)
-                        ? "mt-5"
+                    "flex-1 overflow-auto space-y-4 pt-4 pb-4",
+                    warning !== ""
+                        ? "mt-3"
                         : "mt-1"
                 )}
             >

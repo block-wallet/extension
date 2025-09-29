@@ -146,7 +146,12 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
                 <span
                     title={title}
                     className={classnames(
-                        "text-base font-semibold text-gray-900 dark:text-gray-100",
+                        "font-semibold text-gray-900 dark:text-gray-100 truncate",
+                        (networkIndicator || actions || children)
+                            ? "text-sm"
+                            : title.length > 20
+                                ? "text-sm"
+                                : "text-base",
                         icon && "w-56"
                     )}
                 >

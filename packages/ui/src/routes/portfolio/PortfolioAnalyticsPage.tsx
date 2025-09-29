@@ -342,7 +342,7 @@ const PortfolioAnalyticsPage: React.FC = () => {
                 </PopupHeader>
             }
         >
-            <div className="flex flex-col h-full overflow-x-hidden">
+            <div className="flex flex-col h-full overflow-x-hidden mt-4">
 
                 {/* Tab Navigation */}
                 <HorizontalSelect
